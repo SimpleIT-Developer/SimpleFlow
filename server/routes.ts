@@ -681,6 +681,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Rota de teste para envio de email
+  app.post("/api/test-email", authenticateToken, async (req: any, res) => {
+    try {
+      const { email, name } = req.body;
+      const success = await sendWelcomeEmail(name || "Teste", email || "simpleit.solucoes@gmail.com");
+      
+      if (success) {
+        res.json({ message: "Email de teste enviado com sucesso!" });
+      } else {
+        res.status(500).json({ message: "Erro ao enviar email de teste" });
+      }
+    } catch (error) {
+      console.error("Erro no teste de email:", error);
+      res.status(500).json({ message: "Erro interno do servidor" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
