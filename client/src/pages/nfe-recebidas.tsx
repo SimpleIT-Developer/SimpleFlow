@@ -473,7 +473,11 @@ export default function NFeRecebidasPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setPage(1)}
+                    onClick={() => {
+                      if (page > 1) {
+                        setPage(1);
+                      }
+                    }}
                     disabled={page === 1}
                     className="border-white/20 text-white hover:bg-white/10"
                   >
@@ -482,7 +486,11 @@ export default function NFeRecebidasPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setPage(page - 1)}
+                    onClick={() => {
+                      if (page > 1) {
+                        setPage(prev => prev - 1);
+                      }
+                    }}
                     disabled={page === 1}
                     className="border-white/20 text-white hover:bg-white/10"
                   >
@@ -494,7 +502,11 @@ export default function NFeRecebidasPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setPage(page + 1)}
+                    onClick={() => {
+                      if (page < totalPages) {
+                        setPage(prev => prev + 1);
+                      }
+                    }}
                     disabled={page >= totalPages}
                     className="border-white/20 text-white hover:bg-white/10"
                   >
@@ -503,7 +515,11 @@ export default function NFeRecebidasPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setPage(totalPages)}
+                    onClick={() => {
+                      if (page < totalPages) {
+                        setPage(totalPages);
+                      }
+                    }}
                     disabled={page >= totalPages}
                     className="border-white/20 text-white hover:bg-white/10"
                   >
