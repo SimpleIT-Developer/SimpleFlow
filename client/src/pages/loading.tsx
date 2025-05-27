@@ -39,20 +39,15 @@ export default function LoadingPage() {
         <div className="space-y-4">
           <h1 className="text-4xl font-bold text-white">SimpleDoc</h1>
           <p className="text-xl text-gray-300">Sistema de Gestão Inteligente</p>
-          <p className="text-gray-400">Carregando... {progress}%</p>
         </div>
 
-        {/* Barra de Progresso Animada */}
-        <div className="w-64 space-y-2">
+        {/* Barra de Progresso Animada - Responsiva */}
+        <div className="w-full max-w-md mx-auto px-4">
           <div className="w-full bg-gray-700/50 rounded-full h-3 overflow-hidden">
             <div 
               className="h-full bg-gradient-to-r from-primary to-secondary rounded-full transition-all duration-100 ease-out"
               style={{ width: `${progress}%` }}
             ></div>
-          </div>
-          <div className="flex justify-between text-xs text-gray-400">
-            <span>0%</span>
-            <span>100%</span>
           </div>
         </div>
       </div>
