@@ -2,7 +2,7 @@ import { MailerSend, EmailParams, Sender, Recipient } from 'mailersend';
 
 // Configuração do MailerSend
 const mailerSend = new MailerSend({
-  apiKey: process.env.MAILERSEND_API_KEY || 'mlsn.cef25e50e977718dd23b10ec994fb5914d032a36a52c1112c710d93baf2d2b12',
+  apiKey: process.env.MAILERSEND_API_KEY || 'mlsn.3127b53dc3bd5e31fd39328bd1a3d2ad0145f02ff5ec930ba25ce4cedd8780d1',
 });
 
 // Template HTML profissional de boas-vindas
