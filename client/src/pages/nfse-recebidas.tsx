@@ -60,7 +60,7 @@ export default function NFSeRecebidasPage() {
   const [sortOrder] = useState("desc");
 
   const { data: nfseData, isLoading, error } = useQuery({
-    queryKey: ["/api/nfse-recebidas", { 
+    queryKey: ["nfse-recebidas", { 
       search, 
       status, 
       empresa, 

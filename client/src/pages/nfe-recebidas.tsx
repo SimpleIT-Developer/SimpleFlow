@@ -38,7 +38,7 @@ export default function NFeRecebidasPage() {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
   const { data: nfeData, isLoading, error } = useQuery({
-    queryKey: ["/api/nfe-recebidas", { 
+    queryKey: ["nfe-recebidas", { 
       search, 
       status, 
       empresa, 
