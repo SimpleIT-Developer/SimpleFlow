@@ -3,8 +3,9 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { loginSchema, registerSchema } from "@shared/schema";
+import { loginSchema, registerSchema, type Company, type CompanyFilters, type CompanyResponse } from "@shared/schema";
 import { z } from "zod";
+import { mysqlPool, testMysqlConnection } from "./mysql-config";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production";
 
@@ -143,6 +144,113 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Logout endpoint (client-side handles token removal)
   app.post("/api/auth/logout", authenticateToken, (req, res) => {
     res.json({ message: "Logout realizado com sucesso" });
+  });
+
+  // Test MySQL connection on startup
+  await testMysqlConnection();
+
+  // Companies endpoints
+  app.get("/api/companies", authenticateToken, async (req: any, res) => {
+    try {
+      const {
+        search = "",
+        page = "1",
+        limit = "10",
+        sortBy = "company_id",
+        sortOrder = "asc"
+      } = req.query;
+
+      const offset = (parseInt(page) - 1) * parseInt(limit);
+      
+      // Build search condition
+      let searchCondition = "";
+      const searchParams: any[] = [];
+      
+      if (search) {
+        searchCondition = `WHERE 
+          company_name LIKE ? OR 
+          company_fantasy LIKE ? OR 
+          company_cpf_cnpj LIKE ? OR 
+          company_email LIKE ? OR 
+          company_city LIKE ? OR 
+          company_uf LIKE ?`;
+        const searchTerm = `%${search}%`;
+        searchParams.push(searchTerm, searchTerm, searchTerm, searchTerm, searchTerm, searchTerm);
+      }
+
+      // Count total records
+      const countQuery = `SELECT COUNT(*) as total FROM company ${searchCondition}`;
+      const [countResult] = await mysqlPool.execute(countQuery, searchParams) as any;
+      const total = countResult[0].total;
+
+      // Get companies with pagination and sorting
+      const dataQuery = `
+        SELECT 
+          company_id,
+          company_name,
+          company_fantasy,
+          company_cpf_cnpj,
+          company_email,
+          company_city,
+          company_uf
+        FROM company 
+        ${searchCondition}
+        ORDER BY ${sortBy} ${sortOrder.toUpperCase()}
+        LIMIT ? OFFSET ?
+      `;
+
+      const [companies] = await mysqlPool.execute(dataQuery, [
+        ...searchParams,
+        parseInt(limit),
+        offset
+      ]) as any;
+
+      const totalPages = Math.ceil(total / parseInt(limit));
+
+      const response: CompanyResponse = {
+        companies,
+        total,
+        page: parseInt(page),
+        totalPages,
+        limit: parseInt(limit)
+      };
+
+      res.json(response);
+    } catch (error) {
+      console.error("Companies fetch error:", error);
+      res.status(500).json({ message: "Erro ao buscar empresas" });
+    }
+  });
+
+  // Get single company
+  app.get("/api/companies/:id", authenticateToken, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      
+      const query = `
+        SELECT 
+          company_id,
+          company_name,
+          company_fantasy,
+          company_cpf_cnpj,
+          company_email,
+          company_city,
+          company_uf
+        FROM company 
+        WHERE company_id = ?
+      `;
+
+      const [companies] = await mysqlPool.execute(query, [id]) as any;
+      
+      if (companies.length === 0) {
+        return res.status(404).json({ message: "Empresa não encontrada" });
+      }
+
+      res.json({ company: companies[0] });
+    } catch (error) {
+      console.error("Company fetch error:", error);
+      res.status(500).json({ message: "Erro ao buscar empresa" });
+    }
   });
 
   const httpServer = createServer(app);

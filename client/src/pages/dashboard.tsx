@@ -1,11 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { logout } from "@/lib/auth";
 import { AnimatedLogo } from "@/components/animated-logo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { LogOut, Upload, Plus, BarChart3, Settings, FileText, CheckCircle, Clock } from "lucide-react";
+import { LogOut, Upload, Plus, BarChart3, Settings, FileText, CheckCircle, Clock, Building2 } from "lucide-react";
 
 export default function DashboardPage() {
   const [, setLocation] = useLocation();
@@ -83,13 +83,20 @@ export default function DashboardPage() {
           <nav className="flex-1">
             <ul className="space-y-2">
               <li>
-                <a 
-                  href="#" 
-                  className="flex items-center space-x-3 px-4 py-3 text-white bg-primary/20 rounded-lg border border-primary/30 transition-all duration-200"
-                >
-                  <BarChart3 className="w-5 h-5" />
-                  <span>Dashboard</span>
-                </a>
+                <Link href="/dashboard">
+                  <a className="flex items-center space-x-3 px-4 py-3 text-white bg-primary/20 rounded-lg border border-primary/30 transition-all duration-200">
+                    <BarChart3 className="w-5 h-5" />
+                    <span>Dashboard</span>
+                  </a>
+                </Link>
+              </li>
+              <li>
+                <Link href="/companies">
+                  <a className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200 cursor-pointer">
+                    <Building2 className="w-5 h-5" />
+                    <span>Empresas</span>
+                  </a>
+                </Link>
               </li>
               <li>
                 <a 
