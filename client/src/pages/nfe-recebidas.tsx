@@ -34,7 +34,7 @@ export default function NFeRecebidasPage() {
   const [dataFim, setDataFim] = useState("");
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
-  const [sortBy, setSortBy] = useState<keyof NFeRecebida>("doc_num");
+  const [sortBy, setSortBy] = useState<keyof NFeRecebida>("doc_date_emi");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
   const { data: nfeData, isLoading, error } = useQuery({

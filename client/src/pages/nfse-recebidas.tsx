@@ -56,8 +56,8 @@ export default function NFSeRecebidasPage() {
   const [dataFim, setDataFim] = useState("");
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
-  const [sortBy, setSortBy] = useState("nfse_emitente");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [sortBy, setSortBy] = useState("nfse_data_hora");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
   const { data: nfseData, isLoading, error } = useQuery({
     queryKey: ["/api/nfse-recebidas", { 
