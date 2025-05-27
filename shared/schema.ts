@@ -62,3 +62,37 @@ export interface CompanyResponse {
   totalPages: number;
   limit: number;
 }
+
+// Types for NFe Recebidas (MySQL table)
+export interface NFeRecebida {
+  doc_num: string;
+  doc_dest_nome: string;
+  doc_emit_nome: string;
+  doc_emit_documento: string;
+  doc_date_emi: string;
+  doc_valor: number;
+  doc_nat_op: string;
+  doc_status_integracao: number;
+  doc_id_integracao: string | null;
+}
+
+export interface NFeFilters {
+  search?: string;
+  status?: 'all' | 'integrated' | 'not_integrated';
+  empresa?: string;
+  fornecedor?: string;
+  dataInicio?: string;
+  dataFim?: string;
+  page?: number;
+  limit?: number;
+  sortBy?: keyof NFeRecebida;
+  sortOrder?: 'asc' | 'desc';
+}
+
+export interface NFeResponse {
+  nfes: NFeRecebida[];
+  total: number;
+  page: number;
+  totalPages: number;
+  limit: number;
+}

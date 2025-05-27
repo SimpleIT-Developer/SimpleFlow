@@ -4,7 +4,7 @@ import { logout } from "@/lib/auth";
 import { AnimatedLogo } from "@/components/animated-logo";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { LogOut, BarChart3, Settings, FileText, Building2 } from "lucide-react";
+import { LogOut, BarChart3, Settings, FileText, Building2, Receipt } from "lucide-react";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -115,6 +115,18 @@ export function Layout({ children, currentPage }: LayoutProps) {
                   }`}>
                     <Building2 className="w-5 h-5" />
                     <span>Empresas</span>
+                  </a>
+                </Link>
+              </li>
+              <li>
+                <Link href="/nfe-recebidas">
+                  <a className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer ${
+                    isActive("/nfe-recebidas")
+                      ? "text-white bg-primary/20 border border-primary/30"
+                      : "text-gray-300 hover:text-white hover:bg-white/10"
+                  }`}>
+                    <Receipt className="w-5 h-5" />
+                    <span>NFe Recebidas</span>
                   </a>
                 </Link>
               </li>

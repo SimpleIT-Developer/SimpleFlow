@@ -10,6 +10,7 @@ import LoginPage from "@/pages/login";
 import RegisterPage from "@/pages/register";
 import DashboardPage from "@/pages/dashboard";
 import CompaniesPage from "@/pages/companies";
+import NFeRecebidasPage from "@/pages/nfe-recebidas";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -25,6 +26,11 @@ function Router() {
       <Route path="/companies">
         <ProtectedRoute>
           <CompaniesPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/nfe-recebidas">
+        <ProtectedRoute>
+          <NFeRecebidasPage />
         </ProtectedRoute>
       </Route>
       <Route path="/">

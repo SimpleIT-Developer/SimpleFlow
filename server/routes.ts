@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { loginSchema, registerSchema, type Company, type CompanyFilters, type CompanyResponse } from "@shared/schema";
+import { loginSchema, registerSchema, type Company, type CompanyFilters, type CompanyResponse, type NFeRecebida, type NFeFilters, type NFeResponse } from "@shared/schema";
 import { z } from "zod";
 import { mysqlPool, testMysqlConnection } from "./mysql-config";
 
@@ -250,6 +250,150 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Company fetch error:", error);
       res.status(500).json({ message: "Erro ao buscar empresa" });
+    }
+  });
+
+  // NFe Recebidas endpoints
+  app.get("/api/nfe-recebidas", authenticateToken, async (req: any, res) => {
+    try {
+      const {
+        search = "",
+        status = "all",
+        empresa = "",
+        fornecedor = "",
+        dataInicio = "",
+        dataFim = "",
+        page = "1",
+        limit = "10",
+        sortBy = "doc_num",
+        sortOrder = "desc"
+      } = req.query;
+
+      const offset = (parseInt(page) - 1) * parseInt(limit);
+      
+      // Build search conditions
+      let searchConditions: string[] = [];
+      const searchParams: any[] = [];
+      
+      if (search) {
+        searchConditions.push(`(
+          doc_num LIKE ? OR 
+          doc_dest_nome LIKE ? OR 
+          doc_emit_nome LIKE ? OR 
+          doc_emit_documento LIKE ? OR 
+          doc_nat_op LIKE ? OR
+          doc_id_integracao LIKE ?
+        )`);
+        const searchTerm = `%${search}%`;
+        searchParams.push(searchTerm, searchTerm, searchTerm, searchTerm, searchTerm, searchTerm);
+      }
+
+      if (status !== "all") {
+        if (status === "integrated") {
+          searchConditions.push("doc_status_integracao = 1");
+        } else if (status === "not_integrated") {
+          searchConditions.push("doc_status_integracao = 0");
+        }
+      }
+
+      if (empresa) {
+        searchConditions.push("doc_dest_nome LIKE ?");
+        searchParams.push(`%${empresa}%`);
+      }
+
+      if (fornecedor) {
+        searchConditions.push("doc_emit_nome LIKE ?");
+        searchParams.push(`%${fornecedor}%`);
+      }
+
+      if (dataInicio) {
+        searchConditions.push("doc_date_emi >= ?");
+        searchParams.push(dataInicio);
+      }
+
+      if (dataFim) {
+        searchConditions.push("doc_date_emi <= ?");
+        searchParams.push(dataFim);
+      }
+
+      const whereClause = searchConditions.length > 0 ? `WHERE ${searchConditions.join(" AND ")}` : "";
+
+      // Count total records
+      const countQuery = `SELECT COUNT(*) as total FROM doc ${whereClause}`;
+      const [countResult] = await mysqlPool.execute(countQuery, searchParams) as any;
+      const total = countResult[0].total;
+
+      // Get NFes with pagination and sorting
+      const dataQuery = `
+        SELECT 
+          doc_num,
+          doc_dest_nome,
+          doc_emit_nome,
+          doc_emit_documento,
+          doc_date_emi,
+          doc_valor,
+          doc_nat_op,
+          doc_status_integracao,
+          doc_id_integracao
+        FROM doc 
+        ${whereClause}
+        ORDER BY ${sortBy} ${sortOrder.toUpperCase()}
+        LIMIT ? OFFSET ?
+      `;
+
+      const [nfes] = await mysqlPool.execute(dataQuery, [
+        ...searchParams,
+        parseInt(limit),
+        offset
+      ]) as any;
+
+      const totalPages = Math.ceil(total / parseInt(limit));
+
+      const response: NFeResponse = {
+        nfes,
+        total,
+        page: parseInt(page),
+        totalPages,
+        limit: parseInt(limit)
+      };
+
+      res.json(response);
+    } catch (error) {
+      console.error("NFe fetch error:", error);
+      res.status(500).json({ message: "Erro ao buscar NFe recebidas" });
+    }
+  });
+
+  // Get single NFe
+  app.get("/api/nfe-recebidas/:numero", authenticateToken, async (req: any, res) => {
+    try {
+      const { numero } = req.params;
+      
+      const query = `
+        SELECT 
+          doc_num,
+          doc_dest_nome,
+          doc_emit_nome,
+          doc_emit_documento,
+          doc_date_emi,
+          doc_valor,
+          doc_nat_op,
+          doc_status_integracao,
+          doc_id_integracao
+        FROM doc 
+        WHERE doc_num = ?
+      `;
+
+      const [nfes] = await mysqlPool.execute(query, [numero]) as any;
+      
+      if (nfes.length === 0) {
+        return res.status(404).json({ message: "NFe não encontrada" });
+      }
+
+      res.json({ nfe: nfes[0] });
+    } catch (error) {
+      console.error("NFe fetch error:", error);
+      res.status(500).json({ message: "Erro ao buscar NFe" });
     }
   });
 
