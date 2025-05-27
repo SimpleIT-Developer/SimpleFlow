@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { loginSchema, registerSchema, type Company, type CompanyFilters, type CompanyResponse, type NFeRecebida, type NFeFilters, type NFeResponse } from "@shared/schema";
+import { loginSchema, registerSchema, type Company, type CompanyFilters, type CompanyResponse, type NFeRecebida, type NFeFilters, type NFeResponse, type NFSeRecebida, type NFSeResponse } from "@shared/schema";
 import { z } from "zod";
 import { mysqlPool, testMysqlConnection } from "./mysql-config";
 
@@ -393,6 +393,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("NFe fetch error:", error);
       res.status(500).json({ message: "Erro ao buscar NFe" });
+    }
+  });
+
+  // NFSe Recebidas endpoints
+  app.get("/api/nfse-recebidas", authenticateToken, async (req: any, res) => {
+    try {
+      const {
+        search = "",
+        status = "all",
+        empresa = "",
+        fornecedor = "",
+        local = "",
+        dataInicio = "",
+        dataFim = "",
+        page = "1",
+        limit = "10",
+        sortBy = "nfse_data_hora",
+        sortOrder = "desc"
+      } = req.query;
+
+      const offset = (parseInt(page) - 1) * parseInt(limit);
+      
+      // Build search conditions
+      let whereClause = "";
+      const queryParams = [];
+
+      if (search) {
+        whereClause = "WHERE (nfse_emitente LIKE ? OR nfse_doc LIKE ? OR nfse_tomador LIKE ? OR nfse_tipo LIKE ?)";
+        queryParams.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
+      }
+
+      // Count total records
+      const countQuery = `SELECT COUNT(*) as total FROM nfse ${whereClause}`;
+      const [countResult] = await mysqlPool.execute(countQuery, queryParams) as any;
+      const total = countResult[0].total;
+
+      // Get NFSes with pagination and sorting  
+      const dataQuery = `SELECT nfse_emitente, nfse_doc, nfse_tomador, nfse_tipo, nfse_local_prestacao, nfse_data_hora, nfse_valor_servico, nfse_status_integracao, nfse_id_integracao FROM nfse ${whereClause} ORDER BY ${sortBy} ${sortOrder.toUpperCase()} LIMIT ${parseInt(limit)} OFFSET ${offset}`;
+      
+      const [nfses] = await mysqlPool.execute(dataQuery, queryParams) as any;
+
+      const totalPages = Math.ceil(total / parseInt(limit));
+
+      const response: NFSeResponse = {
+        nfses: nfses,
+        total,
+        page: parseInt(page),
+        totalPages,
+        limit: parseInt(limit)
+      };
+
+      res.json(response);
+    } catch (error) {
+      console.error("Erro ao buscar NFSe recebidas:", error);
+      res.status(500).json({ message: "Erro ao buscar NFSe recebidas" });
     }
   });
 

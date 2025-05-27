@@ -96,3 +96,38 @@ export interface NFeResponse {
   totalPages: number;
   limit: number;
 }
+
+// NFSe Recebidas interfaces
+export interface NFSeRecebida {
+  nfse_emitente: string;
+  nfse_doc: string;
+  nfse_tomador: string;
+  nfse_tipo: string;
+  nfse_local_prestacao: string;
+  nfse_data_hora: string;
+  nfse_valor_servico: number;
+  nfse_status_integracao: number;
+  nfse_id_integracao: string | null;
+}
+
+export interface NFSeFilters {
+  search?: string;
+  status?: 'all' | 'integrated' | 'not_integrated';
+  empresa?: string;
+  fornecedor?: string;
+  local?: string;
+  dataInicio?: string;
+  dataFim?: string;
+  page?: number;
+  limit?: number;
+  sortBy?: keyof NFSeRecebida;
+  sortOrder?: 'asc' | 'desc';
+}
+
+export interface NFSeResponse {
+  nfses: NFSeRecebida[];
+  total: number;
+  page: number;
+  totalPages: number;
+  limit: number;
+}
