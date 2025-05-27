@@ -154,26 +154,7 @@ export function Layout({ children, currentPage }: LayoutProps) {
                   </a>
                 </Link>
               </li>
-              <li>
-                <a 
-                  href="#" 
-                  onClick={() => handleQuickAction("Documentos")}
-                  className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200"
-                >
-                  <FileText className="w-5 h-5" />
-                  <span>Documentos</span>
-                </a>
-              </li>
-              <li>
-                <a 
-                  href="#" 
-                  onClick={() => handleQuickAction("Perfil")}
-                  className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-200"
-                >
-                  <Settings className="w-5 h-5" />
-                  <span>Perfil</span>
-                </a>
-              </li>
+
             </ul>
           </nav>
         </div>
