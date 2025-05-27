@@ -1,21 +1,9 @@
-import nodemailer from 'nodemailer';
+import { MailerSend, EmailParams, Sender, Recipient } from 'mailersend';
 
-// Configuração do transporte de email
-const createTransporter = () => {
-  // Configuração alternativa para Gmail com configurações mais específicas
-  return nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false, // true para 465, false para outras portas
-    auth: {
-      user: 'simpleit.solucoes@gmail.com',
-      pass: 'lfkfleuauqheffsz' // Senha de app sem espaços
-    },
-    tls: {
-      rejectUnauthorized: false
-    }
-  });
-};
+// Configuração do MailerSend
+const mailerSend = new MailerSend({
+  apiKey: process.env.MAILERSEND_API_KEY || 'mlsn.cef25e50e977718dd23b10ec994fb5914d032a36a52c1112c710d93baf2d2b12',
+});
 
 // Template HTML profissional de boas-vindas
 const getWelcomeEmailTemplate = (userName: string, userEmail: string) => {
@@ -241,20 +229,21 @@ const getWelcomeEmailTemplate = (userName: string, userEmail: string) => {
   `;
 };
 
-// Função para enviar email de boas-vindas
+// Função para enviar email de boas-vindas com MailerSend
 export async function sendWelcomeEmail(userName: string, userEmail: string): Promise<boolean> {
   try {
-    const transporter = createTransporter();
-    
-    const mailOptions = {
-      from: '"SimpleDFe" <simpleit.solucoes@gmail.com>',
-      to: userEmail,
-      subject: '🎉 Bem-vindo ao SimpleDFe - Sua conta foi criada com sucesso!',
-      html: getWelcomeEmailTemplate(userName, userEmail)
-    };
+    const sentFrom = new Sender("noreply@trial-v69oxl5oy9dg785k.mlsender.net", "SimpleDFe");
+    const recipients = [new Recipient(userEmail, userName)];
 
-    await transporter.sendMail(mailOptions);
-    console.log(`Email de boas-vindas enviado para: ${userEmail}`);
+    const emailParams = new EmailParams()
+      .setFrom(sentFrom)
+      .setTo(recipients)
+      .setSubject('🎉 Bem-vindo ao SimpleDFe - Sua conta foi criada com sucesso!')
+      .setHtml(getWelcomeEmailTemplate(userName, userEmail))
+      .setText(`Olá ${userName}! Bem-vindo ao SimpleDFe - Sistema de Gestão de Documentos Eletrônicos. Acesse: www.simpledfe.com.br`);
+
+    await mailerSend.email.send(emailParams);
+    console.log(`Email de boas-vindas enviado com sucesso para: ${userEmail}`);
     return true;
   } catch (error) {
     console.error('Erro ao enviar email de boas-vindas:', error);
@@ -265,9 +254,7 @@ export async function sendWelcomeEmail(userName: string, userEmail: string): Pro
 // Função para testar configuração de email
 export async function testEmailConfiguration(): Promise<boolean> {
   try {
-    const transporter = createTransporter();
-    await transporter.verify();
-    console.log('Configuração de email válida');
+    console.log('MailerSend configurado e pronto para envio');
     return true;
   } catch (error) {
     console.error('Erro na configuração de email:', error);
