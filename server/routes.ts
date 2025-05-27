@@ -6,6 +6,7 @@ import jwt from "jsonwebtoken";
 import { loginSchema, registerSchema, type Company, type CompanyFilters, type CompanyResponse, type NFeRecebida, type NFeFilters, type NFeResponse, type NFSeRecebida, type NFSeResponse, type Usuario, type UsuarioResponse } from "@shared/schema";
 import { z } from "zod";
 import { mysqlPool, testMysqlConnection } from "./mysql-config";
+import { sendWelcomeEmail } from "./email-service";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production";
 
@@ -54,6 +55,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email: validatedData.email,
         password: hashedPassword,
         name: validatedData.name,
+      });
+
+      // Enviar email de boas-vindas em background (não bloqueia a resposta)
+      sendWelcomeEmail(newUser.name, newUser.email).catch(error => {
+        console.error('Erro ao enviar email de boas-vindas:', error);
       });
 
       // Generate JWT token
