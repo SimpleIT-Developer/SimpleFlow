@@ -1,161 +1,308 @@
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Layout } from "@/components/layout";
-import { AnimatedLogo } from "@/components/animated-logo";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
-import { Upload, Plus, BarChart3, Settings, FileText, CheckCircle, Clock } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import { Building, FileText, CheckCircle, XCircle, AlertTriangle, Users } from "lucide-react";
+import type { DashboardStats, ChartData, UltimosDocumentos, CNPJAtivo } from "@shared/schema";
+
+const PERIOD_BUTTONS = [
+  { key: 'daily', label: 'Diário' },
+  { key: 'weekly', label: 'Semanal' },
+  { key: 'monthly', label: 'Mensal' },
+  { key: 'yearly', label: 'Anual' }
+];
+
+const PIE_COLORS = ['#8b5cf6', '#06b6d4'];
+
+function formatCurrency(value: number): string {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+  }).format(value);
+}
+
+function formatDate(dateString: string): string {
+  return new Date(dateString).toLocaleDateString('pt-BR');
+}
 
 export default function DashboardPage() {
-  const { toast } = useToast();
+  const [selectedPeriod, setSelectedPeriod] = useState('daily');
 
-  const handleQuickAction = (action: string) => {
-    toast({
-      title: "Funcionalidade em desenvolvimento",
-      description: `A função "${action}" será implementada em breve.`,
-    });
-  };
+  // Consulta para estatísticas principais
+  const { data: stats } = useQuery<DashboardStats>({
+    queryKey: ['/api/dashboard/stats'],
+  });
+
+  // Consulta para dados do gráfico de barras
+  const { data: chartData } = useQuery<ChartData[]>({
+    queryKey: ['/api/dashboard/chart', selectedPeriod],
+  });
+
+  // Consulta para últimos documentos
+  const { data: ultimosDocumentos } = useQuery<UltimosDocumentos[]>({
+    queryKey: ['/api/dashboard/ultimos-documentos'],
+  });
+
+  // Consulta para CNPJs ativos
+  const { data: cnpjAtivos } = useQuery<CNPJAtivo[]>({
+    queryKey: ['/api/dashboard/cnpj-ativos'],
+  });
+
+  // Dados para o gráfico de pizza
+  const pieData = stats ? [
+    { name: 'NFe', value: stats.nfeRecebidas, color: PIE_COLORS[0] },
+    { name: 'NFSe', value: stats.nfseRecebidas, color: PIE_COLORS[1] }
+  ] : [];
+
+  const statsCards = [
+    {
+      title: "Total de CNPJ",
+      value: stats?.totalCNPJ || 0,
+      icon: Building,
+      color: "text-blue-500"
+    },
+    {
+      title: "NFe Recebidas", 
+      value: stats?.nfeRecebidas || 0,
+      icon: FileText,
+      color: "text-green-500"
+    },
+    {
+      title: "NFe Integradas",
+      value: stats?.nfeIntegradas || 0,
+      icon: CheckCircle,
+      color: "text-emerald-500"
+    },
+    {
+      title: "NFSe Recebidas",
+      value: stats?.nfseRecebidas || 0,
+      icon: FileText,
+      color: "text-purple-500"
+    },
+    {
+      title: "NFSe Integradas", 
+      value: stats?.nfseIntegradas || 0,
+      icon: CheckCircle,
+      color: "text-violet-500"
+    },
+    {
+      title: "Fornecedores sem ERP",
+      value: stats?.fornecedoresSemERP || 0,
+      icon: AlertTriangle,
+      color: "text-orange-500"
+    }
+  ];
 
   return (
     <Layout currentPage="Dashboard">
       <div className="space-y-6">
-          {/* Welcome Section */}
-          <Card className="glassmorphism border-white/20">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-xl font-semibold text-white mb-2">
-                    Bem-vindo ao SimpleDoc
-                  </h2>
-                  <p className="text-gray-300">
-                    Gerencie seus documentos e notas fiscais de forma inteligente
-                  </p>
-                </div>
-                <AnimatedLogo size="lg" className="animate-float" />
-              </div>
-            </CardContent>
-          </Card>
+        {/* Header */}
+        <div>
+          <h1 className="text-3xl font-bold text-white">Dashboard</h1>
+          <p className="text-gray-400 mt-2">Visão geral do sistema SimpleDFe</p>
+        </div>
 
-          {/* Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="glassmorphism border-white/20">
-              <CardContent className="pt-6">
+        {/* Stats Cards - 6 cards em grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+          {statsCards.map((stat, index) => {
+            const Icon = stat.icon;
+            return (
+              <Card key={index} className="bg-gray-800/50 border-gray-700 hover:bg-gray-800/70 transition-colors">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-xs font-medium text-gray-300">
+                    {stat.title}
+                  </CardTitle>
+                  <Icon className={`h-4 w-4 ${stat.color}`} />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-xl font-bold text-white">{stat.value.toLocaleString('pt-BR')}</div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+
+        {/* Resumo dos Documentos Fiscais */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Gráfico de Barras */}
+          <div className="lg:col-span-2">
+            <Card className="bg-gray-800/50 border-gray-700">
+              <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-gray-300 text-sm font-medium">Documentos Totais</h3>
-                    <p className="text-2xl font-bold text-white mt-1">0</p>
+                    <CardTitle className="text-white">Resumo dos Documentos Fiscais</CardTitle>
+                    <CardDescription className="text-gray-400">
+                      Quantidade de NFe e NFSe capturadas
+                    </CardDescription>
                   </div>
-                  <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                    <FileText className="w-6 h-6 text-blue-400" />
+                  <div className="flex gap-2">
+                    {PERIOD_BUTTONS.map((period) => (
+                      <Button
+                        key={period.key}
+                        variant={selectedPeriod === period.key ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setSelectedPeriod(period.key)}
+                        className={selectedPeriod === period.key ? 
+                          "bg-primary text-white" : 
+                          "border-gray-600 text-gray-300 hover:bg-gray-700"
+                        }
+                      >
+                        {period.label}
+                      </Button>
+                    ))}
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card className="glassmorphism border-white/20">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-gray-300 text-sm font-medium">Processados Hoje</h3>
-                    <p className="text-2xl font-bold text-white mt-1">0</p>
-                  </div>
-                  <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
-                    <CheckCircle className="w-6 h-6 text-green-400" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="glassmorphism border-white/20">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-gray-300 text-sm font-medium">Em Processamento</h3>
-                    <p className="text-2xl font-bold text-white mt-1">0</p>
-                  </div>
-                  <div className="w-12 h-12 bg-yellow-500/20 rounded-lg flex items-center justify-center">
-                    <Clock className="w-6 h-6 text-yellow-400" />
-                  </div>
+              </CardHeader>
+              <CardContent>
+                <div className="h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={chartData || []}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                      <XAxis dataKey="date" stroke="#9CA3AF" />
+                      <YAxis stroke="#9CA3AF" />
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: '#1F2937', 
+                          border: '1px solid #374151',
+                          color: '#F9FAFB'
+                        }} 
+                      />
+                      <Legend />
+                      <Bar dataKey="nfe" fill="#8b5cf6" name="NFe" />
+                      <Bar dataKey="nfse" fill="#06b6d4" name="NFSe" />
+                    </BarChart>
+                  </ResponsiveContainer>
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          {/* Recent Activity */}
-          <Card className="glassmorphism border-white/20">
-            <CardContent className="pt-6">
-              <h3 className="text-lg font-semibold text-white mb-4">Atividade Recente</h3>
-              <div className="text-center py-8">
-                <p className="text-gray-400">Nenhuma atividade ainda.</p>
-                <p className="text-gray-500 text-sm mt-1">
-                  Comece criando ou importando seus primeiros documentos.
-                </p>
-              </div>
+          {/* Gráfico de Pizza */}
+          <div>
+            <Card className="bg-gray-800/50 border-gray-700">
+              <CardHeader>
+                <CardTitle className="text-white">Distribuição de Documentos</CardTitle>
+                <CardDescription className="text-gray-400">
+                  NFe vs NFSe capturadas
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={pieData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {pieData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: '#1F2937', 
+                          border: '1px solid #374151',
+                          color: '#F9FAFB'
+                        }} 
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* Grids na parte inferior */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Últimas Notas Fiscais Recebidas */}
+          <Card className="bg-gray-800/50 border-gray-700">
+            <CardHeader>
+              <CardTitle className="text-white">Últimas Notas Fiscais Recebidas</CardTitle>
+              <CardDescription className="text-gray-400">
+                Documentos recentemente capturados
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-gray-700">
+                    <TableHead className="text-gray-300">Tipo</TableHead>
+                    <TableHead className="text-gray-300">Emitente</TableHead>
+                    <TableHead className="text-gray-300">Valor</TableHead>
+                    <TableHead className="text-gray-300">Data</TableHead>
+                    <TableHead className="text-gray-300">Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {ultimosDocumentos?.map((doc, index) => (
+                    <TableRow key={index} className="border-gray-700">
+                      <TableCell className="text-gray-300 font-medium">{doc.tipo}</TableCell>
+                      <TableCell className="text-gray-300">{doc.emitente}</TableCell>
+                      <TableCell className="text-gray-300">{formatCurrency(doc.valor)}</TableCell>
+                      <TableCell className="text-gray-300">{formatDate(doc.data)}</TableCell>
+                      <TableCell>
+                        <Badge 
+                          variant={doc.status === 'Integrado' ? 'default' : 'secondary'}
+                          className={doc.status === 'Integrado' ? 
+                            'bg-green-600 text-white' : 
+                            'bg-yellow-600 text-white'
+                          }
+                        >
+                          {doc.status}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
 
-          {/* Quick Actions */}
-          <Card className="glassmorphism border-white/20">
-            <CardContent className="pt-6">
-              <h3 className="text-lg font-semibold text-white mb-4">Ações Rápidas</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Button
-                  onClick={() => handleQuickAction("Upload de Documento")}
-                  variant="outline"
-                  className="p-4 h-auto bg-primary/20 hover:bg-primary/30 border-primary/30 text-white flex flex-col items-center space-y-3 group"
-                >
-                  <div className="w-12 h-12 bg-primary/30 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <Upload className="w-6 h-6 text-primary" />
-                  </div>
-                  <div className="text-center">
-                    <p className="font-medium">Upload</p>
-                    <p className="text-gray-400 text-sm">Novo documento</p>
-                  </div>
-                </Button>
-
-                <Button
-                  onClick={() => handleQuickAction("Criar Nota Fiscal")}
-                  variant="outline"
-                  className="p-4 h-auto bg-green-500/20 hover:bg-green-500/30 border-green-500/30 text-white flex flex-col items-center space-y-3 group"
-                >
-                  <div className="w-12 h-12 bg-green-500/30 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <Plus className="w-6 h-6 text-green-400" />
-                  </div>
-                  <div className="text-center">
-                    <p className="font-medium">Criar</p>
-                    <p className="text-gray-400 text-sm">Nova nota fiscal</p>
-                  </div>
-                </Button>
-
-                <Button
-                  onClick={() => handleQuickAction("Ver Relatórios")}
-                  variant="outline"
-                  className="p-4 h-auto bg-blue-500/20 hover:bg-blue-500/30 border-blue-500/30 text-white flex flex-col items-center space-y-3 group"
-                >
-                  <div className="w-12 h-12 bg-blue-500/30 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <BarChart3 className="w-6 h-6 text-blue-400" />
-                  </div>
-                  <div className="text-center">
-                    <p className="font-medium">Relatórios</p>
-                    <p className="text-gray-400 text-sm">Visualizar dados</p>
-                  </div>
-                </Button>
-
-                <Button
-                  onClick={() => handleQuickAction("Configurações")}
-                  variant="outline"
-                  className="p-4 h-auto bg-purple-500/20 hover:bg-purple-500/30 border-purple-500/30 text-white flex flex-col items-center space-y-3 group"
-                >
-                  <div className="w-12 h-12 bg-purple-500/30 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <Settings className="w-6 h-6 text-purple-400" />
-                  </div>
-                  <div className="text-center">
-                    <p className="font-medium">Configurações</p>
-                    <p className="text-gray-400 text-sm">Gerenciar conta</p>
-                  </div>
-                </Button>
-              </div>
+          {/* CNPJs Ativos */}
+          <Card className="bg-gray-800/50 border-gray-700">
+            <CardHeader>
+              <CardTitle className="text-white">CNPJs Ativos</CardTitle>
+              <CardDescription className="text-gray-400">
+                Empresas com documentos capturados
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-gray-700">
+                    <TableHead className="text-gray-300">CNPJ</TableHead>
+                    <TableHead className="text-gray-300">Nome</TableHead>
+                    <TableHead className="text-gray-300">Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {cnpjAtivos?.map((cnpj, index) => (
+                    <TableRow key={index} className="border-gray-700">
+                      <TableCell className="text-gray-300 font-mono text-sm">{cnpj.cnpj}</TableCell>
+                      <TableCell className="text-gray-300">{cnpj.nome}</TableCell>
+                      <TableCell>
+                        <Badge className="bg-green-600 text-white">
+                          {cnpj.status}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
+        </div>
       </div>
     </Layout>
   );

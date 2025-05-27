@@ -157,3 +157,40 @@ export interface UsuarioResponse {
   totalPages: number;
   limit: number;
 }
+
+// Dashboard Statistics
+export interface DashboardStats {
+  totalCNPJ: number;
+  nfeRecebidas: number;
+  nfeIntegradas: number;
+  nfseRecebidas: number;
+  nfseIntegradas: number;
+  fornecedoresSemERP: number;
+}
+
+export interface ChartData {
+  date: string;
+  nfe: number;
+  nfse: number;
+}
+
+export interface PieChartData {
+  name: string;
+  value: number;
+  color: string;
+}
+
+export interface UltimosDocumentos {
+  tipo: string;
+  emitente: string;
+  valor: number;
+  data: string;
+  status: string;
+}
+
+export interface CNPJAtivo {
+  cnpj: string;
+  nome: string;
+  ultimaCaptura: string;
+  status: string;
+}

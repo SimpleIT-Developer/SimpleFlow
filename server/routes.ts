@@ -501,6 +501,164 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Dashboard endpoints
+  app.get("/api/dashboard/stats", authenticateToken, async (req: any, res) => {
+    try {
+      // Consultas para obter estatísticas
+      const [totalCNPJResult] = await mysqlPool.execute('SELECT COUNT(DISTINCT company_cpf_cnpj) as total FROM companies') as any;
+      const [nfeRecebidasResult] = await mysqlPool.execute('SELECT COUNT(*) as total FROM nfe_recebidas') as any;
+      const [nfeIntegradasResult] = await mysqlPool.execute('SELECT COUNT(*) as total FROM nfe_recebidas WHERE doc_status_integracao = 1') as any;
+      const [nfseRecebidasResult] = await mysqlPool.execute('SELECT COUNT(*) as total FROM nfse') as any;
+      const [nfseIntegradasResult] = await mysqlPool.execute('SELECT COUNT(*) as total FROM nfse WHERE nfse_status_integracao = 1') as any;
+      const [fornecedoresSemERPResult] = await mysqlPool.execute('SELECT COUNT(DISTINCT doc_emit_documento) as total FROM nfe_recebidas WHERE doc_status_integracao = 0') as any;
+
+      const stats = {
+        totalCNPJ: totalCNPJResult[0]?.total || 0,
+        nfeRecebidas: nfeRecebidasResult[0]?.total || 0,
+        nfeIntegradas: nfeIntegradasResult[0]?.total || 0,
+        nfseRecebidas: nfseRecebidasResult[0]?.total || 0,
+        nfseIntegradas: nfseIntegradasResult[0]?.total || 0,
+        fornecedoresSemERP: fornecedoresSemERPResult[0]?.total || 0
+      };
+
+      res.json(stats);
+    } catch (error) {
+      console.error('Erro ao obter estatísticas do dashboard:', error);
+      res.status(500).json({ message: 'Erro interno do servidor' });
+    }
+  });
+
+  // Rota para obter dados do gráfico de barras
+  app.get("/api/dashboard/chart/:period", authenticateToken, async (req: any, res) => {
+    try {
+      const { period } = req.params;
+      let dateFormat, interval;
+      
+      switch (period) {
+        case 'daily':
+          dateFormat = '%Y-%m-%d';
+          interval = '7 DAY';
+          break;
+        case 'weekly':
+          dateFormat = '%Y-%u';
+          interval = '8 WEEK';
+          break;
+        case 'monthly':
+          dateFormat = '%Y-%m';
+          interval = '12 MONTH';
+          break;
+        case 'yearly':
+          dateFormat = '%Y';
+          interval = '5 YEAR';
+          break;
+        default:
+          dateFormat = '%Y-%m-%d';
+          interval = '7 DAY';
+      }
+
+      const [nfeData] = await mysqlPool.execute(`
+        SELECT DATE_FORMAT(doc_date_emi, ?) as date, COUNT(*) as count 
+        FROM nfe_recebidas 
+        WHERE doc_date_emi >= DATE_SUB(NOW(), INTERVAL ${interval})
+        GROUP BY DATE_FORMAT(doc_date_emi, ?)
+        ORDER BY date DESC
+        LIMIT 10
+      `, [dateFormat, dateFormat]) as any;
+
+      const [nfseData] = await mysqlPool.execute(`
+        SELECT DATE_FORMAT(nfse_data_hora, ?) as date, COUNT(*) as count 
+        FROM nfse 
+        WHERE nfse_data_hora >= DATE_SUB(NOW(), INTERVAL ${interval})
+        GROUP BY DATE_FORMAT(nfse_data_hora, ?)
+        ORDER BY date DESC
+        LIMIT 10
+      `, [dateFormat, dateFormat]) as any;
+
+      // Combina os dados
+      const chartData = [];
+      const dateMap = {};
+
+      nfeData.forEach(item => {
+        dateMap[item.date] = { date: item.date, nfe: item.count, nfse: 0 };
+      });
+
+      nfseData.forEach(item => {
+        if (dateMap[item.date]) {
+          dateMap[item.date].nfse = item.count;
+        } else {
+          dateMap[item.date] = { date: item.date, nfe: 0, nfse: item.count };
+        }
+      });
+
+      Object.values(dateMap).forEach(item => chartData.push(item));
+      chartData.sort((a, b) => a.date.localeCompare(b.date));
+
+      res.json(chartData.slice(0, 10));
+    } catch (error) {
+      console.error('Erro ao obter dados do gráfico:', error);
+      res.status(500).json({ message: 'Erro interno do servidor' });
+    }
+  });
+
+  // Rota para obter últimos documentos
+  app.get("/api/dashboard/ultimos-documentos", authenticateToken, async (req: any, res) => {
+    try {
+      const [nfeData] = await mysqlPool.execute(`
+        SELECT 'NF-e' as tipo, doc_emit_nome as emitente, doc_valor as valor, 
+               doc_date_emi as data, 
+               CASE WHEN doc_status_integracao = 1 THEN 'Integrado' ELSE 'Não Integrado' END as status,
+               doc_num as numero
+        FROM nfe_recebidas 
+        ORDER BY doc_date_emi DESC 
+        LIMIT 5
+      `) as any;
+
+      const [nfseData] = await mysqlPool.execute(`
+        SELECT 'NFS-e' as tipo, nfse_emitente as emitente, nfse_valor_servico as valor,
+               nfse_data_hora as data,
+               CASE WHEN nfse_status_integracao = 1 THEN 'Integrado' ELSE 'Não Integrado' END as status,
+               nfse_doc as numero
+        FROM nfse 
+        ORDER BY nfse_data_hora DESC 
+        LIMIT 5
+      `) as any;
+
+      const documentos = [...nfeData, ...nfseData]
+        .map(doc => ({
+          tipo: `${doc.tipo} ${doc.numero}`,
+          emitente: doc.emitente,
+          valor: doc.valor,
+          data: doc.data,
+          status: doc.status
+        }))
+        .sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime())
+        .slice(0, 10);
+
+      res.json(documentos);
+    } catch (error) {
+      console.error('Erro ao obter últimos documentos:', error);
+      res.status(500).json({ message: 'Erro interno do servidor' });
+    }
+  });
+
+  // Rota para obter CNPJs ativos
+  app.get("/api/dashboard/cnpj-ativos", authenticateToken, async (req: any, res) => {
+    try {
+      const [cnpjData] = await mysqlPool.execute(`
+        SELECT company_cpf_cnpj as cnpj, company_name as nome, 
+               'Ativo' as status, NOW() as ultimaCaptura
+        FROM companies 
+        ORDER BY company_name 
+        LIMIT 10
+      `) as any;
+
+      res.json(cnpjData);
+    } catch (error) {
+      console.error('Erro ao obter CNPJs ativos:', error);
+      res.status(500).json({ message: 'Erro interno do servidor' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
