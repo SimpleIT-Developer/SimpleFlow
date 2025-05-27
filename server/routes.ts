@@ -507,7 +507,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Consultas para obter estatísticas usando as tabelas corretas
       const [totalCNPJResult] = await mysqlPool.execute('SELECT COUNT(*) as total FROM company') as any;
       const [nfeRecebidasResult] = await mysqlPool.execute('SELECT COUNT(*) as total FROM doc') as any;
-      const [nfeIntegradasResult] = await mysqlPool.execute('SELECT COUNT(*) as total FROM doc WHERE nfse_status_integracao = 1') as any;
+      const [nfeIntegradasResult] = await mysqlPool.execute('SELECT COUNT(*) as total FROM doc WHERE doc_status_integracao = 1') as any;
       const [nfseRecebidasResult] = await mysqlPool.execute('SELECT COUNT(*) as total FROM nfse') as any;
       const [nfseIntegradasResult] = await mysqlPool.execute('SELECT COUNT(*) as total FROM nfse WHERE nfse_status_integracao = 1') as any;
       const [fornecedoresSemERPResult] = await mysqlPool.execute('SELECT COUNT(*) as total FROM simplefcfo WHERE codigo_erp IS NULL OR codigo_erp = ""') as any;
@@ -606,7 +606,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const [nfeData] = await mysqlPool.execute(`
         SELECT 'NF-e' as tipo, doc_emit_nome as emitente, doc_valor as valor, 
                doc_date_emi as data, 
-               CASE WHEN nfse_status_integracao = 1 THEN 'Integrado' ELSE 'Não Integrado' END as status,
+               CASE WHEN doc_status_integracao = 1 THEN 'Integrado' ELSE 'Não Integrado' END as status,
                doc_num as numero
         FROM doc 
         ORDER BY doc_date_emi DESC 
