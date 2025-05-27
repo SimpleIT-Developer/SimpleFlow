@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Layout } from "@/components/layout";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Download, RefreshCw, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
+import { Download, RefreshCw, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Filter } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { NFSeRecebida, NFSeResponse } from "@shared/schema";
 
@@ -56,16 +56,16 @@ export default function NFSeRecebidasPage() {
   const [dataFim, setDataFim] = useState("");
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
-  const [sortBy] = useState("nfse_emitente");
-  const [sortOrder] = useState("asc");
+  const [sortBy] = useState("nfse_data_hora");
+  const [sortOrder] = useState("desc");
 
   const { data: nfseData, isLoading, error } = useQuery({
-    queryKey: ["/api/nfse-recebidas", { 
+    queryKey: ["nfse-recebidas", { 
       search, 
       status, 
       empresa, 
       fornecedor, 
-      local, 
+      local,
       dataInicio, 
       dataFim, 
       page, 
