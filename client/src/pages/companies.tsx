@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Layout } from "@/components/layout";
 import { AnimatedLogo } from "@/components/animated-logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -98,27 +99,31 @@ export default function CompaniesPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <AnimatedLogo size="lg" showPulse className="mb-4" />
-          <p className="text-white/80">Carregando empresas...</p>
+      <Layout currentPage="Empresas">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <AnimatedLogo size="lg" showPulse className="mb-4" />
+            <p className="text-white/80">Carregando empresas...</p>
+          </div>
         </div>
-      </div>
+      </Layout>
     );
   }
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Card className="glassmorphism border-red-500/20">
-          <CardContent className="pt-6 text-center">
-            <p className="text-red-400">Erro ao carregar empresas</p>
-            <p className="text-gray-400 text-sm mt-2">
-              Verifique sua conexão e tente novamente
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+      <Layout currentPage="Empresas">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <Card className="glassmorphism border-red-500/20">
+            <CardContent className="pt-6 text-center">
+              <p className="text-red-400">Erro ao carregar empresas</p>
+              <p className="text-gray-400 text-sm mt-2">
+                Verifique sua conexão e tente novamente
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </Layout>
     );
   }
 
@@ -127,15 +132,15 @@ export default function CompaniesPage() {
   const total = companyData?.total || 0;
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold text-white">Empresas</h1>
-          <p className="text-gray-400 text-sm">
-            Gerencie as empresas cadastradas no sistema
-          </p>
-        </div>
+    <Layout currentPage="Empresas">
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-gray-400 text-sm">
+              Gerencie as empresas cadastradas no sistema
+            </p>
+          </div>
         <Badge variant="secondary" className="text-primary">
           {total} {total === 1 ? "empresa" : "empresas"}
         </Badge>
@@ -357,6 +362,7 @@ export default function CompaniesPage() {
           )}
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </Layout>
   );
 }
