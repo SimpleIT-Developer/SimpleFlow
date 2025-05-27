@@ -16,7 +16,7 @@ const PERIOD_BUTTONS = [
   { key: 'yearly', label: 'Anual' }
 ];
 
-const PIE_COLORS = ['#8b5cf6', '#06b6d4'];
+const PIE_COLORS = ['#3b82f6', '#ef4444']; // Azul e Vermelho
 
 function formatCurrency(value: number): string {
   return new Intl.NumberFormat('pt-BR', {
@@ -54,7 +54,7 @@ export default function DashboardPage() {
 
   // Dados para o gráfico de pizza
   const pieData = stats ? [
-    { name: 'NFe', value: stats.nfeRecebidas, color: PIE_COLORS[0] },
+    { name: 'DOC (NFe)', value: stats.nfeRecebidas, color: PIE_COLORS[0] },
     { name: 'NFSe', value: stats.nfseRecebidas, color: PIE_COLORS[1] }
   ] : [];
 
@@ -172,8 +172,8 @@ export default function DashboardPage() {
                         }} 
                       />
                       <Legend />
-                      <Bar dataKey="nfe" fill="#8b5cf6" name="NFe" />
-                      <Bar dataKey="nfse" fill="#06b6d4" name="NFSe" />
+                      <Bar dataKey="nfe" fill="#3b82f6" name="DOC (NFe)" />
+                      <Bar dataKey="nfse" fill="#ef4444" name="NFSe" />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>

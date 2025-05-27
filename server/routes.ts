@@ -559,19 +559,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const [nfeData] = await mysqlPool.execute(`
         SELECT DATE_FORMAT(doc_date_emi, ?) as date, COUNT(*) as count 
         FROM doc 
-        WHERE doc_date_emi >= DATE_SUB(NOW(), INTERVAL ${interval})
+        WHERE doc_date_emi IS NOT NULL AND doc_date_emi >= DATE_SUB(NOW(), INTERVAL ${interval})
         GROUP BY DATE_FORMAT(doc_date_emi, ?)
-        ORDER BY date DESC
-        LIMIT 10
+        ORDER BY date ASC
+        LIMIT 20
       `, [dateFormat, dateFormat]) as any;
 
       const [nfseData] = await mysqlPool.execute(`
         SELECT DATE_FORMAT(nfse_data_hora, ?) as date, COUNT(*) as count 
         FROM nfse 
-        WHERE nfse_data_hora >= DATE_SUB(NOW(), INTERVAL ${interval})
+        WHERE nfse_data_hora IS NOT NULL AND nfse_data_hora >= DATE_SUB(NOW(), INTERVAL ${interval})
         GROUP BY DATE_FORMAT(nfse_data_hora, ?)
-        ORDER BY date DESC
-        LIMIT 10
+        ORDER BY date ASC
+        LIMIT 20
       `, [dateFormat, dateFormat]) as any;
 
       // Combina os dados
