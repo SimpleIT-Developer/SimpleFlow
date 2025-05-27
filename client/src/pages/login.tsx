@@ -51,7 +51,10 @@ export default function LoginPage() {
         title: "Login realizado com sucesso!",
         description: `Bem-vindo, ${data.user.name}!`,
       });
-      setLocation("/dashboard");
+      // Aguarda 10 segundos para mostrar o logo animado antes de redirecionar
+      setTimeout(() => {
+        setLocation("/dashboard");
+      }, 10000);
     },
     onError: (error: any) => {
       toast({
