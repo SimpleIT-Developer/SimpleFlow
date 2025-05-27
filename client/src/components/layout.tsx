@@ -86,7 +86,7 @@ export function Layout({ children, currentPage }: LayoutProps) {
           <div className="flex items-center space-x-3 mb-8">
             <AnimatedLogo size="sm" />
             <div>
-              <h2 className="text-white font-semibold">SimpleDoc</h2>
+              <h2 className="text-white font-semibold">SimpleDFe</h2>
               <p className="text-gray-400 text-xs">v1.0.0</p>
             </div>
           </div>
@@ -159,7 +159,6 @@ export function Layout({ children, currentPage }: LayoutProps) {
           </nav>
         </div>
       </div>
-
       {/* Main Content */}
       <div className="ml-64 flex flex-col min-h-screen">
         {/* Top Bar */}

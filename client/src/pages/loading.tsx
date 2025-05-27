@@ -1,17 +1,32 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { AnimatedLogo } from "@/components/animated-logo";
 
 export default function LoadingPage() {
   const [, setLocation] = useLocation();
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    // Aguarda 10 segundos mostrando o logo animado antes de ir para o dashboard
-    const timer = setTimeout(() => {
+    // Animação da barra de progresso
+    const progressInterval = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(progressInterval);
+          return 100;
+        }
+        return prev + 1; // Incrementa 1% a cada 100ms (10 segundos total)
+      });
+    }, 100);
+
+    // Timer para redirecionar após 10 segundos
+    const redirectTimer = setTimeout(() => {
       setLocation("/dashboard");
     }, 10000);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearInterval(progressInterval);
+      clearTimeout(redirectTimer);
+    };
   }, [setLocation]);
 
   return (
@@ -24,12 +39,21 @@ export default function LoadingPage() {
         <div className="space-y-4">
           <h1 className="text-4xl font-bold text-white">SimpleDoc</h1>
           <p className="text-xl text-gray-300">Sistema de Gestão Inteligente</p>
-          <p className="text-gray-400">Carregando...</p>
+          <p className="text-gray-400">Carregando... {progress}%</p>
         </div>
 
-        {/* Indicador de Progresso */}
-        <div className="w-64 bg-gray-700/50 rounded-full h-2 overflow-hidden">
-          <div className="h-full bg-gradient-to-r from-primary to-secondary rounded-full animate-pulse"></div>
+        {/* Barra de Progresso Animada */}
+        <div className="w-64 space-y-2">
+          <div className="w-full bg-gray-700/50 rounded-full h-3 overflow-hidden">
+            <div 
+              className="h-full bg-gradient-to-r from-primary to-secondary rounded-full transition-all duration-100 ease-out"
+              style={{ width: `${progress}%` }}
+            ></div>
+          </div>
+          <div className="flex justify-between text-xs text-gray-400">
+            <span>0%</span>
+            <span>100%</span>
+          </div>
         </div>
       </div>
     </div>
