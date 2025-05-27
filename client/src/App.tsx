@@ -9,6 +9,7 @@ import { ProtectedRoute } from "@/components/protected-route";
 import LoginPage from "@/pages/login";
 import RegisterPage from "@/pages/register";
 import DashboardPage from "@/pages/dashboard";
+import CompaniesPage from "@/pages/companies";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -19,6 +20,11 @@ function Router() {
       <Route path="/dashboard">
         <ProtectedRoute>
           <DashboardPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/companies">
+        <ProtectedRoute>
+          <CompaniesPage />
         </ProtectedRoute>
       </Route>
       <Route path="/">

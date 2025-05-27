@@ -51,12 +51,13 @@ export function Layout({ children, currentPage }: LayoutProps) {
     );
   }
 
-  const user = userData?.user;
+  const user = userData && 'user' in userData ? userData.user : null;
   const userInitials = user?.name
-    ?.split(" ")
-    .map((n: string) => n[0])
-    .join("")
-    .toUpperCase() || "U";
+    ? user.name.split(" ")
+        .map((n: string) => n[0])
+        .join("")
+        .toUpperCase()
+    : "U";
 
   const handleLogout = () => {
     logoutMutation.mutate();
