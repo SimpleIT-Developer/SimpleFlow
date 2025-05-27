@@ -504,13 +504,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Dashboard endpoints
   app.get("/api/dashboard/stats", authenticateToken, async (req: any, res) => {
     try {
-      // Consultas para obter estatísticas
-      const [totalCNPJResult] = await mysqlPool.execute('SELECT COUNT(DISTINCT company_cpf_cnpj) as total FROM companies') as any;
-      const [nfeRecebidasResult] = await mysqlPool.execute('SELECT COUNT(*) as total FROM nfe_recebidas') as any;
-      const [nfeIntegradasResult] = await mysqlPool.execute('SELECT COUNT(*) as total FROM nfe_recebidas WHERE doc_status_integracao = 1') as any;
+      // Consultas para obter estatísticas usando as tabelas corretas
+      const [totalCNPJResult] = await mysqlPool.execute('SELECT COUNT(*) as total FROM company') as any;
+      const [nfeRecebidasResult] = await mysqlPool.execute('SELECT COUNT(*) as total FROM doc') as any;
+      const [nfeIntegradasResult] = await mysqlPool.execute('SELECT COUNT(*) as total FROM doc WHERE nfse_status_integracao = 1') as any;
       const [nfseRecebidasResult] = await mysqlPool.execute('SELECT COUNT(*) as total FROM nfse') as any;
       const [nfseIntegradasResult] = await mysqlPool.execute('SELECT COUNT(*) as total FROM nfse WHERE nfse_status_integracao = 1') as any;
-      const [fornecedoresSemERPResult] = await mysqlPool.execute('SELECT COUNT(DISTINCT doc_emit_documento) as total FROM nfe_recebidas WHERE doc_status_integracao = 0') as any;
+      const [fornecedoresSemERPResult] = await mysqlPool.execute('SELECT COUNT(*) as total FROM simplefcfo WHERE codigo_erp IS NULL OR codigo_erp = ""') as any;
 
       const stats = {
         totalCNPJ: totalCNPJResult[0]?.total || 0,
@@ -558,7 +558,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const [nfeData] = await mysqlPool.execute(`
         SELECT DATE_FORMAT(doc_date_emi, ?) as date, COUNT(*) as count 
-        FROM nfe_recebidas 
+        FROM doc 
         WHERE doc_date_emi >= DATE_SUB(NOW(), INTERVAL ${interval})
         GROUP BY DATE_FORMAT(doc_date_emi, ?)
         ORDER BY date DESC
@@ -606,9 +606,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const [nfeData] = await mysqlPool.execute(`
         SELECT 'NF-e' as tipo, doc_emit_nome as emitente, doc_valor as valor, 
                doc_date_emi as data, 
-               CASE WHEN doc_status_integracao = 1 THEN 'Integrado' ELSE 'Não Integrado' END as status,
+               CASE WHEN nfse_status_integracao = 1 THEN 'Integrado' ELSE 'Não Integrado' END as status,
                doc_num as numero
-        FROM nfe_recebidas 
+        FROM doc 
         ORDER BY doc_date_emi DESC 
         LIMIT 5
       `) as any;
@@ -647,7 +647,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const [cnpjData] = await mysqlPool.execute(`
         SELECT company_cpf_cnpj as cnpj, company_name as nome, 
                'Ativo' as status, NOW() as ultimaCaptura
-        FROM companies 
+        FROM company 
         ORDER BY company_name 
         LIMIT 10
       `) as any;
