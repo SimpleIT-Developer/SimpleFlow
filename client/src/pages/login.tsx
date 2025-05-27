@@ -30,15 +30,17 @@ export default function LoginPage() {
   // Listener para a combinação de teclas CTRL + ALT + SHIFT + 9
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.ctrlKey && event.altKey && event.shiftKey && event.key === '9') {
+      if (event.ctrlKey && event.altKey && event.shiftKey && (event.key === '9' || event.code === 'Digit9')) {
+        event.preventDefault();
         setShowRegisterLink(true);
+        console.log('Combinação de teclas detectada - Link de registro ativado');
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('keydown', handleKeyDown);
     
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
 
