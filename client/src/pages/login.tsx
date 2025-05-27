@@ -51,10 +51,8 @@ export default function LoginPage() {
         title: "Login realizado com sucesso!",
         description: `Bem-vindo, ${data.user.name}!`,
       });
-      // Aguarda 10 segundos para mostrar o logo animado antes de redirecionar
-      setTimeout(() => {
-        setLocation("/dashboard");
-      }, 10000);
+      // Redireciona para a tela de loading que mostra o logo animado por 10 segundos
+      setLocation("/loading");
     },
     onError: (error: any) => {
       toast({
@@ -75,7 +73,7 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="text-center">
           <AnimatedLogo size="lg" showPulse className="mb-4" />
-          <h1 className="text-3xl font-bold text-white">SimpleDoc</h1>
+          <h1 className="text-3xl font-bold text-white">SimpleDFe</h1>
           <p className="text-gray-300 mt-2">Sistema de Gestão Inteligente</p>
         </div>
 
