@@ -7,7 +7,7 @@ const createTransporter = () => {
     service: 'gmail',
     auth: {
       user: process.env.EMAIL_USER || 'simpleit.solucoes@gmail.com',
-      pass: process.env.EMAIL_PASSWORD || '@n@R@quel110987'
+      pass: process.env.EMAIL_PASSWORD || 'lfkf lena uqhe ffsz'
     }
   });
 };
