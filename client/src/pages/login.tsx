@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
@@ -17,6 +17,7 @@ export default function LoginPage() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [rememberMe, setRememberMe] = useState(false);
+  const [showRegisterLink, setShowRegisterLink] = useState(false);
 
   const form = useForm<LoginData>({
     resolver: zodResolver(loginSchema),
@@ -25,6 +26,21 @@ export default function LoginPage() {
       password: "",
     },
   });
+
+  // Listener para a combinação de teclas CTRL + ALT + SHIFT + 9
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.ctrlKey && event.altKey && event.shiftKey && event.key === '9') {
+        setShowRegisterLink(true);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
 
   const loginMutation = useMutation({
     mutationFn: login,
@@ -137,16 +153,18 @@ export default function LoginPage() {
                 </Button>
               </form>
 
-              <div className="text-center">
-                <p className="text-gray-300 text-sm">
-                  Não tem uma conta?{" "}
-                  <Link href="/register">
-                    <span className="text-primary hover:text-secondary font-medium transition-colors cursor-pointer">
-                      Criar conta
-                    </span>
-                  </Link>
-                </p>
-              </div>
+              {showRegisterLink && (
+                <div className="text-center">
+                  <p className="text-gray-300 text-sm">
+                    Não tem uma conta?{" "}
+                    <Link href="/register">
+                      <span className="text-primary hover:text-secondary font-medium transition-colors cursor-pointer">
+                        Criar conta
+                      </span>
+                    </Link>
+                  </p>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
