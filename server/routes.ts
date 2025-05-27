@@ -528,58 +528,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Rota para obter dados do gráfico de barras
+  // Rota para obter dados do gráfico de barras - Resumo dos Documentos Fiscais
   app.get("/api/dashboard/chart/:period", authenticateToken, async (req: any, res) => {
     try {
       const { period } = req.params;
-      let dateFormat, interval;
+      let dateFormat, groupBy, interval;
       
       switch (period) {
         case 'daily':
-          dateFormat = '%Y-%m-%d';
-          interval = '7 DAY';
+          dateFormat = '%d/%m/%Y';
+          groupBy = 'DATE(doc_date_emi)';
+          interval = '30 DAY';
           break;
         case 'weekly':
-          dateFormat = '%Y-%u';
-          interval = '8 WEEK';
+          dateFormat = 'Semana %u/%Y';
+          groupBy = 'YEARWEEK(doc_date_emi)';
+          interval = '12 WEEK';
           break;
         case 'monthly':
-          dateFormat = '%Y-%m';
+          dateFormat = '%m/%Y';
+          groupBy = 'YEAR(doc_date_emi), MONTH(doc_date_emi)';
           interval = '12 MONTH';
           break;
         case 'yearly':
           dateFormat = '%Y';
+          groupBy = 'YEAR(doc_date_emi)';
           interval = '5 YEAR';
           break;
         default:
-          dateFormat = '%Y-%m-%d';
-          interval = '7 DAY';
+          dateFormat = '%d/%m/%Y';
+          groupBy = 'DATE(doc_date_emi)';
+          interval = '30 DAY';
       }
 
-      const [nfeData] = await mysqlPool.execute(`
+      // Consulta tabela DOC por data de emissão
+      const [docData] = await mysqlPool.execute(`
         SELECT DATE_FORMAT(doc_date_emi, ?) as date, COUNT(*) as count 
         FROM doc 
-        WHERE doc_date_emi IS NOT NULL AND doc_date_emi >= DATE_SUB(NOW(), INTERVAL ${interval})
-        GROUP BY DATE_FORMAT(doc_date_emi, ?)
-        ORDER BY date ASC
+        WHERE doc_date_emi IS NOT NULL 
+          AND doc_date_emi >= DATE_SUB(NOW(), INTERVAL ${interval})
+        GROUP BY ${groupBy}
+        ORDER BY doc_date_emi ASC
         LIMIT 20
-      `, [dateFormat, dateFormat]) as any;
+      `, [dateFormat]) as any;
 
+      // Consulta tabela NFSE por data de emissão  
       const [nfseData] = await mysqlPool.execute(`
         SELECT DATE_FORMAT(nfse_data_hora, ?) as date, COUNT(*) as count 
         FROM nfse 
-        WHERE nfse_data_hora IS NOT NULL AND nfse_data_hora >= DATE_SUB(NOW(), INTERVAL ${interval})
-        GROUP BY DATE_FORMAT(nfse_data_hora, ?)
-        ORDER BY date ASC
+        WHERE nfse_data_hora IS NOT NULL 
+          AND nfse_data_hora >= DATE_SUB(NOW(), INTERVAL ${interval})
+        GROUP BY YEAR(nfse_data_hora), MONTH(nfse_data_hora), DAY(nfse_data_hora)
+        ORDER BY nfse_data_hora ASC
         LIMIT 20
-      `, [dateFormat, dateFormat]) as any;
+      `, [dateFormat]) as any;
 
       // Combina os dados das tabelas DOC e NFSE
       const chartData: any[] = [];
       const dateMap: any = {};
 
-      // Processa dados da tabela DOC (NFe)
-      nfeData.forEach((item: any) => {
+      console.log('DOC Data:', docData);
+      console.log('NFSE Data:', nfseData);
+
+      // Processa dados da tabela DOC
+      docData.forEach((item: any) => {
         dateMap[item.date] = { date: item.date, doc: item.count, nfse: 0 };
       });
 
@@ -592,11 +604,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
 
-      // Converte para array e ordena
+      // Converte para array
       Object.values(dateMap).forEach((item: any) => chartData.push(item));
-      chartData.sort((a: any, b: any) => a.date.localeCompare(b.date));
 
-      res.json(chartData.slice(0, 15));
+      console.log('Chart Data Final:', chartData);
+
+      res.json(chartData);
     } catch (error) {
       console.error('Erro ao obter dados do gráfico:', error);
       res.status(500).json({ message: 'Erro interno do servidor' });
