@@ -467,7 +467,7 @@ export default function NFeRecebidasPage() {
             {totalPages > 1 && (
               <div className="flex items-center justify-between mt-6 pt-4 border-t border-white/10">
                 <div className="text-gray-400 text-sm">
-                  Página {page} de {totalPages} • {total} {total === 1 ? "NFe" : "NFes"}
+                  Mostrando {((page - 1) * limit) + 1} a {Math.min(page * limit, total)} de {total} {total === 1 ? "registro" : "registros"} • Página {page} de {totalPages}
                 </div>
                 <div className="flex items-center space-x-2">
                   <Button
