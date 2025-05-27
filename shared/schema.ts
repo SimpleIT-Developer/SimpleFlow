@@ -131,3 +131,29 @@ export interface NFSeResponse {
   totalPages: number;
   limit: number;
 }
+
+// Usuários interfaces
+export interface Usuario {
+  id: number;
+  nome: string;
+  email: string;
+  tipo: string;
+  ativo: number;
+}
+
+export interface UsuarioFilters {
+  search?: string;
+  status?: 'all' | 'active' | 'inactive';
+  page?: number;
+  limit?: number;
+  sortBy?: keyof Usuario;
+  sortOrder?: 'asc' | 'desc';
+}
+
+export interface UsuarioResponse {
+  usuarios: Usuario[];
+  total: number;
+  page: number;
+  totalPages: number;
+  limit: number;
+}

@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { loginSchema, registerSchema, type Company, type CompanyFilters, type CompanyResponse, type NFeRecebida, type NFeFilters, type NFeResponse, type NFSeRecebida, type NFSeResponse } from "@shared/schema";
+import { loginSchema, registerSchema, type Company, type CompanyFilters, type CompanyResponse, type NFeRecebida, type NFeFilters, type NFeResponse, type NFSeRecebida, type NFSeResponse, type Usuario, type UsuarioResponse } from "@shared/schema";
 import { z } from "zod";
 import { mysqlPool, testMysqlConnection } from "./mysql-config";
 
@@ -448,6 +448,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Erro ao buscar NFSe recebidas:", error);
       res.status(500).json({ message: "Erro ao buscar NFSe recebidas" });
+    }
+  });
+
+  // Usuários endpoints
+  app.get("/api/usuarios", authenticateToken, async (req: any, res) => {
+    try {
+      const {
+        search = "",
+        status = "all",
+        page = "1",
+        limit = "10",
+        sortBy = "nome",
+        sortOrder = "asc"
+      } = req.query;
+
+      const offset = (parseInt(page) - 1) * parseInt(limit);
+      
+      // Build search conditions
+      let whereClause = "";
+      const queryParams = [];
+
+      if (search) {
+        whereClause = "WHERE (nome LIKE ? OR email LIKE ? OR tipo LIKE ?)";
+        queryParams.push(`%${search}%`, `%${search}%`, `%${search}%`);
+      }
+
+      // Count total records
+      const countQuery = `SELECT COUNT(*) as total FROM usuarios ${whereClause}`;
+      const [countResult] = await mysqlPool.execute(countQuery, queryParams) as any;
+      const total = countResult[0].total;
+
+      // Get usuarios with pagination and sorting  
+      const dataQuery = `SELECT id, nome, email, tipo, ativo FROM usuarios ${whereClause} ORDER BY ${sortBy} ${sortOrder.toUpperCase()} LIMIT ${parseInt(limit)} OFFSET ${offset}`;
+      
+      const [usuarios] = await mysqlPool.execute(dataQuery, queryParams) as any;
+
+      const totalPages = Math.ceil(total / parseInt(limit));
+
+      const response: UsuarioResponse = {
+        usuarios: usuarios,
+        total,
+        page: parseInt(page),
+        totalPages,
+        limit: parseInt(limit)
+      };
+
+      res.json(response);
+    } catch (error) {
+      console.error("Erro ao buscar usuários:", error);
+      res.status(500).json({ message: "Erro ao buscar usuários" });
     }
   });
 
