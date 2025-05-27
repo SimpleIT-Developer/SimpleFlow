@@ -2,12 +2,17 @@ import nodemailer from 'nodemailer';
 
 // Configuração do transporte de email
 const createTransporter = () => {
-  // Configuração para Gmail (pode ser alterada para outros provedores)
+  // Configuração alternativa para Gmail com configurações mais específicas
   return nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false, // true para 465, false para outras portas
     auth: {
-      user: process.env.EMAIL_USER || 'simpleit.solucoes@gmail.com',
-      pass: process.env.EMAIL_PASSWORD || 'lfkf lena uqhe ffsz'
+      user: 'simpleit.solucoes@gmail.com',
+      pass: 'lfkfleuauqheffsz' // Senha de app sem espaços
+    },
+    tls: {
+      rejectUnauthorized: false
     }
   });
 };
@@ -242,7 +247,7 @@ export async function sendWelcomeEmail(userName: string, userEmail: string): Pro
     const transporter = createTransporter();
     
     const mailOptions = {
-      from: process.env.EMAIL_USER || 'simpleit.solucoes@gmail.com',
+      from: '"SimpleDFe" <simpleit.solucoes@gmail.com>',
       to: userEmail,
       subject: '🎉 Bem-vindo ao SimpleDFe - Sua conta foi criada com sucesso!',
       html: getWelcomeEmailTemplate(userName, userEmail)
