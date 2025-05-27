@@ -6,8 +6,8 @@ const createTransporter = () => {
   return nodemailer.createTransport({
     service: 'gmail',
     auth: {
-      user: process.env.EMAIL_USER || 'seu-email@gmail.com',
-      pass: process.env.EMAIL_PASSWORD || 'sua-senha-de-app'
+      user: process.env.EMAIL_USER || 'simpleit.solucoes@gmail.com',
+      pass: process.env.EMAIL_PASSWORD || '@n@R@quel110987'
     }
   });
 };
@@ -242,7 +242,7 @@ export async function sendWelcomeEmail(userName: string, userEmail: string): Pro
     const transporter = createTransporter();
     
     const mailOptions = {
-      from: process.env.EMAIL_USER || 'noreply@simpledfe.com.br',
+      from: process.env.EMAIL_USER || 'simpleit.solucoes@gmail.com',
       to: userEmail,
       subject: '🎉 Bem-vindo ao SimpleDFe - Sua conta foi criada com sucesso!',
       html: getWelcomeEmailTemplate(userName, userEmail)
