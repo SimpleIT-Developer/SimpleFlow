@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Edit, Trash2, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Filter, Plus } from "lucide-react";
+import { Edit, Trash2, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Filter, Plus, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { Usuario, UsuarioResponse } from "@shared/schema";
 
@@ -18,8 +18,8 @@ export default function UsuariosPage() {
   const [status, setStatus] = useState("all");
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
-  const [sortBy] = useState("nome");
-  const [sortOrder] = useState("asc");
+  const [sortBy, setSortBy] = useState("nome");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
   const { data: usuarioData, isLoading, error } = useQuery({
     queryKey: ["/api/usuarios", { 
@@ -81,156 +81,249 @@ export default function UsuariosPage() {
     setPage(1);
   };
 
+  // Função para ordenação de colunas
+  const handleSort = (column: string) => {
+    if (sortBy === column) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortBy(column);
+      setSortOrder("asc");
+    }
+    setPage(1);
+  };
+
+  // Função para renderizar ícone de ordenação
+  const renderSortIcon = (column: string) => {
+    if (sortBy !== column) {
+      return <ArrowUpDown className="w-4 h-4 ml-1 text-gray-500" />;
+    }
+    return sortOrder === "asc" 
+      ? <ArrowUp className="w-4 h-4 ml-1 text-primary" />
+      : <ArrowDown className="w-4 h-4 ml-1 text-primary" />;
+  };
+
+  // Função de busca com debounce
+  const handleSearch = (value: string) => {
+    setSearch(value);
+    setPage(1);
+  };
+
   return (
     <Layout currentPage="Usuários">
       <div className="space-y-6">
+        {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-white">Usuários</h1>
-            <p className="text-gray-400 mt-2">Gerencie os usuários do sistema</p>
+            <p className="text-gray-400 text-sm">
+              Gerencie os usuários do sistema
+            </p>
           </div>
-          <Button 
-            onClick={handleNewUser}
-            className="bg-primary hover:bg-primary/90 text-white"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Novo Usuário
-          </Button>
+          <div className="flex items-center gap-4">
+            <Badge variant="secondary" className="text-primary">
+              {total} {total === 1 ? "usuário" : "usuários"}
+            </Badge>
+            <Button 
+              onClick={handleNewUser}
+              className="bg-primary hover:bg-primary/90 text-white"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Novo Usuário
+            </Button>
+          </div>
         </div>
 
-        <Card className="bg-gray-800/50 border-white/10">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <Filter className="w-5 h-5" />
-              Filtros
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="Buscar por nome, e-mail, tipo..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="pl-10 bg-gray-700/50 border-white/20 text-white placeholder:text-gray-400"
-                />
+        {/* Search and Filters */}
+        <Card className="glassmorphism border-white/20">
+          <CardContent className="pt-6">
+            <div className="space-y-4">
+              {/* Search Bar */}
+              <div className="flex items-center space-x-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Input
+                    placeholder="Buscar em todos os campos..."
+                    value={search}
+                    onChange={(e) => handleSearch(e.target.value)}
+                    className="pl-10 bg-white/10 border-white/20 text-white placeholder-gray-400"
+                  />
+                </div>
               </div>
-              
-              <Select value={status} onValueChange={setStatus}>
-                <SelectTrigger className="bg-gray-700/50 border-white/20 text-white">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os Status</SelectItem>
-                  <SelectItem value="active">Ativo</SelectItem>
-                  <SelectItem value="inactive">Inativo</SelectItem>
-                </SelectContent>
-              </Select>
 
-              <div></div>
+              {/* Filters */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <Select value={status} onValueChange={(value: any) => setStatus(value)}>
+                  <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="active">Ativo</SelectItem>
+                    <SelectItem value="inactive">Inativo</SelectItem>
+                  </SelectContent>
+                </Select>
 
-              <Button 
-                variant="outline" 
-                onClick={handleClearFilters}
-                className="border-white/20 text-white hover:bg-white/10"
-              >
-                Limpar Filtros
-              </Button>
+                <div></div>
+                <div></div>
+
+                <Button 
+                  variant="outline" 
+                  onClick={handleClearFilters}
+                  className="border-white/20 text-white hover:bg-white/10"
+                >
+                  Limpar Filtros
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gray-800/50 border-white/10">
-          <CardHeader>
-            <CardTitle className="text-white">
-              Usuários ({total} {total === 1 ? "registro" : "registros"})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+        {/* Data Grid */}
+        <Card className="glassmorphism border-white/20">
+          <CardContent className="pt-6">
             <div className="overflow-x-auto">
               {isLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="text-white">Carregando usuários...</div>
+                <div className="flex items-center justify-center min-h-[400px]">
+                  <Card className="glassmorphism border-blue-500/20">
+                    <CardContent className="pt-6 text-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                      <p className="text-white">Carregando usuários...</p>
+                    </CardContent>
+                  </Card>
                 </div>
               ) : error ? (
-                <div className="flex flex-col items-center justify-center py-8 text-center">
-                  <div className="text-red-400 mb-2">Erro ao carregar usuários</div>
-                  <div className="text-gray-400 text-sm">Verifique sua conexão e tente novamente</div>
+                <div className="flex items-center justify-center min-h-[400px]">
+                  <Card className="glassmorphism border-red-500/20">
+                    <CardContent className="pt-6 text-center">
+                      <p className="text-red-400">Erro ao carregar usuários</p>
+                      <p className="text-gray-400 text-sm mt-2">
+                        Verifique sua conexão e tente novamente
+                      </p>
+                    </CardContent>
+                  </Card>
                 </div>
               ) : usuarios.length === 0 ? (
-                <div className="flex items-center justify-center py-8">
-                  <p className="text-gray-400">
-                    {search || status !== "all"
-                      ? "Nenhum usuário encontrado com os filtros aplicados."
-                      : "Nenhum usuário encontrado."}
-                  </p>
+                <div className="flex items-center justify-center min-h-[400px]">
+                  <Card className="glassmorphism border-yellow-500/20">
+                    <CardContent className="pt-6 text-center">
+                      <p className="text-yellow-400">
+                        {search || status !== "all"
+                          ? "Nenhum usuário encontrado com os filtros aplicados"
+                          : "Nenhum usuário encontrado"}
+                      </p>
+                      <p className="text-gray-400 text-sm mt-2">
+                        {search || status !== "all"
+                          ? "Tente ajustar os filtros de busca"
+                          : "Clique em 'Novo Usuário' para adicionar o primeiro usuário"}
+                      </p>
+                    </CardContent>
+                  </Card>
                 </div>
               ) : (
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-white/10">
-                      <th className="text-left py-3 px-4 text-white font-medium">ID</th>
-                      <th className="text-left py-3 px-4 text-white font-medium">Nome</th>
-                      <th className="text-left py-3 px-4 text-white font-medium">E-mail</th>
-                      <th className="text-left py-3 px-4 text-white font-medium">Tipo</th>
-                      <th className="text-left py-3 px-4 text-white font-medium">Status</th>
-                      <th className="text-left py-3 px-4 text-white font-medium">Ações</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {usuarios.map((usuario: Usuario, index: number) => (
-                      <tr key={index} className="border-b border-white/5 hover:bg-white/5">
-                        <td className="py-3 px-4 text-gray-300 font-mono">
-                          {usuario.id}
-                        </td>
-                        <td className="py-3 px-4 text-gray-300">
-                          {usuario.nome}
-                        </td>
-                        <td className="py-3 px-4 text-gray-300">
-                          {usuario.email}
-                        </td>
-                        <td className="py-3 px-4 text-gray-300">
-                          {usuario.tipo}
-                        </td>
-                        <td className="py-3 px-4">
-                          <Badge
-                            variant={usuario.ativo === 1 ? "default" : "secondary"}
-                            className={
-                              usuario.ativo === 1
-                                ? "bg-green-500/20 text-green-400 border-green-500/30"
-                                : "bg-red-500/20 text-red-400 border-red-500/30"
-                            }
-                          >
-                            {usuario.ativo === 1 ? "Ativo" : "Inativo"}
-                          </Badge>
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="flex space-x-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleEdit(usuario)}
-                              className="border-blue-500/30 text-blue-400 hover:bg-blue-500/20"
-                              title="Editar"
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleDelete(usuario)}
-                              className="border-red-500/30 text-red-400 hover:bg-red-500/20"
-                              title="Excluir"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
+                <div className="bg-white/5 rounded-lg overflow-hidden">
+                  <table className="w-full">
+                    <thead className="bg-white/10">
+                      <tr>
+                        <th 
+                          className="text-left py-4 px-6 text-white font-medium cursor-pointer hover:bg-white/5 transition-colors"
+                          onClick={() => handleSort("id")}
+                        >
+                          <div className="flex items-center">
+                            ID
+                            {renderSortIcon("id")}
                           </div>
-                        </td>
+                        </th>
+                        <th 
+                          className="text-left py-4 px-6 text-white font-medium cursor-pointer hover:bg-white/5 transition-colors"
+                          onClick={() => handleSort("nome")}
+                        >
+                          <div className="flex items-center">
+                            Nome
+                            {renderSortIcon("nome")}
+                          </div>
+                        </th>
+                        <th 
+                          className="text-left py-4 px-6 text-white font-medium cursor-pointer hover:bg-white/5 transition-colors"
+                          onClick={() => handleSort("email")}
+                        >
+                          <div className="flex items-center">
+                            E-mail
+                            {renderSortIcon("email")}
+                          </div>
+                        </th>
+                        <th className="text-left py-4 px-6 text-white font-medium">Tipo</th>
+                        <th 
+                          className="text-left py-4 px-6 text-white font-medium cursor-pointer hover:bg-white/5 transition-colors"
+                          onClick={() => handleSort("ativo")}
+                        >
+                          <div className="flex items-center">
+                            Status
+                            {renderSortIcon("ativo")}
+                          </div>
+                        </th>
+                        <th className="text-left py-4 px-6 text-white font-medium">Ações</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {usuarios.map((usuario: Usuario, index: number) => (
+                        <tr 
+                          key={usuario.id} 
+                          className="border-b border-white/5 hover:bg-white/5 transition-colors"
+                        >
+                          <td className="py-4 px-6 text-gray-300 font-mono text-sm">
+                            #{usuario.id}
+                          </td>
+                          <td className="py-4 px-6">
+                            <div className="flex flex-col">
+                              <span className="text-white font-medium">{usuario.nome}</span>
+                            </div>
+                          </td>
+                          <td className="py-4 px-6 text-gray-300 text-sm">
+                            {usuario.email}
+                          </td>
+                          <td className="py-4 px-6">
+                            <Badge variant="outline" className="border-blue-500/30 text-blue-400">
+                              {usuario.tipo}
+                            </Badge>
+                          </td>
+                          <td className="py-4 px-6">
+                            <Badge
+                              variant={usuario.ativo === 1 ? "default" : "secondary"}
+                              className={
+                                usuario.ativo === 1
+                                  ? "bg-green-500/20 text-green-400 border-green-500/30"
+                                  : "bg-red-500/20 text-red-400 border-red-500/30"
+                              }
+                            >
+                              {usuario.ativo === 1 ? "Ativo" : "Inativo"}
+                            </Badge>
+                          </td>
+                          <td className="py-4 px-6">
+                            <div className="flex space-x-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleEdit(usuario)}
+                                className="border-blue-500/30 text-blue-400 hover:bg-blue-500/20"
+                                title="Editar"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleDelete(usuario)}
+                                className="border-red-500/30 text-red-400 hover:bg-red-500/20"
+                                title="Excluir"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </div>
 
