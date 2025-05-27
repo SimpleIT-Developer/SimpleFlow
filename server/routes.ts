@@ -256,6 +256,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // NFe Recebidas endpoints
   app.get("/api/nfe-recebidas", authenticateToken, async (req: any, res) => {
     try {
+      console.log("NFe Recebidas - Starting request");
       const {
         search = "",
         status = "all",
@@ -268,6 +269,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         sortBy = "doc_num",
         sortOrder = "desc"
       } = req.query;
+      
+      console.log("NFe Recebidas - Query params:", { search, status, empresa, fornecedor, dataInicio, dataFim, page, limit, sortBy, sortOrder });
 
       const offset = (parseInt(page) - 1) * parseInt(limit);
       
@@ -338,14 +341,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         FROM doc 
         ${whereClause}
         ORDER BY ${sortBy} ${sortOrder.toUpperCase()}
-        LIMIT ? OFFSET ?
+        LIMIT ${parseInt(limit)} OFFSET ${offset}
       `;
 
-      const [nfes] = await mysqlPool.execute(dataQuery, [
-        ...searchParams,
-        parseInt(limit),
-        offset
-      ]) as any;
+      const [nfes] = await mysqlPool.execute(dataQuery, searchParams) as any;
 
       const totalPages = Math.ceil(total / parseInt(limit));
 
