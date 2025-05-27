@@ -59,44 +59,28 @@ export default function NFSeRecebidasPage() {
   const [sortBy] = useState("nfse_data_hora");
   const [sortOrder] = useState("desc");
 
-  // Query para buscar NFSes
+  // Query para buscar NFSes - usando a mesma estrutura que funciona para NFe
   const { data, isLoading, error } = useQuery({
-    queryKey: [
-      '/api/nfse-recebidas', 
-      search, 
-      status, 
-      empresa, 
-      fornecedor, 
-      local,
-      dataInicio, 
-      dataFim, 
-      page, 
-      limit, 
-      sortBy, 
-      sortOrder 
-    ],
+    queryKey: ['/api/nfse-recebidas', search, status, empresa, fornecedor, local, dataInicio, dataFim, page, limit, sortBy, sortOrder],
     queryFn: async () => {
-      const params = new URLSearchParams({
-        search,
-        status,
-        empresa,
-        fornecedor,
-        local,
-        dataInicio,
-        dataFim,
-        page: page.toString(),
-        limit: limit.toString(),
-        sortBy,
-        sortOrder
-      });
+      const params = new URLSearchParams();
+      if (search) params.append('search', search);
+      if (status && status !== 'all') params.append('status', status);
+      if (empresa) params.append('empresa', empresa);
+      if (fornecedor) params.append('fornecedor', fornecedor);
+      if (local) params.append('local', local);
+      if (dataInicio) params.append('dataInicio', dataInicio);
+      if (dataFim) params.append('dataFim', dataFim);
+      params.append('page', page.toString());
+      params.append('limit', limit.toString());
+      params.append('sortBy', sortBy);
+      params.append('sortOrder', sortOrder);
       
-      const response = await fetch(`/api/nfse-recebidas?${params}`);
-      
+      const response = await fetch(`/api/nfse-recebidas?${params.toString()}`);
       if (!response.ok) {
-        throw new Error('Erro ao carregar NFSe recebidas');
+        throw new Error('Erro ao carregar dados');
       }
-      
-      return response.json() as Promise<NFSeResponse>;
+      return response.json();
     }
   });
 
