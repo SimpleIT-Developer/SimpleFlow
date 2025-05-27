@@ -574,26 +574,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         LIMIT 20
       `, [dateFormat, dateFormat]) as any;
 
-      // Combina os dados
-      const chartData = [];
-      const dateMap = {};
+      // Combina os dados das tabelas DOC e NFSE
+      const chartData: any[] = [];
+      const dateMap: any = {};
 
-      nfeData.forEach(item => {
-        dateMap[item.date] = { date: item.date, nfe: item.count, nfse: 0 };
+      // Processa dados da tabela DOC (NFe)
+      nfeData.forEach((item: any) => {
+        dateMap[item.date] = { date: item.date, doc: item.count, nfse: 0 };
       });
 
-      nfseData.forEach(item => {
+      // Processa dados da tabela NFSE
+      nfseData.forEach((item: any) => {
         if (dateMap[item.date]) {
           dateMap[item.date].nfse = item.count;
         } else {
-          dateMap[item.date] = { date: item.date, nfe: 0, nfse: item.count };
+          dateMap[item.date] = { date: item.date, doc: 0, nfse: item.count };
         }
       });
 
-      Object.values(dateMap).forEach(item => chartData.push(item));
-      chartData.sort((a, b) => a.date.localeCompare(b.date));
+      // Converte para array e ordena
+      Object.values(dateMap).forEach((item: any) => chartData.push(item));
+      chartData.sort((a: any, b: any) => a.date.localeCompare(b.date));
 
-      res.json(chartData.slice(0, 10));
+      res.json(chartData.slice(0, 15));
     } catch (error) {
       console.error('Erro ao obter dados do gráfico:', error);
       res.status(500).json({ message: 'Erro interno do servidor' });

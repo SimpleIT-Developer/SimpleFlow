@@ -172,7 +172,7 @@ export default function DashboardPage() {
                         }} 
                       />
                       <Legend />
-                      <Bar dataKey="nfe" fill="#3b82f6" name="DOC (NFe)" />
+                      <Bar dataKey="doc" fill="#3b82f6" name="DOC (NFe)" />
                       <Bar dataKey="nfse" fill="#ef4444" name="NFSe" />
                     </BarChart>
                   </ResponsiveContainer>
