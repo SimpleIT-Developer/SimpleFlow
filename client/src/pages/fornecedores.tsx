@@ -228,43 +228,45 @@ function FornecedoresPage() {
                   <table className="w-full table-fixed">
                     <thead className="bg-white/10">
                       <tr>
-                        <th 
-                          className="text-left py-4 px-6 text-white font-medium cursor-pointer hover:bg-white/5 transition-colors"
-                          onClick={() => handleSort("nome")}
-                        >
-                          <div className="flex items-center">
-                            Nome
-                            {renderSortIcon("nome")}
-                          </div>
+                        <th className="text-left py-3 px-2 w-40">
+                          <Button
+                            variant="ghost"
+                            onClick={() => handleSort("nome")}
+                            className="text-gray-300 hover:text-white p-0 h-auto font-semibold text-xs"
+                          >
+                            Nome {renderSortIcon("nome")}
+                          </Button>
                         </th>
-                        <th 
-                          className="text-left py-4 px-6 text-white font-medium cursor-pointer hover:bg-white/5 transition-colors"
-                          onClick={() => handleSort("cnpj")}
-                        >
-                          <div className="flex items-center">
-                            CNPJ
-                            {renderSortIcon("cnpj")}
-                          </div>
+                        <th className="text-left py-3 px-2 w-32">
+                          <Button
+                            variant="ghost"
+                            onClick={() => handleSort("cnpj")}
+                            className="text-gray-300 hover:text-white p-0 h-auto font-semibold text-xs"
+                          >
+                            CNPJ {renderSortIcon("cnpj")}
+                          </Button>
                         </th>
-                        <th 
-                          className="text-left py-4 px-6 text-white font-medium cursor-pointer hover:bg-white/5 transition-colors"
-                          onClick={() => handleSort("codigo_erp")}
-                        >
-                          <div className="flex items-center">
-                            Código ERP
-                            {renderSortIcon("codigo_erp")}
-                          </div>
+                        <th className="text-left py-3 px-2 w-32">
+                          <Button
+                            variant="ghost"
+                            onClick={() => handleSort("codigo_erp")}
+                            className="text-gray-300 hover:text-white p-0 h-auto font-semibold text-xs"
+                          >
+                            ERP {renderSortIcon("codigo_erp")}
+                          </Button>
                         </th>
-                        <th 
-                          className="text-left py-4 px-6 text-white font-medium cursor-pointer hover:bg-white/5 transition-colors"
-                          onClick={() => handleSort("data_cadastro")}
-                        >
-                          <div className="flex items-center">
-                            Data de Cadastro
-                            {renderSortIcon("data_cadastro")}
-                          </div>
+                        <th className="text-left py-3 px-2 w-24">
+                          <Button
+                            variant="ghost"
+                            onClick={() => handleSort("data_cadastro")}
+                            className="text-gray-300 hover:text-white p-0 h-auto font-semibold text-xs"
+                          >
+                            Data {renderSortIcon("data_cadastro")}
+                          </Button>
                         </th>
-                        <th className="text-left py-4 px-6 text-white font-medium">Ações</th>
+                        <th className="text-left py-3 px-2 w-20">
+                          <span className="text-gray-300 font-semibold text-xs">Ações</span>
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
@@ -273,43 +275,37 @@ function FornecedoresPage() {
                           key={fornecedor.id} 
                           className="border-b border-white/5 hover:bg-white/5 transition-colors"
                         >
-                          <td className="py-4 px-6">
-                            <div className="flex flex-col">
-                              <span className="text-white font-medium">{fornecedor.nome}</span>
-                            </div>
+                          <td className="py-2 px-2 text-white text-sm truncate" title={fornecedor.nome}>
+                            {fornecedor.nome}
                           </td>
-                          <td className="py-4 px-6 text-gray-300 font-mono text-sm">
+                          <td className="py-2 px-2 text-gray-300 font-mono text-sm">
                             {formatCNPJ(fornecedor.cnpj)}
                           </td>
-                          <td className="py-4 px-6">
+                          <td className="py-2 px-2">
                             {fornecedor.codigo_erp ? (
-                              <div className="flex items-center gap-2">
-                                <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
-                                  <CheckCircle className="w-3 h-3 mr-1" />
-                                  {fornecedor.codigo_erp}
-                                </Badge>
-                              </div>
+                              <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">
+                                <CheckCircle className="w-3 h-3 mr-1" />
+                                {fornecedor.codigo_erp}
+                              </Badge>
                             ) : (
-                              <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">
-                                Não integrado ao ERP
+                              <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30 text-xs">
+                                Pendente
                               </Badge>
                             )}
                           </td>
-                          <td className="py-4 px-6 text-gray-300 text-sm">
+                          <td className="py-2 px-2 text-gray-300 text-sm">
                             {formatDate(fornecedor.data_cadastro)}
                           </td>
-                          <td className="py-4 px-6">
-                            <div className="flex space-x-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleConsultarERP(fornecedor)}
-                                className="border-blue-500/30 text-blue-400 hover:bg-blue-500/20"
-                                title="Consultar código ERP"
-                              >
-                                <Eye className="w-4 h-4" />
-                              </Button>
-                            </div>
+                          <td className="py-2 px-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleConsultarERP(fornecedor)}
+                              className="border-blue-500/30 text-blue-400 hover:bg-blue-500/20 w-7 h-7 p-0"
+                              title="Consultar ERP"
+                            >
+                              <Eye className="w-3 h-3" />
+                            </Button>
                           </td>
                         </tr>
                       ))}

@@ -219,48 +219,52 @@ export default function UsuariosPage() {
                   </Card>
                 </div>
               ) : (
-                <div className="bg-white/5 rounded-lg overflow-hidden">
-                  <table className="w-full">
+                <div className="bg-white/5 rounded-lg">
+                  <table className="w-full table-fixed">
                     <thead className="bg-white/10">
                       <tr>
-                        <th 
-                          className="text-left py-4 px-6 text-white font-medium cursor-pointer hover:bg-white/5 transition-colors"
-                          onClick={() => handleSort("id")}
-                        >
-                          <div className="flex items-center">
-                            ID
-                            {renderSortIcon("id")}
-                          </div>
+                        <th className="text-left py-3 px-2 w-16">
+                          <Button
+                            variant="ghost"
+                            onClick={() => handleSort("id")}
+                            className="text-gray-300 hover:text-white p-0 h-auto font-semibold text-xs"
+                          >
+                            ID {renderSortIcon("id")}
+                          </Button>
                         </th>
-                        <th 
-                          className="text-left py-4 px-6 text-white font-medium cursor-pointer hover:bg-white/5 transition-colors"
-                          onClick={() => handleSort("nome")}
-                        >
-                          <div className="flex items-center">
-                            Nome
-                            {renderSortIcon("nome")}
-                          </div>
+                        <th className="text-left py-3 px-2 w-40">
+                          <Button
+                            variant="ghost"
+                            onClick={() => handleSort("nome")}
+                            className="text-gray-300 hover:text-white p-0 h-auto font-semibold text-xs"
+                          >
+                            Nome {renderSortIcon("nome")}
+                          </Button>
                         </th>
-                        <th 
-                          className="text-left py-4 px-6 text-white font-medium cursor-pointer hover:bg-white/5 transition-colors"
-                          onClick={() => handleSort("email")}
-                        >
-                          <div className="flex items-center">
-                            E-mail
-                            {renderSortIcon("email")}
-                          </div>
+                        <th className="text-left py-3 px-2 w-48">
+                          <Button
+                            variant="ghost"
+                            onClick={() => handleSort("email")}
+                            className="text-gray-300 hover:text-white p-0 h-auto font-semibold text-xs"
+                          >
+                            E-mail {renderSortIcon("email")}
+                          </Button>
                         </th>
-                        <th className="text-left py-4 px-6 text-white font-medium">Tipo</th>
-                        <th 
-                          className="text-left py-4 px-6 text-white font-medium cursor-pointer hover:bg-white/5 transition-colors"
-                          onClick={() => handleSort("ativo")}
-                        >
-                          <div className="flex items-center">
-                            Status
-                            {renderSortIcon("ativo")}
-                          </div>
+                        <th className="text-left py-3 px-2 w-24">
+                          <span className="text-gray-300 font-semibold text-xs">Tipo</span>
                         </th>
-                        <th className="text-left py-4 px-6 text-white font-medium">Ações</th>
+                        <th className="text-left py-3 px-2 w-20">
+                          <Button
+                            variant="ghost"
+                            onClick={() => handleSort("ativo")}
+                            className="text-gray-300 hover:text-white p-0 h-auto font-semibold text-xs"
+                          >
+                            Status {renderSortIcon("ativo")}
+                          </Button>
+                        </th>
+                        <th className="text-left py-3 px-2 w-24">
+                          <span className="text-gray-300 font-semibold text-xs">Ações</span>
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
