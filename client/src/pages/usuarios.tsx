@@ -1,14 +1,38 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { queryClient } from "@/lib/queryClient";
 import { Layout } from "@/components/layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Edit, Trash2, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Filter, Plus, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import type { Usuario, UsuarioResponse } from "@shared/schema";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { apiRequest } from "@/lib/queryClient";
+import type { Usuario, UsuarioResponse, CreateUsuarioData, UpdateUsuarioData } from "@shared/schema";
+
+// Schemas de validação
+const createUserSchema = z.object({
+  nome: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
+  email: z.string().email("Email inválido"),
+  password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
+  tipo: z.enum(["user", "admin", "system"], { required_error: "Selecione um tipo" })
+});
+
+const updateUserSchema = z.object({
+  nome: z.string().min(2, "Nome deve ter pelo menos 2 caracteres").optional(),
+  email: z.string().email("Email inválido").optional(),
+  password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres").optional(),
+  tipo: z.enum(["user", "admin", "system"]).optional(),
+  ativo: z.number().optional()
+});
 
 export default function UsuariosPage() {
   const { toast } = useToast();

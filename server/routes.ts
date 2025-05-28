@@ -459,7 +459,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Usuários endpoints - PostgreSQL com Drizzle
+  // Usuários endpoints - PostgreSQL com Drizzle e controle de acesso
   app.get("/api/usuarios", authenticateToken, async (req: any, res) => {
     try {
       const {
@@ -471,10 +471,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         sortOrder = "asc"
       } = req.query;
 
+      const userType = req.user.type || 'user';
+      const currentUserId = req.user.id;
       const offset = (parseInt(page) - 1) * parseInt(limit);
       
       // Construir condições WHERE usando Drizzle
       let whereConditions = [];
+
+      // Controle de acesso baseado no tipo de usuário
+      if (userType === 'user') {
+        // Usuários do tipo 'user' só podem ver eles mesmos
+        whereConditions.push(eq(users.id, currentUserId));
+      } else if (userType === 'admin') {
+        // Usuários do tipo 'admin' podem ver 'admin' e 'user'
+        whereConditions.push(or(eq(users.type, 'admin'), eq(users.type, 'user')));
+      }
+      // Usuários do tipo 'system' podem ver todos (sem restrição)
 
       if (search) {
         whereConditions.push(
@@ -527,7 +539,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           id: user.id,
           nome: user.name,
           email: user.email,
-          tipo: user.type || "Usuário",
+          tipo: user.type || "user",
           ativo: user.status || 1
         })),
         total,
@@ -540,6 +552,153 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Erro ao buscar usuários:", error);
       res.status(500).json({ message: "Erro ao buscar usuários" });
+    }
+  });
+
+  // Rota para criar usuário
+  app.post("/api/usuarios", authenticateToken, async (req: any, res) => {
+    try {
+      const userType = req.user.type || 'user';
+      
+      // Apenas admins e system podem criar usuários
+      if (userType !== 'admin' && userType !== 'system') {
+        return res.status(403).json({ message: "Acesso negado" });
+      }
+
+      const { nome, email, password, tipo } = req.body;
+
+      if (!nome || !email || !password || !tipo) {
+        return res.status(400).json({ message: "Todos os campos são obrigatórios" });
+      }
+
+      // Admins só podem criar users e admins
+      if (userType === 'admin' && tipo === 'system') {
+        return res.status(403).json({ message: "Admins não podem criar usuários do tipo system" });
+      }
+
+      // Verificar se email já existe
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ message: "Email já está em uso" });
+      }
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+      
+      const newUser = await storage.createUser({
+        username: nome,
+        email,
+        password: hashedPassword,
+        type: tipo,
+        status: 1
+      });
+
+      res.status(201).json({ 
+        message: "Usuário criado com sucesso",
+        usuario: {
+          id: newUser.id,
+          nome: newUser.username,
+          email: newUser.email,
+          tipo: newUser.type,
+          ativo: newUser.status
+        }
+      });
+    } catch (error) {
+      console.error("Erro ao criar usuário:", error);
+      res.status(500).json({ message: "Erro ao criar usuário" });
+    }
+  });
+
+  // Rota para atualizar usuário
+  app.put("/api/usuarios/:id", authenticateToken, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const userType = req.user.type || 'user';
+      const currentUserId = req.user.id;
+      
+      // Users só podem editar eles mesmos
+      if (userType === 'user' && parseInt(id) !== currentUserId) {
+        return res.status(403).json({ message: "Acesso negado" });
+      }
+
+      const targetUser = await storage.getUser(parseInt(id));
+      if (!targetUser) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+
+      // Admins não podem editar usuários system
+      if (userType === 'admin' && targetUser.type === 'system') {
+        return res.status(403).json({ message: "Admins não podem editar usuários do tipo system" });
+      }
+
+      const { nome, email, password, tipo, ativo } = req.body;
+      const updateData: any = {};
+
+      if (nome) updateData.name = nome;
+      if (email) {
+        const existingUser = await storage.getUserByEmail(email);
+        if (existingUser && existingUser.id !== parseInt(id)) {
+          return res.status(400).json({ message: "Email já está em uso" });
+        }
+        updateData.email = email;
+      }
+      if (password) updateData.password = await bcrypt.hash(password, 10);
+      
+      // Users não podem alterar tipo e status
+      if (userType !== 'user') {
+        if (tipo !== undefined) {
+          // Admins não podem criar/alterar para system
+          if (userType === 'admin' && tipo === 'system') {
+            return res.status(403).json({ message: "Admins não podem alterar usuários para tipo system" });
+          }
+          updateData.type = tipo;
+        }
+        if (ativo !== undefined) updateData.status = ativo;
+      }
+
+      await db.update(users)
+        .set(updateData)
+        .where(eq(users.id, parseInt(id)));
+
+      res.json({ message: "Usuário atualizado com sucesso" });
+    } catch (error) {
+      console.error("Erro ao atualizar usuário:", error);
+      res.status(500).json({ message: "Erro ao atualizar usuário" });
+    }
+  });
+
+  // Rota para excluir usuário
+  app.delete("/api/usuarios/:id", authenticateToken, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const userType = req.user.type || 'user';
+      const currentUserId = req.user.id;
+      
+      // Users não podem excluir usuários
+      if (userType === 'user') {
+        return res.status(403).json({ message: "Acesso negado" });
+      }
+
+      // Não pode excluir a si mesmo
+      if (parseInt(id) === currentUserId) {
+        return res.status(400).json({ message: "Não é possível excluir seu próprio usuário" });
+      }
+
+      const targetUser = await storage.getUser(parseInt(id));
+      if (!targetUser) {
+        return res.status(404).json({ message: "Usuário não encontrado" });
+      }
+
+      // Admins não podem excluir usuários system
+      if (userType === 'admin' && targetUser.type === 'system') {
+        return res.status(403).json({ message: "Admins não podem excluir usuários do tipo system" });
+      }
+
+      await db.delete(users).where(eq(users.id, parseInt(id)));
+
+      res.json({ message: "Usuário excluído com sucesso" });
+    } catch (error) {
+      console.error("Erro ao excluir usuário:", error);
+      res.status(500).json({ message: "Erro ao excluir usuário" });
     }
   });
 

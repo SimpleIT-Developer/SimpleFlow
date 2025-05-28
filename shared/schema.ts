@@ -18,6 +18,8 @@ export const insertUserSchema = createInsertSchema(users).pick({
   email: true,
   password: true,
   name: true,
+  type: true,
+  status: true,
 });
 
 export const loginSchema = z.object({
@@ -141,6 +143,21 @@ export interface Usuario {
   email: string;
   tipo: string;
   ativo: number;
+}
+
+export interface CreateUsuarioData {
+  nome: string;
+  email: string;
+  password: string;
+  tipo: 'user' | 'admin' | 'system';
+}
+
+export interface UpdateUsuarioData {
+  nome?: string;
+  email?: string;
+  password?: string;
+  tipo?: 'user' | 'admin' | 'system';
+  ativo?: number;
 }
 
 export interface UsuarioFilters {
