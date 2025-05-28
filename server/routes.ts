@@ -8,7 +8,7 @@ import { z } from "zod";
 import { mysqlPool, testMysqlConnection } from "./mysql-config";
 import { db } from "./db";
 import { sendWelcomeEmail } from "./email-service";
-import { eq, ilike, or, count, desc, asc } from "drizzle-orm";
+import { eq, ilike, or, and, count, desc, asc } from "drizzle-orm";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production";
 
