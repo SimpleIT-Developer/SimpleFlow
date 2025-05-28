@@ -273,41 +273,39 @@ export default function UsuariosPage() {
                           key={usuario.id} 
                           className="border-b border-white/5 hover:bg-white/5 transition-colors"
                         >
-                          <td className="py-4 px-6 text-gray-300 font-mono text-sm">
+                          <td className="py-2 px-2 text-gray-300 font-mono text-sm">
                             #{usuario.id}
                           </td>
-                          <td className="py-4 px-6">
-                            <div className="flex flex-col">
-                              <span className="text-white font-medium">{usuario.nome}</span>
-                            </div>
+                          <td className="py-2 px-2 text-white text-sm truncate" title={usuario.nome}>
+                            {usuario.nome}
                           </td>
-                          <td className="py-4 px-6 text-gray-300 text-sm">
+                          <td className="py-2 px-2 text-gray-300 text-sm truncate" title={usuario.email}>
                             {usuario.email}
                           </td>
-                          <td className="py-4 px-6">
-                            <Badge variant="outline" className="border-blue-500/30 text-blue-400">
+                          <td className="py-2 px-2">
+                            <Badge variant="outline" className="border-blue-500/30 text-blue-400 text-xs">
                               {usuario.tipo}
                             </Badge>
                           </td>
-                          <td className="py-4 px-6">
+                          <td className="py-2 px-2">
                             <Badge
                               variant={usuario.ativo === 1 ? "default" : "secondary"}
-                              className={
+                              className={`text-xs ${
                                 usuario.ativo === 1
                                   ? "bg-green-500/20 text-green-400 border-green-500/30"
                                   : "bg-red-500/20 text-red-400 border-red-500/30"
-                              }
+                              }`}
                             >
                               {usuario.ativo === 1 ? "Ativo" : "Inativo"}
                             </Badge>
                           </td>
-                          <td className="py-4 px-6">
-                            <div className="flex space-x-2">
+                          <td className="py-2 px-2">
+                            <div className="flex space-x-1">
                               <Button
                                 size="sm"
                                 variant="outline"
                                 onClick={() => handleEdit(usuario)}
-                                className="border-blue-500/30 text-blue-400 hover:bg-blue-500/20"
+                                className="border-blue-500/30 text-blue-400 hover:bg-blue-500/20 w-7 h-7 p-0"
                                 title="Editar"
                               >
                                 <Edit className="w-4 h-4" />
@@ -316,10 +314,10 @@ export default function UsuariosPage() {
                                 size="sm"
                                 variant="outline"
                                 onClick={() => handleDelete(usuario)}
-                                className="border-red-500/30 text-red-400 hover:bg-red-500/20"
+                                className="border-red-500/30 text-red-400 hover:bg-red-500/20 w-7 h-7 p-0"
                                 title="Excluir"
                               >
-                                <Trash2 className="w-4 h-4" />
+                                <Trash2 className="w-3 h-3" />
                               </Button>
                             </div>
                           </td>
