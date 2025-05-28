@@ -6,7 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
-import { Building, FileText, CheckCircle, XCircle, AlertTriangle, Users } from "lucide-react";
+import { Building, FileText, CheckCircle, XCircle, AlertTriangle, Users, RefreshCw } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { queryClient } from "@/lib/queryClient";
 import type { DashboardStats, ChartData, UltimosDocumentos, CNPJAtivo } from "@shared/schema";
 
 const PERIOD_BUTTONS = [
@@ -31,6 +33,15 @@ function formatDate(dateString: string): string {
 
 export default function DashboardPage() {
   const [selectedPeriod, setSelectedPeriod] = useState('daily');
+  const { toast } = useToast();
+
+  const handleRefreshDashboard = () => {
+    queryClient.invalidateQueries({ queryKey: ['/api/dashboard'] });
+    toast({
+      title: "Dashboard Atualizado",
+      description: "Dados do dashboard atualizados com sucesso!",
+    });
+  };
 
   // Consulta para estatísticas principais
   const { data: stats } = useQuery<DashboardStats>({
@@ -101,9 +112,18 @@ export default function DashboardPage() {
     <Layout currentPage="Dashboard">
       <div className="space-y-6">
         {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold text-white">Dashboard</h1>
-          <p className="text-gray-400 mt-2">Visão geral do sistema SimpleDFe</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-white">Dashboard</h1>
+            <p className="text-gray-400 mt-2">Visão geral do sistema SimpleDFe</p>
+          </div>
+          <Button
+            onClick={handleRefreshDashboard}
+            className="bg-purple-600 hover:bg-purple-700 text-white"
+          >
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Atualizar Dashboard
+          </Button>
         </div>
 
         {/* Stats Cards - 6 cards em grid */}
@@ -238,6 +258,7 @@ export default function DashboardPage() {
                 <TableHeader>
                   <TableRow className="border-gray-700">
                     <TableHead className="text-gray-300">Tipo</TableHead>
+                    <TableHead className="text-gray-300">Número</TableHead>
                     <TableHead className="text-gray-300">Emitente</TableHead>
                     <TableHead className="text-gray-300">Valor</TableHead>
                     <TableHead className="text-gray-300">Data</TableHead>
@@ -245,25 +266,33 @@ export default function DashboardPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {ultimosDocumentos?.map((doc, index) => (
-                    <TableRow key={index} className="border-gray-700">
-                      <TableCell className="text-gray-300 font-medium">{doc.tipo}</TableCell>
-                      <TableCell className="text-gray-300">{doc.emitente}</TableCell>
-                      <TableCell className="text-gray-300">{formatCurrency(doc.valor)}</TableCell>
-                      <TableCell className="text-gray-300">{formatDate(doc.data)}</TableCell>
-                      <TableCell>
-                        <Badge 
-                          variant={doc.status === 'Integrado' ? 'default' : 'secondary'}
-                          className={doc.status === 'Integrado' ? 
-                            'bg-green-600 text-white' : 
-                            'bg-yellow-600 text-white'
-                          }
-                        >
-                          {doc.status}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {ultimosDocumentos?.slice(0, 5).map((doc, index) => {
+                    // Separar tipo e número
+                    const tipoNumero = doc.tipo.split(' ');
+                    const tipo = tipoNumero[0]; // NFe, NFS-e
+                    const numero = tipoNumero.slice(1).join(' '); // Resto da string
+                    
+                    return (
+                      <TableRow key={index} className="border-gray-700">
+                        <TableCell className="text-gray-300 font-medium">{tipo}</TableCell>
+                        <TableCell className="text-gray-300">{numero}</TableCell>
+                        <TableCell className="text-gray-300">{doc.emitente}</TableCell>
+                        <TableCell className="text-gray-300">{formatCurrency(doc.valor)}</TableCell>
+                        <TableCell className="text-gray-300">{formatDate(doc.data)}</TableCell>
+                        <TableCell>
+                          <Badge 
+                            variant={doc.status === 'Integrado' ? 'default' : 'secondary'}
+                            className={doc.status === 'Integrado' ? 
+                              'bg-green-600 text-white' : 
+                              'bg-yellow-600 text-white'
+                            }
+                          >
+                            {doc.status}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </CardContent>

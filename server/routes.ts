@@ -799,70 +799,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Rota para obter dados do gráfico de barras - Resumo dos Documentos Fiscais
-  app.get("/api/dashboard/chart/:period", authenticateToken, async (req: any, res) => {
+  app.get("/api/dashboard/chart", authenticateToken, async (req: any, res) => {
     try {
-      const { period } = req.params;
-      let dateFormat, groupBy, interval;
+      const { period = 'daily' } = req.query;
+      let dateFormat, docGroupBy, nfseGroupBy, interval;
       
       switch (period) {
         case 'daily':
-          dateFormat = '%d/%m/%Y';
-          groupBy = 'DATE(doc_date_emi)';
-          interval = '30 DAY';
+          dateFormat = '%d/%m';
+          docGroupBy = 'DATE(doc_date_emi)';
+          nfseGroupBy = 'DATE(nfse_data_hora)';
+          interval = '7 DAY';
           break;
         case 'weekly':
-          dateFormat = 'Semana %u/%Y';
-          groupBy = 'YEARWEEK(doc_date_emi)';
-          interval = '12 WEEK';
+          dateFormat = 'Sem %u';
+          docGroupBy = 'YEARWEEK(doc_date_emi)';
+          nfseGroupBy = 'YEARWEEK(nfse_data_hora)';
+          interval = '8 WEEK';
           break;
         case 'monthly':
           dateFormat = '%m/%Y';
-          groupBy = 'YEAR(doc_date_emi), MONTH(doc_date_emi)';
+          docGroupBy = 'YEAR(doc_date_emi), MONTH(doc_date_emi)';
+          nfseGroupBy = 'YEAR(nfse_data_hora), MONTH(nfse_data_hora)';
           interval = '12 MONTH';
           break;
         case 'yearly':
           dateFormat = '%Y';
-          groupBy = 'YEAR(doc_date_emi)';
+          docGroupBy = 'YEAR(doc_date_emi)';
+          nfseGroupBy = 'YEAR(nfse_data_hora)';
           interval = '5 YEAR';
           break;
         default:
-          dateFormat = '%d/%m/%Y';
-          groupBy = 'DATE(doc_date_emi)';
-          interval = '30 DAY';
+          dateFormat = '%d/%m';
+          docGroupBy = 'DATE(doc_date_emi)';
+          nfseGroupBy = 'DATE(nfse_data_hora)';
+          interval = '7 DAY';
       }
 
-      // Consulta tabela DOC por data de emissão
+      // Consulta dados da tabela DOC (NFe)
       const [docData] = await mysqlPool.execute(`
-        SELECT DATE_FORMAT(doc_date_emi, ?) as date, COUNT(*) as count 
+        SELECT 
+          DATE_FORMAT(doc_date_emi, ?) as date, 
+          COUNT(*) as count 
         FROM doc 
         WHERE doc_date_emi IS NOT NULL 
           AND doc_date_emi >= DATE_SUB(NOW(), INTERVAL ${interval})
-        GROUP BY ${groupBy}
-        ORDER BY doc_date_emi ASC
-        LIMIT 20
+        GROUP BY ${docGroupBy}
+        ORDER BY doc_date_emi DESC
+        LIMIT 15
       `, [dateFormat]) as any;
 
-      // Consulta tabela NFSE por data de emissão  
+      // Consulta dados da tabela NFSE
       const [nfseData] = await mysqlPool.execute(`
-        SELECT DATE_FORMAT(nfse_data_hora, ?) as date, COUNT(*) as count 
+        SELECT 
+          DATE_FORMAT(nfse_data_hora, ?) as date, 
+          COUNT(*) as count 
         FROM nfse 
         WHERE nfse_data_hora IS NOT NULL 
           AND nfse_data_hora >= DATE_SUB(NOW(), INTERVAL ${interval})
-        GROUP BY YEAR(nfse_data_hora), MONTH(nfse_data_hora), DAY(nfse_data_hora)
-        ORDER BY nfse_data_hora ASC
-        LIMIT 20
+        GROUP BY ${nfseGroupBy}
+        ORDER BY nfse_data_hora DESC
+        LIMIT 15
       `, [dateFormat]) as any;
 
-      // Combina os dados das tabelas DOC e NFSE
-      const chartData: any[] = [];
+      // Combina os dados das duas tabelas
       const dateMap: any = {};
 
-      console.log('DOC Data:', docData);
-      console.log('NFSE Data:', nfseData);
-
-      // Processa dados da tabela DOC
+      // Processa dados da tabela DOC (NFe)
       docData.forEach((item: any) => {
-        dateMap[item.date] = { date: item.date, doc: item.count, nfse: 0 };
+        dateMap[item.date] = { date: item.date, nfe: item.count, nfse: 0 };
       });
 
       // Processa dados da tabela NFSE
@@ -870,18 +875,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (dateMap[item.date]) {
           dateMap[item.date].nfse = item.count;
         } else {
-          dateMap[item.date] = { date: item.date, doc: 0, nfse: item.count };
+          dateMap[item.date] = { date: item.date, nfe: 0, nfse: item.count };
         }
       });
 
-      // Converte para array
-      Object.values(dateMap).forEach((item: any) => chartData.push(item));
-
-      console.log('Chart Data Final:', chartData);
+      // Converte para array e ordena por data
+      const chartData = Object.values(dateMap).sort((a: any, b: any) => {
+        return a.date.localeCompare(b.date);
+      });
 
       res.json(chartData);
     } catch (error) {
       console.error('Erro ao obter dados do gráfico:', error);
+      res.status(500).json({ message: 'Erro interno do servidor' });
+    }
+  });
       res.status(500).json({ message: 'Erro interno do servidor' });
     }
   });
