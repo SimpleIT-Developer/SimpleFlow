@@ -216,7 +216,7 @@ export default function NFSeRecebidasPage() {
         {/* Data Grid */}
         <Card className="glassmorphism border-white/20">
           <CardContent className="pt-6">
-            <div className="overflow-x-auto">
+            <div className="w-full">
               {isLoading ? (
                 <div className="flex items-center justify-center min-h-[400px]">
                   <Card className="glassmorphism border-blue-500/20">
@@ -255,19 +255,34 @@ export default function NFSeRecebidasPage() {
                   </Card>
                 </div>
               ) : (
-                <div className="bg-white/5 rounded-lg overflow-hidden">
-                  <table className="w-full">
+                <div className="bg-white/5 rounded-lg">
+                  <table className="w-full table-fixed">
                     <thead className="bg-white/10">
                       <tr>
-                        <th className="text-left py-4 px-6 text-white font-medium">Emitente</th>
-                        <th className="text-left py-4 px-6 text-white font-medium">CNPJ</th>
-                        <th className="text-left py-4 px-6 text-white font-medium">Tomador</th>
-                        <th className="text-left py-4 px-6 text-white font-medium">Tipo</th>
-                        <th className="text-left py-4 px-6 text-white font-medium">Local</th>
-                        <th className="text-left py-4 px-6 text-white font-medium">Data</th>
-                        <th className="text-left py-4 px-6 text-white font-medium">Valor</th>
-                        <th className="text-left py-4 px-6 text-white font-medium">Status</th>
-                        <th className="text-left py-4 px-6 text-white font-medium">Ações</th>
+                        <th className="text-left py-3 px-2 w-32">
+                          <span className="text-gray-300 font-semibold text-xs">Emitente</span>
+                        </th>
+                        <th className="text-left py-3 px-2 w-24">
+                          <span className="text-gray-300 font-semibold text-xs">CNPJ</span>
+                        </th>
+                        <th className="text-left py-3 px-2 w-32">
+                          <span className="text-gray-300 font-semibold text-xs">Tomador</span>
+                        </th>
+                        <th className="text-left py-3 px-2 w-20">
+                          <span className="text-gray-300 font-semibold text-xs">Tipo</span>
+                        </th>
+                        <th className="text-left py-3 px-2 w-24">
+                          <span className="text-gray-300 font-semibold text-xs">Data</span>
+                        </th>
+                        <th className="text-left py-3 px-2 w-24">
+                          <span className="text-gray-300 font-semibold text-xs">Valor</span>
+                        </th>
+                        <th className="text-left py-3 px-2 w-24">
+                          <span className="text-gray-300 font-semibold text-xs">Status</span>
+                        </th>
+                        <th className="text-left py-3 px-2 w-28">
+                          <span className="text-gray-300 font-semibold text-xs">Ações</span>
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
@@ -276,62 +291,55 @@ export default function NFSeRecebidasPage() {
                           key={index} 
                           className="border-b border-white/5 hover:bg-white/5 transition-colors"
                         >
-                          <td className="py-4 px-6">
-                            <div className="flex flex-col">
-                              <span className="text-white font-medium">{nfse.nfse_emitente}</span>
-                            </div>
+                          <td className="py-2 px-2 text-white text-sm truncate" title={nfse.nfse_emitente}>
+                            {nfse.nfse_emitente}
                           </td>
-                          <td className="py-4 px-6 text-gray-300 font-mono text-sm">
+                          <td className="py-2 px-2 text-gray-300 font-mono text-sm">
                             {formatCNPJCPF(nfse.nfse_doc)}
                           </td>
-                          <td className="py-4 px-6 text-gray-300 text-sm">
+                          <td className="py-2 px-2 text-gray-300 text-sm truncate" title={nfse.nfse_tomador}>
                             {nfse.nfse_tomador}
                           </td>
-                          <td className="py-4 px-6">
-                            <Badge variant="outline" className="border-blue-500/30 text-blue-400">
-                              {nfse.nfse_tipo}
-                            </Badge>
+                          <td className="py-2 px-2 text-gray-300 text-xs">
+                            {nfse.nfse_tipo}
                           </td>
-                          <td className="py-4 px-6 text-gray-300 text-sm">
-                            {nfse.nfse_local_prestacao}
-                          </td>
-                          <td className="py-4 px-6 text-gray-300 text-sm">
+                          <td className="py-2 px-2 text-gray-300 text-sm">
                             {formatDate(nfse.nfse_data_hora)}
                           </td>
-                          <td className="py-4 px-6 text-gray-300 font-mono text-sm">
+                          <td className="py-2 px-2 text-gray-300 font-mono text-sm">
                             {formatCurrency(nfse.nfse_valor_servico)}
                           </td>
-                          <td className="py-4 px-6">
+                          <td className="py-2 px-2">
                             <Badge
                               variant={nfse.nfse_status_integracao === 1 ? "default" : "secondary"}
-                              className={
+                              className={`text-xs ${
                                 nfse.nfse_status_integracao === 1
                                   ? "bg-green-500/20 text-green-400 border-green-500/30"
                                   : "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
-                              }
+                              }`}
                             >
-                              {nfse.nfse_status_integracao === 1 ? "Integrado" : "Não Integrado"}
+                              {nfse.nfse_status_integracao === 1 ? "OK" : "Pendente"}
                             </Badge>
                           </td>
-                          <td className="py-4 px-6">
-                            <div className="flex space-x-2">
+                          <td className="py-2 px-2">
+                            <div className="flex space-x-1">
                               <Button
                                 size="sm"
                                 variant="outline"
                                 onClick={() => handleBaixarXML(nfse)}
-                                className="border-blue-500/30 text-blue-400 hover:bg-blue-500/20"
+                                className="border-blue-500/30 text-blue-400 hover:bg-blue-500/20 w-7 h-7 p-0"
                                 title="Baixar XML"
                               >
-                                <Download className="w-4 h-4" />
+                                <Download className="w-3 h-3" />
                               </Button>
                               <Button
                                 size="sm"
                                 variant="outline"
                                 onClick={() => handleIntegrarERP(nfse)}
-                                className="border-green-500/30 text-green-400 hover:bg-green-500/20"
+                                className="border-green-500/30 text-green-400 hover:bg-green-500/20 w-7 h-7 p-0"
                                 title="Integrar com ERP"
                               >
-                                <RefreshCw className="w-4 h-4" />
+                                <RefreshCw className="w-3 h-3" />
                               </Button>
                             </div>
                           </td>

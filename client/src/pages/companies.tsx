@@ -178,75 +178,66 @@ export default function CompaniesPage() {
           <CardTitle className="text-white">Lista de Empresas</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full">
+          <div className="w-full">
+            <table className="w-full table-fixed">
               <thead>
                 <tr className="border-b border-white/10">
-                  <th className="text-left py-3 px-4">
+                  <th className="text-left py-3 px-2 w-16">
                     <Button
                       variant="ghost"
                       onClick={() => handleSort("company_id")}
-                      className="text-gray-300 hover:text-white p-0 h-auto font-semibold"
+                      className="text-gray-300 hover:text-white p-0 h-auto font-semibold text-xs"
                     >
                       ID {getSortIcon("company_id")}
                     </Button>
                   </th>
-                  <th className="text-left py-3 px-4">
+                  <th className="text-left py-3 px-2 w-32">
                     <Button
                       variant="ghost"
                       onClick={() => handleSort("company_name")}
-                      className="text-gray-300 hover:text-white p-0 h-auto font-semibold"
+                      className="text-gray-300 hover:text-white p-0 h-auto font-semibold text-xs"
                     >
                       Nome {getSortIcon("company_name")}
                     </Button>
                   </th>
-                  <th className="text-left py-3 px-4">
+                  <th className="text-left py-3 px-2 w-32">
                     <Button
                       variant="ghost"
                       onClick={() => handleSort("company_fantasy")}
-                      className="text-gray-300 hover:text-white p-0 h-auto font-semibold"
+                      className="text-gray-300 hover:text-white p-0 h-auto font-semibold text-xs"
                     >
-                      Nome Fantasia {getSortIcon("company_fantasy")}
+                      Fantasia {getSortIcon("company_fantasy")}
                     </Button>
                   </th>
-                  <th className="text-left py-3 px-4">
+                  <th className="text-left py-3 px-2 w-28">
                     <Button
                       variant="ghost"
                       onClick={() => handleSort("company_cpf_cnpj")}
-                      className="text-gray-300 hover:text-white p-0 h-auto font-semibold"
+                      className="text-gray-300 hover:text-white p-0 h-auto font-semibold text-xs"
                     >
-                      CNPJ/CPF {getSortIcon("company_cpf_cnpj")}
+                      CNPJ {getSortIcon("company_cpf_cnpj")}
                     </Button>
                   </th>
-                  <th className="text-left py-3 px-4">
-                    <Button
-                      variant="ghost"
-                      onClick={() => handleSort("company_email")}
-                      className="text-gray-300 hover:text-white p-0 h-auto font-semibold"
-                    >
-                      Email {getSortIcon("company_email")}
-                    </Button>
-                  </th>
-                  <th className="text-left py-3 px-4">
+                  <th className="text-left py-3 px-2 w-24">
                     <Button
                       variant="ghost"
                       onClick={() => handleSort("company_city")}
-                      className="text-gray-300 hover:text-white p-0 h-auto font-semibold"
+                      className="text-gray-300 hover:text-white p-0 h-auto font-semibold text-xs"
                     >
                       Cidade {getSortIcon("company_city")}
                     </Button>
                   </th>
-                  <th className="text-left py-3 px-4">
+                  <th className="text-left py-3 px-2 w-16">
                     <Button
                       variant="ghost"
                       onClick={() => handleSort("company_uf")}
-                      className="text-gray-300 hover:text-white p-0 h-auto font-semibold"
+                      className="text-gray-300 hover:text-white p-0 h-auto font-semibold text-xs"
                     >
                       UF {getSortIcon("company_uf")}
                     </Button>
                   </th>
-                  <th className="text-left py-3 px-4">
-                    <span className="text-gray-300 font-semibold">Ações</span>
+                  <th className="text-left py-3 px-2 w-24">
+                    <span className="text-gray-300 font-semibold text-xs">Ações</span>
                   </th>
                 </tr>
               </thead>
@@ -256,44 +247,43 @@ export default function CompaniesPage() {
                     key={company.company_id}
                     className="border-b border-white/5 hover:bg-white/5 transition-colors"
                   >
-                    <td className="py-3 px-4 text-white font-mono">
+                    <td className="py-2 px-2 text-white font-mono text-sm">
                       {company.company_id}
                     </td>
-                    <td className="py-3 px-4 text-white">
+                    <td className="py-2 px-2 text-white text-sm truncate" title={company.company_name}>
                       {company.company_name}
                     </td>
-                    <td className="py-3 px-4 text-gray-300">
+                    <td className="py-2 px-2 text-gray-300 text-sm truncate" title={company.company_fantasy}>
                       {company.company_fantasy || "-"}
                     </td>
-                    <td className="py-3 px-4 text-gray-300 font-mono">
+                    <td className="py-2 px-2 text-gray-300 font-mono text-sm">
                       {formatCpfCnpj(company.company_cpf_cnpj)}
                     </td>
-                    <td className="py-3 px-4 text-gray-300">
-                      {company.company_email}
-                    </td>
-                    <td className="py-3 px-4 text-gray-300">
+                    <td className="py-2 px-2 text-gray-300 text-sm truncate" title={company.company_city}>
                       {company.company_city}
                     </td>
-                    <td className="py-3 px-4 text-gray-300 uppercase">
+                    <td className="py-2 px-2 text-gray-300 uppercase text-sm">
                       {company.company_uf}
                     </td>
-                    <td className="py-3 px-4">
-                      <div className="flex space-x-2">
+                    <td className="py-2 px-2">
+                      <div className="flex space-x-1">
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => handleView(company)}
-                          className="border-blue-500/30 text-blue-400 hover:bg-blue-500/20"
+                          className="border-blue-500/30 text-blue-400 hover:bg-blue-500/20 w-7 h-7 p-0"
+                          title="Visualizar"
                         >
-                          <Eye className="w-4 h-4" />
+                          <Eye className="w-3 h-3" />
                         </Button>
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => handleEdit(company)}
-                          className="border-green-500/30 text-green-400 hover:bg-green-500/20"
+                          className="border-green-500/30 text-green-400 hover:bg-green-500/20 w-7 h-7 p-0"
+                          title="Editar"
                         >
-                          <Edit className="w-4 h-4" />
+                          <Edit className="w-3 h-3" />
                         </Button>
                       </div>
                     </td>

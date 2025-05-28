@@ -224,8 +224,8 @@ function FornecedoresPage() {
                   </Card>
                 </div>
               ) : (
-                <div className="bg-white/5 rounded-lg overflow-hidden">
-                  <table className="w-full">
+                <div className="bg-white/5 rounded-lg">
+                  <table className="w-full table-fixed">
                     <thead className="bg-white/10">
                       <tr>
                         <th 
