@@ -79,6 +79,23 @@ export default function UsuariosPage() {
     }
   });
 
+  // Obter dados do usuário logado para controle de acesso
+  const { data: currentUser } = useQuery({
+    queryKey: ["/api/auth/me"],
+    queryFn: async () => {
+      const response = await fetch("/api/auth/me", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      if (!response.ok) {
+        throw new Error("Erro ao obter dados do usuário");
+      }
+      const data = await response.json();
+      return data.user;
+    },
+  });
+
   const { data: usuarioData, isLoading, error } = useQuery({
     queryKey: ["/api/usuarios", { 
       search, 
@@ -311,12 +328,13 @@ export default function UsuariosPage() {
               Atualizar Usuários
             </Button>
             
-            {/* Botão Novo Usuário */}
-            <Dialog open={createModalOpen} onOpenChange={setCreateModalOpen}>
-              <DialogTrigger asChild>
-                <Button className="bg-purple-600 hover:bg-purple-700">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Novo Usuário
+            {/* Botão Novo Usuário - apenas para admin e system */}
+            {currentUser?.type !== 'user' && (
+              <Dialog open={createModalOpen} onOpenChange={setCreateModalOpen}>
+                <DialogTrigger asChild>
+                  <Button className="bg-purple-600 hover:bg-purple-700">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Novo Usuário
                 </Button>
               </DialogTrigger>
               <DialogContent className="glassmorphism border-white/20 bg-black/90">
@@ -421,6 +439,7 @@ export default function UsuariosPage() {
                 </Form>
               </DialogContent>
             </Dialog>
+            )}
           </div>
         </div>
 
