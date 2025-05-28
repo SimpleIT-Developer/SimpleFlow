@@ -981,16 +981,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Fazer consulta ao webhook
         const webhookUrl = `https://webhook-n8n.simpleit.app.br/webhook/3f78d932-bba2-426b-995c-42dedea1c8ef?cnpj=${encodeURIComponent(cnpj)}`;
         
+        console.log(`Consultando webhook para CNPJ: ${cnpj}`);
+        
         const webhookResponse = await fetch(webhookUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-          },
-          timeout: 10000 // 10 segundos de timeout
+          }
         });
 
+        console.log(`Webhook response status: ${webhookResponse.status}`);
+
         if (webhookResponse.ok) {
-          const webhookData = await webhookResponse.json();
+          // Verificar se a resposta tem conteúdo
+          const responseText = await webhookResponse.text();
+          console.log(`Webhook response text: ${responseText}`);
+          
+          let webhookData = null;
+          
+          // Tentar fazer parse do JSON apenas se houver conteúdo
+          if (responseText && responseText.trim() !== '') {
+            try {
+              webhookData = JSON.parse(responseText);
+            } catch (jsonError) {
+              console.error("Erro ao fazer parse do JSON:", jsonError);
+              console.log("Response text que causou erro:", responseText);
+            }
+          }
           
           // Verificar se retornou CODCFO
           if (webhookData && webhookData.CODCFO) {
@@ -998,23 +1015,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const deleteQuery = "DELETE FROM simplefcfo WHERE id = ?";
             await mysqlPool.execute(deleteQuery, [fornecedorId]);
             
+            console.log(`Fornecedor ${fornecedorId} removido da tabela - CODCFO: ${webhookData.CODCFO}`);
+            
             res.json({ 
               cadastrado: true, 
               message: "Fornecedor cadastrado no ERP",
               codcfo: webhookData.CODCFO
             });
           } else {
-            // Não retornou CODCFO
+            // Não retornou CODCFO ou resposta vazia
             res.json({ 
               cadastrado: false, 
-              message: "Fornecedor ainda não foi cadastrado no ERP" 
+              message: "Fornecedor não foi encontrado no ERP" 
             });
           }
         } else {
-          // Webhook retornou erro ou não encontrou
+          // Webhook retornou erro
+          console.log(`Webhook retornou erro: ${webhookResponse.status} - ${webhookResponse.statusText}`);
           res.json({ 
             cadastrado: false, 
-            message: "Fornecedor ainda não foi cadastrado no ERP" 
+            message: "Fornecedor não foi encontrado no ERP" 
           });
         }
       } catch (webhookError) {
@@ -1022,7 +1042,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Se houver erro no webhook, assumir que não está cadastrado
         res.json({ 
           cadastrado: false, 
-          message: "Fornecedor ainda não foi cadastrado no ERP" 
+          message: "Erro ao consultar o ERP. Tente novamente." 
         });
       }
     } catch (error) {
