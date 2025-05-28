@@ -588,8 +588,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         username: nome,
         email,
         password: hashedPassword,
-        type: tipo,
-        status: 1
+        name: nome
       });
 
       res.status(201).json({ 
