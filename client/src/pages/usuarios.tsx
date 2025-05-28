@@ -329,8 +329,7 @@ export default function UsuariosPage() {
             </Button>
             
             {/* Botão Novo Usuário - apenas para admin e system */}
-            {console.log('Debug - currentUser:', currentUser)}
-            {(currentUser?.type === 'admin' || currentUser?.type === 'system') && (
+            {(currentUser?.user?.type === 'admin' || currentUser?.user?.type === 'system') && (
               <Dialog open={createModalOpen} onOpenChange={setCreateModalOpen}>
                 <DialogTrigger asChild>
                   <Button className="bg-purple-600 hover:bg-purple-700">
