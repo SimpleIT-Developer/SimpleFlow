@@ -90,7 +90,11 @@ export default function UsuariosPage() {
         sortOrder
       });
       
-      const response = await fetch(`/api/usuarios?${params}`);
+      const response = await fetch(`/api/usuarios?${params}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
       if (!response.ok) {
         throw new Error("Erro ao carregar usuários");
       }
@@ -209,7 +213,7 @@ export default function UsuariosPage() {
       nome: usuario.nome,
       email: usuario.email,
       password: "",
-      tipo: usuario.tipo as "user" | "admin" | "system",
+      tipo: usuario.tipo as any,
       ativo: usuario.ativo
     });
     setEditModalOpen(true);
@@ -219,11 +223,11 @@ export default function UsuariosPage() {
     deleteMutation.mutate(usuario.id);
   };
 
-  const onCreateSubmit = (data: CreateUsuarioData) => {
+  const onCreateSubmit = (data: z.infer<typeof createUserSchema>) => {
     createMutation.mutate(data);
   };
 
-  const onEditSubmit = (data: UpdateUsuarioData) => {
+  const onEditSubmit = (data: z.infer<typeof updateUserSchema>) => {
     if (!editingUser) return;
     
     // Remove password do objeto se estiver vazio
@@ -235,61 +239,46 @@ export default function UsuariosPage() {
     updateMutation.mutate({ id: editingUser.id, data: updateData });
   };
 
-  // Funções de ação
-  const handleEdit = (usuario: Usuario) => {
-    toast({
-      title: "Editar Usuário",
-      description: `Abrindo formulário para editar ${usuario.nome}`,
-    });
-  };
-
-  const handleDelete = (usuario: Usuario) => {
-    toast({
-      title: "Excluir Usuário",
-      description: `Confirmar exclusão do usuário ${usuario.nome}`,
-    });
-  };
-
-  const handleNewUser = () => {
-    toast({
-      title: "Novo Usuário",
-      description: "Abrindo formulário para criar novo usuário",
-    });
-  };
-
-  // Função para limpar filtros
-  const handleClearFilters = () => {
-    setSearch("");
-    setStatus("all");
+  const handleSearch = (value: string) => {
+    setSearch(value);
     setPage(1);
   };
 
-  // Função para ordenação de colunas
-  const handleSort = (column: string) => {
-    if (sortBy === column) {
+  const handleSort = (field: string) => {
+    if (sortBy === field) {
       setSortOrder(sortOrder === "asc" ? "desc" : "asc");
     } else {
-      setSortBy(column);
+      setSortBy(field);
       setSortOrder("asc");
     }
     setPage(1);
   };
 
-  // Função para renderizar ícone de ordenação
-  const renderSortIcon = (column: string) => {
-    if (sortBy !== column) {
-      return <ArrowUpDown className="w-4 h-4 ml-1 text-gray-500" />;
+  const renderSortIcon = (field: string) => {
+    if (sortBy !== field) {
+      return <ArrowUpDown className="w-3 h-3 ml-1" />;
     }
-    return sortOrder === "asc" 
-      ? <ArrowUp className="w-4 h-4 ml-1 text-primary" />
-      : <ArrowDown className="w-4 h-4 ml-1 text-primary" />;
+    return sortOrder === "asc" ? 
+      <ArrowUp className="w-3 h-3 ml-1" /> : 
+      <ArrowDown className="w-3 h-3 ml-1" />;
   };
 
-  // Função de busca com debounce
-  const handleSearch = (value: string) => {
-    setSearch(value);
-    setPage(1);
-  };
+  if (error) {
+    return (
+      <Layout currentPage="Usuários">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <Card className="glassmorphism border-red-500/20">
+            <CardContent className="pt-6 text-center">
+              <p className="text-red-400">Erro ao carregar usuários</p>
+              <p className="text-gray-400 text-sm mt-2">
+                {error.message || "Tente recarregar a página"}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout currentPage="Usuários">
@@ -301,17 +290,121 @@ export default function UsuariosPage() {
               Gerencie os usuários do sistema
             </p>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center space-x-3">
             <Badge variant="secondary" className="text-primary">
               {total} {total === 1 ? "usuário" : "usuários"}
             </Badge>
-            <Button 
-              onClick={handleNewUser}
-              className="bg-primary hover:bg-primary/90 text-white"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Novo Usuário
-            </Button>
+            
+            {/* Botão Novo Usuário */}
+            <Dialog open={createModalOpen} onOpenChange={setCreateModalOpen}>
+              <DialogTrigger asChild>
+                <Button className="bg-purple-600 hover:bg-purple-700">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Novo Usuário
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="glassmorphism border-white/20 bg-black/90">
+                <DialogHeader>
+                  <DialogTitle className="text-white">Criar Novo Usuário</DialogTitle>
+                </DialogHeader>
+                <Form {...createForm}>
+                  <form onSubmit={createForm.handleSubmit(onCreateSubmit)} className="space-y-4">
+                    <FormField
+                      control={createForm.control}
+                      name="nome"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-white">Nome</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Digite o nome do usuário"
+                              {...field}
+                              className="bg-white/10 border-white/20 text-white"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={createForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-white">Email</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="email"
+                              placeholder="Digite o email do usuário"
+                              {...field}
+                              className="bg-white/10 border-white/20 text-white"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={createForm.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-white">Senha</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="password"
+                              placeholder="Digite a senha do usuário"
+                              {...field}
+                              className="bg-white/10 border-white/20 text-white"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={createForm.control}
+                      name="tipo"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-white">Tipo</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                                <SelectValue placeholder="Selecione o tipo" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="user">Usuário</SelectItem>
+                              <SelectItem value="admin">Administrador</SelectItem>
+                              <SelectItem value="system">Sistema</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <div className="flex justify-end space-x-2 pt-4">
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={() => setCreateModalOpen(false)}
+                        className="border-white/20 text-white hover:bg-white/10"
+                      >
+                        Cancelar
+                      </Button>
+                      <Button 
+                        type="submit" 
+                        disabled={createMutation.isPending}
+                        className="bg-purple-600 hover:bg-purple-700"
+                      >
+                        {createMutation.isPending ? "Criando..." : "Criar Usuário"}
+                      </Button>
+                    </div>
+                  </form>
+                </Form>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
 
@@ -324,65 +417,40 @@ export default function UsuariosPage() {
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <Input
-                    placeholder="Buscar em todos os campos..."
+                    placeholder="Buscar usuários..."
                     value={search}
                     onChange={(e) => handleSearch(e.target.value)}
                     className="pl-10 bg-white/10 border-white/20 text-white placeholder-gray-400"
                   />
                 </div>
-              </div>
-
-              {/* Filters */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Select value={status} onValueChange={(value: any) => setStatus(value)}>
-                  <SelectTrigger className="bg-white/10 border-white/20 text-white">
-                    <SelectValue placeholder="Status" />
+                <Select value={status} onValueChange={setStatus}>
+                  <SelectTrigger className="w-48 bg-white/10 border-white/20 text-white">
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Todos</SelectItem>
-                    <SelectItem value="active">Ativo</SelectItem>
-                    <SelectItem value="inactive">Inativo</SelectItem>
+                    <SelectItem value="all">Todos os Status</SelectItem>
+                    <SelectItem value="active">Ativos</SelectItem>
+                    <SelectItem value="inactive">Inativos</SelectItem>
                   </SelectContent>
                 </Select>
-
-                <div></div>
-                <div></div>
-
-                <Button 
-                  variant="outline" 
-                  onClick={handleClearFilters}
-                  className="border-white/20 text-white hover:bg-white/10"
-                >
-                  Limpar Filtros
-                </Button>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Data Grid */}
+        {/* Users Table */}
         <Card className="glassmorphism border-white/20">
-          <CardContent className="pt-6">
-            <div className="overflow-x-auto">
+          <CardHeader>
+            <CardTitle className="text-white">Lista de Usuários</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="w-full">
               {isLoading ? (
-                <div className="flex items-center justify-center min-h-[400px]">
-                  <Card className="glassmorphism border-blue-500/20">
-                    <CardContent className="pt-6 text-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-                      <p className="text-white">Carregando usuários...</p>
-                    </CardContent>
-                  </Card>
-                </div>
-              ) : error ? (
-                <div className="flex items-center justify-center min-h-[400px]">
-                  <Card className="glassmorphism border-red-500/20">
-                    <CardContent className="pt-6 text-center">
-                      <p className="text-red-400">Erro ao carregar usuários</p>
-                      <p className="text-gray-400 text-sm mt-2">
-                        Verifique sua conexão e tente novamente
-                      </p>
-                    </CardContent>
-                  </Card>
+                <div className="flex items-center justify-center min-h-[200px]">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto"></div>
+                    <p className="text-gray-400 mt-2">Carregando usuários...</p>
+                  </div>
                 </div>
               ) : usuarios.length === 0 ? (
                 <div className="flex items-center justify-center min-h-[400px]">
@@ -491,17 +559,40 @@ export default function UsuariosPage() {
                                 className="border-blue-500/30 text-blue-400 hover:bg-blue-500/20 w-7 h-7 p-0"
                                 title="Editar"
                               >
-                                <Edit className="w-4 h-4" />
+                                <Edit className="w-3 h-3" />
                               </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleDelete(usuario)}
-                                className="border-red-500/30 text-red-400 hover:bg-red-500/20 w-7 h-7 p-0"
-                                title="Excluir"
-                              >
-                                <Trash2 className="w-3 h-3" />
-                              </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="border-red-500/30 text-red-400 hover:bg-red-500/20 w-7 h-7 p-0"
+                                    title="Excluir"
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent className="glassmorphism border-white/20 bg-black/90">
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle className="text-white">Excluir Usuário</AlertDialogTitle>
+                                    <AlertDialogDescription className="text-gray-300">
+                                      Tem certeza que deseja excluir o usuário <strong>{usuario.nome}</strong>? 
+                                      Esta ação não pode ser desfeita.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel className="border-white/20 text-white hover:bg-white/10">
+                                      Cancelar
+                                    </AlertDialogCancel>
+                                    <AlertDialogAction 
+                                      onClick={() => handleDelete(usuario)}
+                                      className="bg-red-600 hover:bg-red-700"
+                                    >
+                                      Excluir
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
                             </div>
                           </td>
                         </tr>
@@ -522,12 +613,8 @@ export default function UsuariosPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => {
-                      if (page > 1) {
-                        setPage(1);
-                      }
-                    }}
-                    disabled={page === 1}
+                    onClick={() => setPage(1)}
+                    disabled={page <= 1}
                     className="border-white/20 text-white hover:bg-white/10"
                   >
                     <ChevronsLeft className="w-4 h-4" />
@@ -535,19 +622,13 @@ export default function UsuariosPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => {
-                      if (page > 1) {
-                        setPage(prev => prev - 1);
-                      }
-                    }}
-                    disabled={page === 1}
+                    onClick={() => setPage(prev => Math.max(1, prev - 1))}
+                    disabled={page <= 1}
                     className="border-white/20 text-white hover:bg-white/10"
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </Button>
-                  <span className="text-white px-3 py-1 bg-primary/20 rounded border border-primary/30">
-                    {page}
-                  </span>
+                  <span className="text-white text-sm px-3">{page}</span>
                   <Button
                     variant="outline"
                     size="sm"
@@ -579,6 +660,132 @@ export default function UsuariosPage() {
             )}
           </CardContent>
         </Card>
+
+        {/* Edit Modal */}
+        <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
+          <DialogContent className="glassmorphism border-white/20 bg-black/90">
+            <DialogHeader>
+              <DialogTitle className="text-white">Editar Usuário</DialogTitle>
+            </DialogHeader>
+            <Form {...editForm}>
+              <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
+                <FormField
+                  control={editForm.control}
+                  name="nome"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-white">Nome</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Digite o nome do usuário"
+                          {...field}
+                          className="bg-white/10 border-white/20 text-white"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={editForm.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-white">Email</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="email"
+                          placeholder="Digite o email do usuário"
+                          {...field}
+                          className="bg-white/10 border-white/20 text-white"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={editForm.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-white">Nova Senha (opcional)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="password"
+                          placeholder="Deixe em branco para manter a senha atual"
+                          {...field}
+                          className="bg-white/10 border-white/20 text-white"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={editForm.control}
+                  name="tipo"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-white">Tipo</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                            <SelectValue placeholder="Selecione o tipo" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="user">Usuário</SelectItem>
+                          <SelectItem value="admin">Administrador</SelectItem>
+                          <SelectItem value="system">Sistema</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={editForm.control}
+                  name="ativo"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-white">Status</FormLabel>
+                      <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
+                        <FormControl>
+                          <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                            <SelectValue placeholder="Selecione o status" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="1">Ativo</SelectItem>
+                          <SelectItem value="0">Inativo</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="flex justify-end space-x-2 pt-4">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => setEditModalOpen(false)}
+                    className="border-white/20 text-white hover:bg-white/10"
+                  >
+                    Cancelar
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    disabled={updateMutation.isPending}
+                    className="bg-purple-600 hover:bg-purple-700"
+                  >
+                    {updateMutation.isPending ? "Salvando..." : "Salvar Alterações"}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );
