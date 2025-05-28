@@ -205,9 +205,17 @@ export default function NFSeRecebidasPage() {
                   className="bg-white/10 border-white/20 text-white"
                 />
 
+                <Input
+                  type="date"
+                  placeholder="Data Fim"
+                  value={dataFim}
+                  onChange={(e) => setDataFim(e.target.value)}
+                  className="bg-white/10 border-white/20 text-white"
+                />
+
                 <Button 
                   variant="outline" 
-                  onClick={handleClearFilters}
+                  onClick={clearFilters}
                   className="border-white/20 text-white hover:bg-white/10"
                 >
                   Limpar Filtros
@@ -246,12 +254,12 @@ export default function NFSeRecebidasPage() {
                   <Card className="glassmorphism border-yellow-500/20">
                     <CardContent className="pt-6 text-center">
                       <p className="text-yellow-400">
-                        {search || status !== "all" || empresa || fornecedor || local || dataInicio || dataFim
+                        {search || status !== "all" || empresa || fornecedor || dataInicio || dataFim
                           ? "Nenhuma NFSe encontrada com os filtros aplicados"
                           : "Nenhuma NFSe recebida encontrada"}
                       </p>
                       <p className="text-gray-400 text-sm mt-2">
-                        {search || status !== "all" || empresa || fornecedor || local || dataInicio || dataFim
+                        {search || status !== "all" || empresa || fornecedor || dataInicio || dataFim
                           ? "Tente ajustar os filtros de busca"
                           : "As NFSe recebidas aparecerão aqui quando disponíveis"}
                       </p>
