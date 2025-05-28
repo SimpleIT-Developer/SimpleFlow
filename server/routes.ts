@@ -445,7 +445,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status = "all",
         empresa = "",
         fornecedor = "",
-        local = "",
         dataInicio = "",
         dataFim = "",
         page = "1",
@@ -456,24 +455,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const offset = (parseInt(page) - 1) * parseInt(limit);
       
-      // Build search conditions
-      let whereClause = "";
-      const queryParams = [];
-
+      // Build search conditions (idêntico ao NFe Recebidas)
+      let searchConditions: string[] = [];
+      const searchParams: any[] = [];
+      
       if (search) {
-        whereClause = "WHERE (nfse_emitente LIKE ? OR nfse_doc LIKE ? OR nfse_tomador LIKE ? OR nfse_tipo LIKE ?)";
-        queryParams.push(`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`);
+        searchConditions.push(`(
+          nfse_emitente LIKE ? OR 
+          nfse_doc LIKE ? OR 
+          nfse_tomador LIKE ? OR 
+          nfse_tipo LIKE ? OR 
+          nfse_local_prestacao LIKE ? OR
+          nfse_id_integracao LIKE ?
+        )`);
+        const searchTerm = `%${search}%`;
+        searchParams.push(searchTerm, searchTerm, searchTerm, searchTerm, searchTerm, searchTerm);
       }
+
+      if (status !== "all") {
+        if (status === "integrated") {
+          searchConditions.push("nfse_status_integracao = 1");
+        } else if (status === "not_integrated") {
+          searchConditions.push("nfse_status_integracao = 0");
+        }
+      }
+
+      if (empresa) {
+        searchConditions.push("nfse_tomador LIKE ?");
+        searchParams.push(`%${empresa}%`);
+      }
+
+      if (fornecedor) {
+        searchConditions.push("nfse_emitente LIKE ?");
+        searchParams.push(`%${fornecedor}%`);
+      }
+
+      if (dataInicio) {
+        searchConditions.push("DATE(nfse_data_hora) >= ?");
+        searchParams.push(dataInicio);
+      }
+
+      if (dataFim) {
+        searchConditions.push("DATE(nfse_data_hora) <= ?");
+        searchParams.push(dataFim);
+      }
+
+      const whereClause = searchConditions.length > 0 ? `WHERE ${searchConditions.join(" AND ")}` : "";
 
       // Count total records
       const countQuery = `SELECT COUNT(*) as total FROM nfse ${whereClause}`;
-      const [countResult] = await mysqlPool.execute(countQuery, queryParams) as any;
+      const [countResult] = await mysqlPool.execute(countQuery, searchParams) as any;
       const total = countResult[0].total;
 
       // Get NFSes with pagination and sorting  
       const dataQuery = `SELECT nfse_emitente, nfse_doc, nfse_tomador, nfse_tipo, nfse_local_prestacao, nfse_data_hora, nfse_valor_servico, nfse_status_integracao, nfse_id_integracao FROM nfse ${whereClause} ORDER BY ${sortBy} ${sortOrder.toUpperCase()} LIMIT ${parseInt(limit)} OFFSET ${offset}`;
       
-      const [nfses] = await mysqlPool.execute(dataQuery, queryParams) as any;
+      const [nfses] = await mysqlPool.execute(dataQuery, searchParams) as any;
 
       const totalPages = Math.ceil(total / parseInt(limit));
 

@@ -171,7 +171,7 @@ export default function NFSeRecebidasPage() {
               </div>
 
               {/* Filters */}
-              <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                 <Select value={status} onValueChange={(value: any) => setStatus(value)}>
                   <SelectTrigger className="bg-white/10 border-white/20 text-white">
                     <SelectValue placeholder="Status" />
@@ -202,7 +202,7 @@ export default function NFSeRecebidasPage() {
                   placeholder="Data Início"
                   value={dataInicio}
                   onChange={(e) => setDataInicio(e.target.value)}
-                  className="bg-white/10 border-white/20 text-white"
+                  className="bg-white/10 border-white/20 text-white placeholder-gray-400"
                 />
 
                 <Input
@@ -210,17 +210,23 @@ export default function NFSeRecebidasPage() {
                   placeholder="Data Fim"
                   value={dataFim}
                   onChange={(e) => setDataFim(e.target.value)}
-                  className="bg-white/10 border-white/20 text-white"
+                  className="bg-white/10 border-white/20 text-white placeholder-gray-400"
                 />
-
-                <Button 
-                  variant="outline" 
-                  onClick={clearFilters}
-                  className="border-white/20 text-white hover:bg-white/10"
-                >
-                  Limpar Filtros
-                </Button>
               </div>
+
+              {/* Clear Filters */}
+              {(search || status !== "all" || empresa || fornecedor || dataInicio || dataFim) && (
+                <div className="flex justify-end">
+                  <Button
+                    variant="outline"
+                    onClick={clearFilters}
+                    className="border-white/20 text-white hover:bg-white/10"
+                  >
+                    <Filter className="w-4 h-4 mr-2" />
+                    Limpar Filtros
+                  </Button>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
