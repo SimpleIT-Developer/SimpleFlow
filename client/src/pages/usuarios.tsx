@@ -22,7 +22,8 @@ const createUserSchema = z.object({
   nome: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
   email: z.string().email("Email inválido"),
   password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
-  tipo: z.enum(["user", "admin", "system"], { required_error: "Selecione um tipo" })
+  tipo: z.enum(["user", "admin", "system"], { required_error: "Selecione um tipo" }),
+  ativo: z.number().min(0).max(1)
 });
 
 const updateUserSchema = z.object({
@@ -64,7 +65,8 @@ export default function UsuariosPage() {
       nome: "",
       email: "",
       password: "",
-      tipo: "user" as const
+      tipo: "user" as const,
+      ativo: 1
     }
   });
 
@@ -412,6 +414,27 @@ export default function UsuariosPage() {
                               <SelectItem value="user">Usuário</SelectItem>
                               <SelectItem value="admin">Administrador</SelectItem>
                               <SelectItem value="system">Sistema</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={createForm.control}
+                      name="ativo"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-white">Status</FormLabel>
+                          <Select onValueChange={(value) => field.onChange(parseInt(value))} defaultValue={field.value.toString()}>
+                            <FormControl>
+                              <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                                <SelectValue placeholder="Selecione o status" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="1">Ativo</SelectItem>
+                              <SelectItem value="0">Inativo</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />

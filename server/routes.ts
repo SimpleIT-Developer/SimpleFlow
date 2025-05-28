@@ -635,7 +635,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Acesso negado" });
       }
 
-      const { nome, email, password, tipo } = req.body;
+      const { nome, email, password, tipo, ativo } = req.body;
 
       if (!nome || !email || !password || !tipo) {
         return res.status(400).json({ message: "Todos os campos são obrigatórios" });
@@ -658,7 +658,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         username: nome,
         email,
         password: hashedPassword,
-        name: nome
+        name: nome,
+        type: tipo,
+        status: ativo !== undefined ? ativo : 1
       });
 
       res.status(201).json({ 
