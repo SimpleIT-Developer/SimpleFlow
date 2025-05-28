@@ -1,26 +1,15 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { Layout } from "@/components/layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUpDown, ArrowUp, ArrowDown, Eye, Edit, CheckCircle, AlertCircle } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUpDown, ArrowUp, ArrowDown, Eye, RefreshCw, CheckCircle, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 import type { Fornecedor, FornecedorResponse } from "@shared/schema";
-
-// Schema para validação do formulário de edição
-const updateFornecedorSchema = z.object({
-  nome: z.string().min(1, "Nome é obrigatório"),
-  cnpj: z.string().min(1, "CNPJ é obrigatório"),
-  codigo_erp: z.string().nullable().optional(),
-});
 
 // Função para formatar CNPJ
 function formatCNPJ(cnpj: string) {
@@ -57,18 +46,8 @@ function FornecedoresPage() {
 
   // Estados dos modais
   const [viewModalOpen, setViewModalOpen] = useState(false);
-  const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedFornecedor, setSelectedFornecedor] = useState<Fornecedor | null>(null);
-
-  // Formulário de edição
-  const editForm = useForm<z.infer<typeof updateFornecedorSchema>>({
-    resolver: zodResolver(updateFornecedorSchema),
-    defaultValues: {
-      nome: "",
-      cnpj: "",
-      codigo_erp: null,
-    }
-  });
+  const [verificandoERP, setVerificandoERP] = useState<number | null>(null);
 
   const { data: fornecedorData, isLoading, error } = useQuery({
     queryKey: ["/api/fornecedores", { 
@@ -99,37 +78,47 @@ function FornecedoresPage() {
     },
   });
 
-  // Mutação para editar fornecedor
-  const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: z.infer<typeof updateFornecedorSchema> }) => {
-      const response = await fetch(`/api/fornecedores/${id}`, {
-        method: "PUT",
+  // Mutação para verificar cadastro no ERP
+  const verificarERPMutation = useMutation({
+    mutationFn: async (fornecedor: Fornecedor) => {
+      const cnpjFormatted = formatCNPJ(fornecedor.cnpj);
+      const response = await fetch(`/api/fornecedores/verificar-erp`, {
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ 
+          fornecedorId: fornecedor.id,
+          cnpj: cnpjFormatted 
+        }),
       });
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || "Erro ao atualizar fornecedor");
+        throw new Error(error.message || "Erro ao verificar cadastro no ERP");
       }
       return response.json();
     },
-    onSuccess: () => {
-      toast({
-        title: "Sucesso",
-        description: "Fornecedor atualizado com sucesso!",
-      });
+    onSuccess: (data) => {
+      setVerificandoERP(null);
+      if (data.cadastrado) {
+        toast({
+          title: "Sucesso",
+          description: "Fornecedor cadastrado no ERP",
+        });
+      } else {
+        toast({
+          title: "Informação",
+          description: "Fornecedor ainda não foi cadastrado no ERP",
+        });
+      }
       queryClient.invalidateQueries({ queryKey: ["/api/fornecedores"] });
-      setEditModalOpen(false);
-      setSelectedFornecedor(null);
-      editForm.reset();
     },
     onError: (error: any) => {
+      setVerificandoERP(null);
       toast({
         title: "Erro",
-        description: error.message || "Erro ao atualizar fornecedor",
+        description: error.message || "Erro ao verificar cadastro no ERP",
         variant: "destructive",
       });
     },
@@ -140,31 +129,14 @@ function FornecedoresPage() {
   const totalPages = fornecedorData?.totalPages || 0;
 
   // Funções de ação
-  const handleConsultarERP = (fornecedor: Fornecedor) => {
-    toast({
-      title: "Consultar Código ERP",
-      description: `Consultando código ERP do fornecedor ${fornecedor.nome}`,
-    });
-  };
-
   const handleView = (fornecedor: Fornecedor) => {
     setSelectedFornecedor(fornecedor);
     setViewModalOpen(true);
   };
 
-  const handleEdit = (fornecedor: Fornecedor) => {
-    setSelectedFornecedor(fornecedor);
-    editForm.reset({
-      nome: fornecedor.nome,
-      cnpj: fornecedor.cnpj,
-      codigo_erp: fornecedor.codigo_erp,
-    });
-    setEditModalOpen(true);
-  };
-
-  const onEditSubmit = (data: z.infer<typeof updateFornecedorSchema>) => {
-    if (!selectedFornecedor) return;
-    updateMutation.mutate({ id: selectedFornecedor.id, data });
+  const handleVerificarERP = (fornecedor: Fornecedor) => {
+    setVerificandoERP(fornecedor.id);
+    verificarERPMutation.mutate(fornecedor);
   };
 
   // Função para limpar filtros
@@ -370,11 +342,16 @@ function FornecedoresPage() {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => handleEdit(fornecedor)}
-                                className="border-purple-500/30 text-purple-400 hover:bg-purple-500/20 w-7 h-7 p-0"
-                                title="Editar"
+                                onClick={() => handleVerificarERP(fornecedor)}
+                                disabled={verificandoERP === fornecedor.id}
+                                className="border-green-500/30 text-green-400 hover:bg-green-500/20 w-7 h-7 p-0"
+                                title="Verificar Cadastro no ERP"
                               >
-                                <Edit className="w-3 h-3" />
+                                {verificandoERP === fornecedor.id ? (
+                                  <RefreshCw className="w-3 h-3 animate-spin" />
+                                ) : (
+                                  <RefreshCw className="w-3 h-3" />
+                                )}
                               </Button>
                             </div>
                           </td>
@@ -501,87 +478,7 @@ function FornecedoresPage() {
           </DialogContent>
         </Dialog>
 
-        {/* Modal de Edição */}
-        <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
-          <DialogContent className="glassmorphism border-white/20 bg-black/90 max-w-2xl">
-            <DialogHeader>
-              <DialogTitle className="text-white">Editar Fornecedor</DialogTitle>
-            </DialogHeader>
-            <Form {...editForm}>
-              <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
-                <FormField
-                  control={editForm.control}
-                  name="nome"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-white">Nome</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Digite o nome do fornecedor"
-                          {...field}
-                          className="bg-white/10 border-white/20 text-white"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={editForm.control}
-                  name="cnpj"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-white">CNPJ</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Digite o CNPJ"
-                          {...field}
-                          className="bg-white/10 border-white/20 text-white"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={editForm.control}
-                  name="codigo_erp"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-white">Código ERP</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Digite o código ERP (opcional)"
-                          {...field}
-                          value={field.value || ""}
-                          className="bg-white/10 border-white/20 text-white"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <div className="flex justify-end space-x-2 pt-4">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={() => setEditModalOpen(false)}
-                    className="border-white/20 text-white hover:bg-white/10"
-                  >
-                    Cancelar
-                  </Button>
-                  <Button 
-                    type="submit" 
-                    disabled={updateMutation.isPending}
-                    className="bg-purple-600 hover:bg-purple-700"
-                  >
-                    {updateMutation.isPending ? "Salvando..." : "Salvar Alterações"}
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
+
       </div>
     </Layout>
   );

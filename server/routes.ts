@@ -957,45 +957,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Rota para editar fornecedor
-  app.put("/api/fornecedores/:id", authenticateToken, async (req: any, res) => {
+  // Rota para verificar cadastro no ERP
+  app.post("/api/fornecedores/verificar-erp", authenticateToken, async (req: any, res) => {
     try {
-      const { id } = req.params;
-      const { nome, cnpj, codigo_erp } = req.body;
+      const { fornecedorId, cnpj } = req.body;
 
       // Validação básica
-      if (!nome || !cnpj) {
-        return res.status(400).json({ message: "Nome e CNPJ são obrigatórios" });
+      if (!fornecedorId || !cnpj) {
+        return res.status(400).json({ message: "ID do fornecedor e CNPJ são obrigatórios" });
       }
 
       // Verificar se o fornecedor existe
-      const checkQuery = "SELECT id FROM simplefcfo WHERE id = ?";
-      const [existing] = await mysqlPool.execute(checkQuery, [id]) as any;
+      const checkQuery = "SELECT id, nome, cnpj FROM simplefcfo WHERE id = ?";
+      const [existing] = await mysqlPool.execute(checkQuery, [fornecedorId]) as any;
       
       if (!existing || existing.length === 0) {
         return res.status(404).json({ message: "Fornecedor não encontrado" });
       }
 
-      // Atualizar fornecedor
-      const updateQuery = `
-        UPDATE simplefcfo 
-        SET nome = ?, cnpj = ?, codigo_erp = ?
-        WHERE id = ?
-      `;
-      
-      await mysqlPool.execute(updateQuery, [nome, cnpj, codigo_erp || null, id]);
+      const fornecedor = existing[0];
 
-      // Buscar o fornecedor atualizado
-      const selectQuery = "SELECT id, nome, cnpj, codigo_erp, data_cadastro FROM simplefcfo WHERE id = ?";
-      const [updated] = await mysqlPool.execute(selectQuery, [id]) as any;
+      try {
+        // Fazer consulta ao webhook
+        const webhookUrl = `https://webhook-n8n.simpleit.app.br/webhook/3f78d932-bba2-426b-995c-42dedea1c8ef?cnpj=${encodeURIComponent(cnpj)}`;
+        
+        const webhookResponse = await fetch(webhookUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          timeout: 10000 // 10 segundos de timeout
+        });
 
-      res.json({ 
-        message: "Fornecedor atualizado com sucesso", 
-        fornecedor: updated[0] 
-      });
+        if (webhookResponse.ok) {
+          const webhookData = await webhookResponse.json();
+          
+          // Verificar se retornou CODCFO
+          if (webhookData && webhookData.CODCFO) {
+            // Fornecedor cadastrado no ERP - excluir da tabela
+            const deleteQuery = "DELETE FROM simplefcfo WHERE id = ?";
+            await mysqlPool.execute(deleteQuery, [fornecedorId]);
+            
+            res.json({ 
+              cadastrado: true, 
+              message: "Fornecedor cadastrado no ERP",
+              codcfo: webhookData.CODCFO
+            });
+          } else {
+            // Não retornou CODCFO
+            res.json({ 
+              cadastrado: false, 
+              message: "Fornecedor ainda não foi cadastrado no ERP" 
+            });
+          }
+        } else {
+          // Webhook retornou erro ou não encontrou
+          res.json({ 
+            cadastrado: false, 
+            message: "Fornecedor ainda não foi cadastrado no ERP" 
+          });
+        }
+      } catch (webhookError) {
+        console.error("Erro ao consultar webhook:", webhookError);
+        // Se houver erro no webhook, assumir que não está cadastrado
+        res.json({ 
+          cadastrado: false, 
+          message: "Fornecedor ainda não foi cadastrado no ERP" 
+        });
+      }
     } catch (error) {
-      console.error("Erro ao atualizar fornecedor:", error);
-      res.status(500).json({ message: "Erro ao atualizar fornecedor" });
+      console.error("Erro ao verificar cadastro no ERP:", error);
+      res.status(500).json({ message: "Erro ao verificar cadastro no ERP" });
     }
   });
 
