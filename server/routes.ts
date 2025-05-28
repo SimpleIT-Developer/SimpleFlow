@@ -3,11 +3,12 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { loginSchema, registerSchema, type Company, type CompanyFilters, type CompanyResponse, type NFeRecebida, type NFeFilters, type NFeResponse, type NFSeRecebida, type NFSeResponse, type Usuario, type UsuarioResponse, type FornecedorResponse } from "@shared/schema";
+import { loginSchema, registerSchema, users, type Company, type CompanyFilters, type CompanyResponse, type NFeRecebida, type NFeFilters, type NFeResponse, type NFSeRecebida, type NFSeResponse, type Usuario, type UsuarioResponse, type FornecedorResponse } from "@shared/schema";
 import { z } from "zod";
 import { mysqlPool, testMysqlConnection } from "./mysql-config";
-import { pool } from "./db";
+import { db } from "./db";
 import { sendWelcomeEmail } from "./email-service";
+import { eq, ilike, or, count, desc, asc } from "drizzle-orm";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production";
 
@@ -458,12 +459,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Usuários endpoints - PostgreSQL
+  // Usuários endpoints - PostgreSQL com Drizzle
   app.get("/api/usuarios", authenticateToken, async (req: any, res) => {
     try {
       const {
         search = "",
-        status = "all",
+        status = "all", 
         page = "1",
         limit = "10",
         sortBy = "name",
@@ -472,51 +473,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const offset = (parseInt(page) - 1) * parseInt(limit);
       
-      // Build search conditions for PostgreSQL
+      // Construir condições WHERE usando Drizzle
       let whereConditions = [];
-      let queryParams = [];
-      let paramIndex = 1;
 
       if (search) {
-        whereConditions.push(`(name ILIKE $${paramIndex} OR email ILIKE $${paramIndex + 1} OR type ILIKE $${paramIndex + 2})`);
-        queryParams.push(`%${search}%`, `%${search}%`, `%${search}%`);
-        paramIndex += 3;
+        whereConditions.push(
+          or(
+            ilike(users.name, `%${search}%`),
+            ilike(users.email, `%${search}%`)
+          )
+        );
       }
 
       if (status !== "all") {
         const statusValue = status === "active" ? 1 : 0;
-        whereConditions.push(`status = $${paramIndex}`);
-        queryParams.push(statusValue);
-        paramIndex++;
+        whereConditions.push(eq(users.status, statusValue));
       }
 
-      const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(" AND ")}` : "";
+      // Count total usando Drizzle
+      const [countResult] = await db
+        .select({ count: count() })
+        .from(users)
+        .where(whereConditions.length > 0 ? and(...whereConditions) : undefined);
 
-      // Count total records using PostgreSQL
-      const countQuery = `SELECT COUNT(*) as total FROM users ${whereClause}`;
-      const countResult = await pool.query(countQuery, queryParams);
-      const total = parseInt(countResult.rows[0].total);
+      const total = countResult.count;
 
-      // Get usuarios with pagination and sorting using PostgreSQL
-      const dataQuery = `
-        SELECT id, name, email, type, status 
-        FROM users 
-        ${whereClause} 
-        ORDER BY ${sortBy} ${sortOrder.toUpperCase()} 
-        LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
-      `;
-      
-      const usuarios = await pool.query(dataQuery, [...queryParams, parseInt(limit), offset]);
+      // Buscar usuários usando Drizzle
+      const orderByField = sortBy === "name" ? users.name : 
+                          sortBy === "email" ? users.email :
+                          sortBy === "type" ? users.type :
+                          sortBy === "status" ? users.status : users.name;
+
+      const orderDirection = sortOrder === "desc" ? desc(orderByField) : asc(orderByField);
+
+      const allUsers = await db
+        .select({
+          id: users.id,
+          name: users.name,
+          email: users.email,
+          type: users.type,
+          status: users.status
+        })
+        .from(users)
+        .where(whereConditions.length > 0 ? and(...whereConditions) : undefined)
+        .orderBy(orderDirection)
+        .limit(parseInt(limit))
+        .offset(offset);
 
       const totalPages = Math.ceil(total / parseInt(limit));
 
       const response = {
-        usuarios: usuarios.rows.map((user: any) => ({
+        usuarios: allUsers.map((user: any) => ({
           id: user.id,
           nome: user.name,
           email: user.email,
           tipo: user.type || "Usuário",
-          ativo: user.status
+          ativo: user.status || 1
         })),
         total,
         page: parseInt(page),
