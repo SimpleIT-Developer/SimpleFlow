@@ -1,13 +1,26 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Layout } from "@/components/layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUpDown, ArrowUp, ArrowDown, Eye, CheckCircle, AlertCircle } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUpDown, ArrowUp, ArrowDown, Eye, Edit, CheckCircle, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { queryClient } from "@/lib/queryClient";
 import type { Fornecedor, FornecedorResponse } from "@shared/schema";
+
+// Schema para validação do formulário de edição
+const updateFornecedorSchema = z.object({
+  nome: z.string().min(1, "Nome é obrigatório"),
+  cnpj: z.string().min(1, "CNPJ é obrigatório"),
+  codigo_erp: z.string().nullable().optional(),
+});
 
 // Função para formatar CNPJ
 function formatCNPJ(cnpj: string) {
@@ -37,18 +50,29 @@ function FornecedoresPage() {
   
   // Estados dos filtros
   const [search, setSearch] = useState("");
-  const [nome, setNome] = useState("");
-  const [cnpj, setCnpj] = useState("");
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [sortBy, setSortBy] = useState("data_cadastro");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
+  // Estados dos modais
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [selectedFornecedor, setSelectedFornecedor] = useState<Fornecedor | null>(null);
+
+  // Formulário de edição
+  const editForm = useForm<z.infer<typeof updateFornecedorSchema>>({
+    resolver: zodResolver(updateFornecedorSchema),
+    defaultValues: {
+      nome: "",
+      cnpj: "",
+      codigo_erp: null,
+    }
+  });
+
   const { data: fornecedorData, isLoading, error } = useQuery({
     queryKey: ["/api/fornecedores", { 
       search, 
-      nome,
-      cnpj,
       page, 
       limit, 
       sortBy, 
@@ -57,19 +81,57 @@ function FornecedoresPage() {
     queryFn: async () => {
       const params = new URLSearchParams({
         search,
-        nome,
-        cnpj,
         page: page.toString(),
         limit: limit.toString(),
         sortBy,
         sortOrder
       });
       
-      const response = await fetch(`/api/fornecedores?${params}`);
+      const response = await fetch(`/api/fornecedores?${params}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
       if (!response.ok) {
         throw new Error("Erro ao carregar fornecedores");
       }
       return response.json() as Promise<FornecedorResponse>;
+    },
+  });
+
+  // Mutação para editar fornecedor
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: z.infer<typeof updateFornecedorSchema> }) => {
+      const response = await fetch(`/api/fornecedores/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Erro ao atualizar fornecedor");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Sucesso",
+        description: "Fornecedor atualizado com sucesso!",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/fornecedores"] });
+      setEditModalOpen(false);
+      setSelectedFornecedor(null);
+      editForm.reset();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro",
+        description: error.message || "Erro ao atualizar fornecedor",
+        variant: "destructive",
+      });
     },
   });
 
@@ -85,11 +147,29 @@ function FornecedoresPage() {
     });
   };
 
+  const handleView = (fornecedor: Fornecedor) => {
+    setSelectedFornecedor(fornecedor);
+    setViewModalOpen(true);
+  };
+
+  const handleEdit = (fornecedor: Fornecedor) => {
+    setSelectedFornecedor(fornecedor);
+    editForm.reset({
+      nome: fornecedor.nome,
+      cnpj: fornecedor.cnpj,
+      codigo_erp: fornecedor.codigo_erp,
+    });
+    setEditModalOpen(true);
+  };
+
+  const onEditSubmit = (data: z.infer<typeof updateFornecedorSchema>) => {
+    if (!selectedFornecedor) return;
+    updateMutation.mutate({ id: selectedFornecedor.id, data });
+  };
+
   // Função para limpar filtros
   const handleClearFilters = () => {
     setSearch("");
-    setNome("");
-    setCnpj("");
     setPage(1);
   };
 
@@ -138,46 +218,25 @@ function FornecedoresPage() {
         {/* Search and Filters */}
         <Card className="glassmorphism border-white/20">
           <CardContent className="pt-6">
-            <div className="space-y-4">
-              {/* Search Bar */}
-              <div className="flex items-center space-x-4">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <Input
-                    placeholder="Buscar em todos os campos..."
-                    value={search}
-                    onChange={(e) => handleSearch(e.target.value)}
-                    className="pl-10 bg-white/10 border-white/20 text-white placeholder-gray-400"
-                  />
-                </div>
+            <div className="flex items-center space-x-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  placeholder="Buscar em todos os campos..."
+                  value={search}
+                  onChange={(e) => handleSearch(e.target.value)}
+                  className="pl-10 bg-white/10 border-white/20 text-white placeholder-gray-400"
+                />
               </div>
-
-              {/* Filters */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Input
-                  placeholder="Nome do Fornecedor"
-                  value={nome}
-                  onChange={(e) => setNome(e.target.value)}
-                  className="bg-white/10 border-white/20 text-white placeholder-gray-400"
-                />
-
-                <Input
-                  placeholder="CNPJ"
-                  value={cnpj}
-                  onChange={(e) => setCnpj(e.target.value)}
-                  className="bg-white/10 border-white/20 text-white placeholder-gray-400"
-                />
-
-                <div></div>
-
+              {search && (
                 <Button 
                   variant="outline" 
                   onClick={handleClearFilters}
                   className="border-white/20 text-white hover:bg-white/10"
                 >
-                  Limpar Filtros
+                  Limpar
                 </Button>
-              </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -298,15 +357,26 @@ function FornecedoresPage() {
                             {formatDate(fornecedor.data_cadastro)}
                           </td>
                           <td className="py-2 px-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => handleConsultarERP(fornecedor)}
-                              className="border-blue-500/30 text-blue-400 hover:bg-blue-500/20 w-7 h-7 p-0"
-                              title="Consultar ERP"
-                            >
-                              <Eye className="w-3 h-3" />
-                            </Button>
+                            <div className="flex space-x-1">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleView(fornecedor)}
+                                className="border-blue-500/30 text-blue-400 hover:bg-blue-500/20 w-7 h-7 p-0"
+                                title="Visualizar"
+                              >
+                                <Eye className="w-3 h-3" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleEdit(fornecedor)}
+                                className="border-purple-500/30 text-purple-400 hover:bg-purple-500/20 w-7 h-7 p-0"
+                                title="Editar"
+                              >
+                                <Edit className="w-3 h-3" />
+                              </Button>
+                            </div>
                           </td>
                         </tr>
                       ))}
