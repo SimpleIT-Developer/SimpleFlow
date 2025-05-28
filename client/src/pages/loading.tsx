@@ -14,14 +14,14 @@ export default function LoadingPage() {
           clearInterval(progressInterval);
           return 100;
         }
-        return prev + 1; // Incrementa 1% a cada 100ms (10 segundos total)
+        return prev + 2; // Incrementa 2% a cada 100ms (5 segundos total)
       });
     }, 100);
 
-    // Timer para redirecionar após 10 segundos
+    // Timer para redirecionar após 5 segundos
     const redirectTimer = setTimeout(() => {
       setLocation("/dashboard");
-    }, 10000);
+    }, 5000);
 
     return () => {
       clearInterval(progressInterval);
