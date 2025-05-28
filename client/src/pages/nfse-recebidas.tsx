@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Layout } from "@/components/layout";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Download, RefreshCw, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { Download, RefreshCw, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Filter } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { NFSeRecebida, NFSeResponse } from "@shared/schema";
 
@@ -56,16 +56,16 @@ export default function NFSeRecebidasPage() {
   const [dataFim, setDataFim] = useState("");
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
-  const [sortBy, setSortBy] = useState("nfse_data_hora");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [sortBy] = useState("nfse_data_hora");
+  const [sortOrder] = useState("desc");
 
   const { data: nfseData, isLoading, error } = useQuery({
-    queryKey: ["/api/nfse-recebidas", { 
+    queryKey: ["nfse-recebidas", { 
       search, 
       status, 
       empresa, 
       fornecedor, 
-      local, 
+      local,
       dataInicio, 
       dataFim, 
       page, 
@@ -127,33 +127,6 @@ export default function NFSeRecebidasPage() {
     setPage(1);
   };
 
-  // Função para ordenação de colunas
-  const handleSort = (column: string) => {
-    if (sortBy === column) {
-      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-    } else {
-      setSortBy(column);
-      setSortOrder("asc");
-    }
-    setPage(1);
-  };
-
-  // Função para renderizar ícone de ordenação
-  const renderSortIcon = (column: string) => {
-    if (sortBy !== column) {
-      return <ArrowUpDown className="w-4 h-4 ml-1 text-gray-500" />;
-    }
-    return sortOrder === "asc" 
-      ? <ArrowUp className="w-4 h-4 ml-1 text-primary" />
-      : <ArrowDown className="w-4 h-4 ml-1 text-primary" />;
-  };
-
-  // Função de busca com debounce
-  const handleSearch = (value: string) => {
-    setSearch(value);
-    setPage(1);
-  };
-
   return (
     <Layout currentPage="NFSe Recebidas">
       <div className="space-y-6">
@@ -180,7 +153,7 @@ export default function NFSeRecebidasPage() {
                   <Input
                     placeholder="Buscar em todos os campos..."
                     value={search}
-                    onChange={(e) => handleSearch(e.target.value)}
+                    onChange={(e) => setSearch(e.target.value)}
                     className="pl-10 bg-white/10 border-white/20 text-white placeholder-gray-400"
                   />
                 </div>
@@ -286,70 +259,14 @@ export default function NFSeRecebidasPage() {
                   <table className="w-full">
                     <thead className="bg-white/10">
                       <tr>
-                        <th 
-                          className="text-left py-4 px-6 text-white font-medium cursor-pointer hover:bg-white/5 transition-colors"
-                          onClick={() => handleSort("nfse_emitente")}
-                        >
-                          <div className="flex items-center">
-                            Emitente
-                            {renderSortIcon("nfse_emitente")}
-                          </div>
-                        </th>
-                        <th 
-                          className="text-left py-4 px-6 text-white font-medium cursor-pointer hover:bg-white/5 transition-colors"
-                          onClick={() => handleSort("nfse_doc")}
-                        >
-                          <div className="flex items-center">
-                            CNPJ
-                            {renderSortIcon("nfse_doc")}
-                          </div>
-                        </th>
-                        <th 
-                          className="text-left py-4 px-6 text-white font-medium cursor-pointer hover:bg-white/5 transition-colors"
-                          onClick={() => handleSort("nfse_tomador")}
-                        >
-                          <div className="flex items-center">
-                            Tomador
-                            {renderSortIcon("nfse_tomador")}
-                          </div>
-                        </th>
+                        <th className="text-left py-4 px-6 text-white font-medium">Emitente</th>
+                        <th className="text-left py-4 px-6 text-white font-medium">CNPJ</th>
+                        <th className="text-left py-4 px-6 text-white font-medium">Tomador</th>
                         <th className="text-left py-4 px-6 text-white font-medium">Tipo</th>
-                        <th 
-                          className="text-left py-4 px-6 text-white font-medium cursor-pointer hover:bg-white/5 transition-colors"
-                          onClick={() => handleSort("nfse_local_prestacao")}
-                        >
-                          <div className="flex items-center">
-                            Local
-                            {renderSortIcon("nfse_local_prestacao")}
-                          </div>
-                        </th>
-                        <th 
-                          className="text-left py-4 px-6 text-white font-medium cursor-pointer hover:bg-white/5 transition-colors"
-                          onClick={() => handleSort("nfse_data_hora")}
-                        >
-                          <div className="flex items-center">
-                            Data
-                            {renderSortIcon("nfse_data_hora")}
-                          </div>
-                        </th>
-                        <th 
-                          className="text-left py-4 px-6 text-white font-medium cursor-pointer hover:bg-white/5 transition-colors"
-                          onClick={() => handleSort("nfse_valor_servico")}
-                        >
-                          <div className="flex items-center">
-                            Valor
-                            {renderSortIcon("nfse_valor_servico")}
-                          </div>
-                        </th>
-                        <th 
-                          className="text-left py-4 px-6 text-white font-medium cursor-pointer hover:bg-white/5 transition-colors"
-                          onClick={() => handleSort("nfse_status_integracao")}
-                        >
-                          <div className="flex items-center">
-                            Status
-                            {renderSortIcon("nfse_status_integracao")}
-                          </div>
-                        </th>
+                        <th className="text-left py-4 px-6 text-white font-medium">Local</th>
+                        <th className="text-left py-4 px-6 text-white font-medium">Data</th>
+                        <th className="text-left py-4 px-6 text-white font-medium">Valor</th>
+                        <th className="text-left py-4 px-6 text-white font-medium">Status</th>
                         <th className="text-left py-4 px-6 text-white font-medium">Ações</th>
                       </tr>
                     </thead>
