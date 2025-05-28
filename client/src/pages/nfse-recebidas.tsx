@@ -48,16 +48,15 @@ export default function NFSeRecebidasPage() {
   
   // Estados dos filtros
   const [search, setSearch] = useState("");
-  const [status, setStatus] = useState("all");
+  const [status, setStatus] = useState<"all" | "integrated" | "not_integrated">("all");
   const [empresa, setEmpresa] = useState("");
   const [fornecedor, setFornecedor] = useState("");
-  const [local, setLocal] = useState("");
   const [dataInicio, setDataInicio] = useState("");
   const [dataFim, setDataFim] = useState("");
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
-  const [sortBy] = useState("nfse_data_hora");
-  const [sortOrder] = useState("desc");
+  const [sortBy, setSortBy] = useState<keyof NFSeRecebida>("nfse_data_hora");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
   const { data: nfseData, isLoading, error } = useQuery({
     queryKey: ["nfse-recebidas", { 
@@ -65,7 +64,6 @@ export default function NFSeRecebidasPage() {
       status, 
       empresa, 
       fornecedor, 
-      local,
       dataInicio, 
       dataFim, 
       page, 
@@ -79,7 +77,6 @@ export default function NFSeRecebidasPage() {
         status,
         empresa,
         fornecedor,
-        local,
         dataInicio,
         dataFim,
         page: page.toString(),
@@ -115,13 +112,27 @@ export default function NFSeRecebidasPage() {
     });
   };
 
-  // Função para limpar filtros
-  const handleClearFilters = () => {
+  // Funções de manipulação dos filtros (idênticas às da NFe Recebidas)
+  const handleSort = (column: keyof NFSeRecebida) => {
+    if (sortBy === column) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortBy(column);
+      setSortOrder("asc");
+    }
+    setPage(1);
+  };
+
+  const handleSearch = (value: string) => {
+    setSearch(value);
+    setPage(1);
+  };
+
+  const clearFilters = () => {
     setSearch("");
     setStatus("all");
     setEmpresa("");
     setFornecedor("");
-    setLocal("");
     setDataInicio("");
     setDataFim("");
     setPage(1);
@@ -183,13 +194,6 @@ export default function NFSeRecebidasPage() {
                   placeholder="Fornecedor"
                   value={fornecedor}
                   onChange={(e) => setFornecedor(e.target.value)}
-                  className="bg-white/10 border-white/20 text-white placeholder-gray-400"
-                />
-
-                <Input
-                  placeholder="Local"
-                  value={local}
-                  onChange={(e) => setLocal(e.target.value)}
                   className="bg-white/10 border-white/20 text-white placeholder-gray-400"
                 />
 
