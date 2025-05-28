@@ -284,93 +284,66 @@ export default function NFeRecebidasPage() {
             <CardTitle className="text-white">Lista de NFe Recebidas</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full">
+            <div className="w-full">
+              <table className="w-full table-fixed">
                 <thead>
                   <tr className="border-b border-white/10">
-                    <th className="text-left py-3 px-4">
+                    <th className="text-left py-3 px-2 w-20">
                       <Button
                         variant="ghost"
                         onClick={() => handleSort("doc_num")}
-                        className="text-gray-300 hover:text-white p-0 h-auto font-semibold"
+                        className="text-gray-300 hover:text-white p-0 h-auto font-semibold text-xs"
                       >
                         Número {getSortIcon("doc_num")}
                       </Button>
                     </th>
-                    <th className="text-left py-3 px-4">
+                    <th className="text-left py-3 px-2 w-32">
                       <Button
                         variant="ghost"
                         onClick={() => handleSort("doc_dest_nome")}
-                        className="text-gray-300 hover:text-white p-0 h-auto font-semibold"
+                        className="text-gray-300 hover:text-white p-0 h-auto font-semibold text-xs"
                       >
                         Empresa {getSortIcon("doc_dest_nome")}
                       </Button>
                     </th>
-                    <th className="text-left py-3 px-4">
+                    <th className="text-left py-3 px-2 w-32">
                       <Button
                         variant="ghost"
                         onClick={() => handleSort("doc_emit_nome")}
-                        className="text-gray-300 hover:text-white p-0 h-auto font-semibold"
+                        className="text-gray-300 hover:text-white p-0 h-auto font-semibold text-xs"
                       >
                         Fornecedor {getSortIcon("doc_emit_nome")}
                       </Button>
                     </th>
-                    <th className="text-left py-3 px-4">
-                      <Button
-                        variant="ghost"
-                        onClick={() => handleSort("doc_emit_documento")}
-                        className="text-gray-300 hover:text-white p-0 h-auto font-semibold"
-                      >
-                        CNPJ {getSortIcon("doc_emit_documento")}
-                      </Button>
-                    </th>
-                    <th className="text-left py-3 px-4">
+                    <th className="text-left py-3 px-2 w-24">
                       <Button
                         variant="ghost"
                         onClick={() => handleSort("doc_date_emi")}
-                        className="text-gray-300 hover:text-white p-0 h-auto font-semibold"
+                        className="text-gray-300 hover:text-white p-0 h-auto font-semibold text-xs"
                       >
-                        Data Emissão {getSortIcon("doc_date_emi")}
+                        Data {getSortIcon("doc_date_emi")}
                       </Button>
                     </th>
-                    <th className="text-left py-3 px-4">
+                    <th className="text-left py-3 px-2 w-24">
                       <Button
                         variant="ghost"
                         onClick={() => handleSort("doc_valor")}
-                        className="text-gray-300 hover:text-white p-0 h-auto font-semibold"
+                        className="text-gray-300 hover:text-white p-0 h-auto font-semibold text-xs"
                       >
                         Valor {getSortIcon("doc_valor")}
                       </Button>
                     </th>
-                    <th className="text-left py-3 px-4">
-                      <Button
-                        variant="ghost"
-                        onClick={() => handleSort("doc_nat_op")}
-                        className="text-gray-300 hover:text-white p-0 h-auto font-semibold"
-                      >
-                        CFOP {getSortIcon("doc_nat_op")}
-                      </Button>
-                    </th>
-                    <th className="text-left py-3 px-4">
+                    <th className="text-left py-3 px-2 w-24">
                       <Button
                         variant="ghost"
                         onClick={() => handleSort("doc_status_integracao")}
-                        className="text-gray-300 hover:text-white p-0 h-auto font-semibold"
+                        className="text-gray-300 hover:text-white p-0 h-auto font-semibold text-xs"
                       >
                         Status {getSortIcon("doc_status_integracao")}
                       </Button>
                     </th>
-                    <th className="text-left py-3 px-4">
-                      <Button
-                        variant="ghost"
-                        onClick={() => handleSort("doc_id_integracao")}
-                        className="text-gray-300 hover:text-white p-0 h-auto font-semibold"
-                      >
-                        ID ERP {getSortIcon("doc_id_integracao")}
-                      </Button>
-                    </th>
-                    <th className="text-left py-3 px-4 min-w-[140px]">
-                      <span className="text-gray-300 font-semibold">Ações</span>
+                    <th className="text-left py-3 px-2 w-28">
+                      <span className="text-gray-300 font-semibold text-xs">Ações</span>
                     </th>
                   </tr>
                 </thead>
@@ -380,70 +353,61 @@ export default function NFeRecebidasPage() {
                       key={`${nfe.doc_num}-${index}`}
                       className="border-b border-white/5 hover:bg-white/5 transition-colors"
                     >
-                      <td className="py-3 px-4 text-white font-mono">
+                      <td className="py-2 px-2 text-white font-mono text-sm truncate">
                         {nfe.doc_num}
                       </td>
-                      <td className="py-3 px-4 text-white">
+                      <td className="py-2 px-2 text-white text-sm truncate" title={nfe.doc_dest_nome}>
                         {nfe.doc_dest_nome}
                       </td>
-                      <td className="py-3 px-4 text-gray-300">
+                      <td className="py-2 px-2 text-gray-300 text-sm truncate" title={nfe.doc_emit_nome}>
                         {nfe.doc_emit_nome}
                       </td>
-                      <td className="py-3 px-4 text-gray-300 font-mono">
-                        {formatCpfCnpj(nfe.doc_emit_documento)}
-                      </td>
-                      <td className="py-3 px-4 text-gray-300">
+                      <td className="py-2 px-2 text-gray-300 text-sm">
                         {formatDate(nfe.doc_date_emi)}
                       </td>
-                      <td className="py-3 px-4 text-gray-300 font-mono">
+                      <td className="py-2 px-2 text-gray-300 font-mono text-sm">
                         {formatCurrency(nfe.doc_valor)}
                       </td>
-                      <td className="py-3 px-4 text-gray-300">
-                        {nfe.doc_nat_op}
-                      </td>
-                      <td className="py-3 px-4">
+                      <td className="py-2 px-2">
                         <Badge
                           variant={nfe.doc_status_integracao === 1 ? "default" : "secondary"}
-                          className={
+                          className={`text-xs ${
                             nfe.doc_status_integracao === 1
                               ? "bg-green-500/20 text-green-400 border-green-500/30"
                               : "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
-                          }
+                          }`}
                         >
-                          {nfe.doc_status_integracao === 1 ? "Integrado" : "Não Integrado"}
+                          {nfe.doc_status_integracao === 1 ? "OK" : "Pendente"}
                         </Badge>
                       </td>
-                      <td className="py-3 px-4 text-gray-300 font-mono">
-                        {nfe.doc_id_integracao || "-"}
-                      </td>
-                      <td className="py-3 px-4 min-w-[140px]">
-                        <div className="flex space-x-1 justify-start">
+                      <td className="py-2 px-2">
+                        <div className="flex space-x-1">
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => handleBaixarXML(nfe)}
-                            className="border-blue-500/30 text-blue-400 hover:bg-blue-500/20 min-w-[32px]"
+                            className="border-blue-500/30 text-blue-400 hover:bg-blue-500/20 w-7 h-7 p-0"
                             title="Baixar XML"
                           >
-                            <Download className="w-4 h-4" />
+                            <Download className="w-3 h-3" />
                           </Button>
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => handleIntegrarERP(nfe)}
-                            className="border-green-500/30 text-green-400 hover:bg-green-500/20 min-w-[32px]"
+                            className="border-green-500/30 text-green-400 hover:bg-green-500/20 w-7 h-7 p-0"
                             title="Integrar com ERP"
                           >
-                            <RefreshCw className="w-4 h-4" />
+                            <RefreshCw className="w-3 h-3" />
                           </Button>
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => handleImprimirDANFE(nfe)}
-                            className="border-purple-500/30 text-purple-400 hover:bg-purple-500/20 min-w-[32px]"
+                            className="border-purple-500/30 text-purple-400 hover:bg-purple-500/20 w-7 h-7 p-0"
                             title="Imprimir DANFE"
                           >
-                            <Printer className="w-4 h-4" />
+                            <Printer className="w-3 h-3" />
                           </Button>
                         </div>
                       </td>
