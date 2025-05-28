@@ -369,7 +369,7 @@ export default function NFeRecebidasPage() {
                         ID ERP {getSortIcon("doc_id_integracao")}
                       </Button>
                     </th>
-                    <th className="text-left py-3 px-4">
+                    <th className="text-left py-3 px-4 min-w-[140px]">
                       <span className="text-gray-300 font-semibold">Ações</span>
                     </th>
                   </tr>
@@ -416,13 +416,13 @@ export default function NFeRecebidasPage() {
                       <td className="py-3 px-4 text-gray-300 font-mono">
                         {nfe.doc_id_integracao || "-"}
                       </td>
-                      <td className="py-3 px-4">
-                        <div className="flex space-x-2">
+                      <td className="py-3 px-4 min-w-[140px]">
+                        <div className="flex space-x-1 justify-start">
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => handleBaixarXML(nfe)}
-                            className="border-blue-500/30 text-blue-400 hover:bg-blue-500/20"
+                            className="border-blue-500/30 text-blue-400 hover:bg-blue-500/20 min-w-[32px]"
                             title="Baixar XML"
                           >
                             <Download className="w-4 h-4" />
@@ -431,7 +431,7 @@ export default function NFeRecebidasPage() {
                             size="sm"
                             variant="outline"
                             onClick={() => handleIntegrarERP(nfe)}
-                            className="border-green-500/30 text-green-400 hover:bg-green-500/20"
+                            className="border-green-500/30 text-green-400 hover:bg-green-500/20 min-w-[32px]"
                             title="Integrar com ERP"
                           >
                             <RefreshCw className="w-4 h-4" />
@@ -440,7 +440,7 @@ export default function NFeRecebidasPage() {
                             size="sm"
                             variant="outline"
                             onClick={() => handleImprimirDANFE(nfe)}
-                            className="border-purple-500/30 text-purple-400 hover:bg-purple-500/20"
+                            className="border-purple-500/30 text-purple-400 hover:bg-purple-500/20 min-w-[32px]"
                             title="Imprimir DANFE"
                           >
                             <Printer className="w-4 h-4" />
