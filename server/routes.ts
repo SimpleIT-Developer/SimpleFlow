@@ -475,6 +475,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const currentUserId = req.user.id;
       const offset = (parseInt(page) - 1) * parseInt(limit);
       
+      console.log("Usuário logado:", { userType, currentUserId, userInfo: req.user });
+      
       // Construir condições WHERE usando Drizzle
       let whereConditions = [];
 
@@ -482,9 +484,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (userType === 'user') {
         // Usuários do tipo 'user' só podem ver eles mesmos
         whereConditions.push(eq(users.id, currentUserId));
+        console.log("Aplicando filtro para usuário tipo 'user'");
       } else if (userType === 'admin') {
         // Usuários do tipo 'admin' podem ver 'admin' e 'user'
         whereConditions.push(or(eq(users.type, 'admin'), eq(users.type, 'user')));
+        console.log("Aplicando filtro para usuário tipo 'admin'");
+      } else {
+        console.log("Usuário tipo 'system' - sem restrições de acesso");
       }
       // Usuários do tipo 'system' podem ver todos (sem restrição)
 
