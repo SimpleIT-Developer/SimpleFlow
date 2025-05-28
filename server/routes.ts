@@ -6,6 +6,7 @@ import jwt from "jsonwebtoken";
 import { loginSchema, registerSchema, type Company, type CompanyFilters, type CompanyResponse, type NFeRecebida, type NFeFilters, type NFeResponse, type NFSeRecebida, type NFSeResponse, type Usuario, type UsuarioResponse, type FornecedorResponse } from "@shared/schema";
 import { z } from "zod";
 import { mysqlPool, testMysqlConnection } from "./mysql-config";
+import { pool } from "./db";
 import { sendWelcomeEmail } from "./email-service";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production";
@@ -457,7 +458,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Usuários endpoints
+  // Usuários endpoints - PostgreSQL
   app.get("/api/usuarios", authenticateToken, async (req: any, res) => {
     try {
       const {
@@ -465,35 +466,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status = "all",
         page = "1",
         limit = "10",
-        sortBy = "nome",
+        sortBy = "name",
         sortOrder = "asc"
       } = req.query;
 
       const offset = (parseInt(page) - 1) * parseInt(limit);
       
-      // Build search conditions
-      let whereClause = "";
-      const queryParams = [];
+      // Build search conditions for PostgreSQL
+      let whereConditions = [];
+      let queryParams = [];
+      let paramIndex = 1;
 
       if (search) {
-        whereClause = "WHERE (nome LIKE ? OR email LIKE ? OR tipo LIKE ?)";
+        whereConditions.push(`(name ILIKE $${paramIndex} OR email ILIKE $${paramIndex + 1} OR type ILIKE $${paramIndex + 2})`);
         queryParams.push(`%${search}%`, `%${search}%`, `%${search}%`);
+        paramIndex += 3;
       }
 
-      // Count total records
-      const countQuery = `SELECT COUNT(*) as total FROM usuarios ${whereClause}`;
-      const [countResult] = await mysqlPool.execute(countQuery, queryParams) as any;
-      const total = countResult[0].total;
+      if (status !== "all") {
+        const statusValue = status === "active" ? 1 : 0;
+        whereConditions.push(`status = $${paramIndex}`);
+        queryParams.push(statusValue);
+        paramIndex++;
+      }
 
-      // Get usuarios with pagination and sorting  
-      const dataQuery = `SELECT id, nome, email, tipo, ativo FROM usuarios ${whereClause} ORDER BY ${sortBy} ${sortOrder.toUpperCase()} LIMIT ${parseInt(limit)} OFFSET ${offset}`;
+      const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(" AND ")}` : "";
+
+      // Count total records using PostgreSQL
+      const countQuery = `SELECT COUNT(*) as total FROM users ${whereClause}`;
+      const countResult = await pool.query(countQuery, queryParams);
+      const total = parseInt(countResult.rows[0].total);
+
+      // Get usuarios with pagination and sorting using PostgreSQL
+      const dataQuery = `
+        SELECT id, name, email, type, status 
+        FROM users 
+        ${whereClause} 
+        ORDER BY ${sortBy} ${sortOrder.toUpperCase()} 
+        LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+      `;
       
-      const [usuarios] = await mysqlPool.execute(dataQuery, queryParams) as any;
+      const usuarios = await pool.query(dataQuery, [...queryParams, parseInt(limit), offset]);
 
       const totalPages = Math.ceil(total / parseInt(limit));
 
-      const response: UsuarioResponse = {
-        usuarios: usuarios,
+      const response = {
+        usuarios: usuarios.rows.map((user: any) => ({
+          id: user.id,
+          nome: user.name,
+          email: user.email,
+          tipo: user.type || "Usuário",
+          ativo: user.status
+        })),
         total,
         page: parseInt(page),
         totalPages,
