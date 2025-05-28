@@ -51,6 +51,13 @@ export default function DashboardPage() {
   // Consulta para dados do gráfico de barras
   const { data: chartData } = useQuery<ChartData[]>({
     queryKey: ['/api/dashboard/chart', selectedPeriod],
+    queryFn: async () => {
+      const response = await fetch(`/api/dashboard/chart?period=${selectedPeriod}`);
+      if (!response.ok) {
+        throw new Error("Erro ao carregar dados do gráfico");
+      }
+      return response.json();
+    },
   });
 
   // Consulta para últimos documentos
@@ -192,7 +199,7 @@ export default function DashboardPage() {
                         }} 
                       />
                       <Legend />
-                      <Bar dataKey="doc" fill="#3b82f6" name="DOC (NFe)" />
+                      <Bar dataKey="nfe" fill="#3b82f6" name="NFe" />
                       <Bar dataKey="nfse" fill="#ef4444" name="NFSe" />
                     </BarChart>
                   </ResponsiveContainer>

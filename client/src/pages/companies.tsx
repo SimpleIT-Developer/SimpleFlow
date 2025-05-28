@@ -17,7 +17,8 @@ import {
   Search, 
   Eye, 
   Edit, 
-  ChevronLeft, 
+  ChevronLeft,
+  RefreshCw, 
   ChevronRight, 
   ChevronsLeft, 
   ChevronsRight,
@@ -49,6 +50,14 @@ export default function CompaniesPage() {
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
+
+  const handleRefreshEmpresas = () => {
+    queryClient.invalidateQueries({ queryKey: ["/api/companies"] });
+    toast({
+      title: "Empresas Atualizadas",
+      description: "Dados das empresas atualizados com sucesso!",
+    });
+  };
 
   // Form para edição
   const editForm = useForm({

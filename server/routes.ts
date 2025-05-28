@@ -890,9 +890,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: 'Erro interno do servidor' });
     }
   });
-      res.status(500).json({ message: 'Erro interno do servidor' });
-    }
-  });
 
   // Rota para obter últimos documentos
   app.get("/api/dashboard/ultimos-documentos", authenticateToken, async (req: any, res) => {
