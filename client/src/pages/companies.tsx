@@ -1,12 +1,18 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { queryClient } from "@/lib/queryClient";
 import { Layout } from "@/components/layout";
 import { AnimatedLogo } from "@/components/animated-logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { 
   Search, 
   Eye, 
@@ -21,6 +27,16 @@ import {
 } from "lucide-react";
 import type { Company, CompanyResponse } from "@shared/schema";
 
+// Schema de validação para edição de empresa
+const updateCompanySchema = z.object({
+  company_name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
+  company_fantasy: z.string().min(2, "Nome fantasia deve ter pelo menos 2 caracteres"),
+  company_cpf_cnpj: z.string().min(11, "CPF/CNPJ deve ter pelo menos 11 caracteres"),
+  company_email: z.string().email("Email inválido"),
+  company_city: z.string().min(2, "Cidade deve ter pelo menos 2 caracteres"),
+  company_uf: z.string().length(2, "UF deve ter 2 caracteres")
+});
+
 export default function CompaniesPage() {
   const { toast } = useToast();
   const [search, setSearch] = useState("");
@@ -28,6 +44,24 @@ export default function CompaniesPage() {
   const [limit] = useState(10);
   const [sortBy, setSortBy] = useState<keyof Company>("company_id");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+
+  // Estados dos modais
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
+
+  // Form para edição
+  const editForm = useForm({
+    resolver: zodResolver(updateCompanySchema),
+    defaultValues: {
+      company_name: "",
+      company_fantasy: "",
+      company_cpf_cnpj: "",
+      company_email: "",
+      company_city: "",
+      company_uf: ""
+    }
+  });
 
   const { data: companyData, isLoading, error } = useQuery({
     queryKey: ["/api/companies", { search, page, limit, sortBy, sortOrder }],
@@ -40,11 +74,51 @@ export default function CompaniesPage() {
         sortOrder
       });
       
-      const response = await fetch(`/api/companies?${params}`);
+      const response = await fetch(`/api/companies?${params}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
       if (!response.ok) {
         throw new Error("Erro ao carregar empresas");
       }
       return response.json() as Promise<CompanyResponse>;
+    },
+  });
+
+  // Mutação para editar empresa
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: z.infer<typeof updateCompanySchema> }) => {
+      const response = await fetch(`/api/companies/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Erro ao atualizar empresa");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Sucesso",
+        description: "Empresa atualizada com sucesso!",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/companies"] });
+      setEditModalOpen(false);
+      setSelectedCompany(null);
+      editForm.reset();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro",
+        description: error.message || "Erro ao atualizar empresa",
+        variant: "destructive",
+      });
     },
   });
 

@@ -261,6 +261,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update company
+  app.put("/api/companies/:id", authenticateToken, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { company_name, company_fantasy, company_cpf_cnpj, company_email, company_city, company_uf } = req.body;
+
+      if (!company_name || !company_fantasy || !company_cpf_cnpj || !company_email || !company_city || !company_uf) {
+        return res.status(400).json({ message: "Todos os campos são obrigatórios" });
+      }
+
+      const updateQuery = `
+        UPDATE company 
+        SET company_name = ?, company_fantasy = ?, company_cpf_cnpj = ?, company_email = ?, company_city = ?, company_uf = ?
+        WHERE company_id = ?
+      `;
+
+      await mysqlPool.execute(updateQuery, [
+        company_name, 
+        company_fantasy, 
+        company_cpf_cnpj, 
+        company_email, 
+        company_city, 
+        company_uf, 
+        parseInt(id)
+      ]);
+
+      res.json({ message: "Empresa atualizada com sucesso" });
+    } catch (error) {
+      console.error("Company update error:", error);
+      res.status(500).json({ message: "Erro ao atualizar empresa" });
+    }
+  });
+
   // NFe Recebidas endpoints
   app.get("/api/nfe-recebidas", authenticateToken, async (req: any, res) => {
     try {
