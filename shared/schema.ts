@@ -194,3 +194,30 @@ export interface CNPJAtivo {
   ultimaCaptura: string;
   status: string;
 }
+
+// Fornecedores interfaces
+export interface Fornecedor {
+  id: number;
+  nome: string;
+  cnpj: string;
+  codigo_erp: string | null;
+  data_cadastro: string;
+}
+
+export interface FornecedorFilters {
+  search?: string;
+  nome?: string;
+  cnpj?: string;
+  page?: number;
+  limit?: number;
+  sortBy?: keyof Fornecedor;
+  sortOrder?: 'asc' | 'desc';
+}
+
+export interface FornecedorResponse {
+  fornecedores: Fornecedor[];
+  total: number;
+  page: number;
+  totalPages: number;
+  limit: number;
+}

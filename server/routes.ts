@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { loginSchema, registerSchema, type Company, type CompanyFilters, type CompanyResponse, type NFeRecebida, type NFeFilters, type NFeResponse, type NFSeRecebida, type NFSeResponse, type Usuario, type UsuarioResponse } from "@shared/schema";
+import { loginSchema, registerSchema, type Company, type CompanyFilters, type CompanyResponse, type NFeRecebida, type NFeFilters, type NFeResponse, type NFSeRecebida, type NFSeResponse, type Usuario, type UsuarioResponse, type FornecedorResponse } from "@shared/schema";
 import { z } from "zod";
 import { mysqlPool, testMysqlConnection } from "./mysql-config";
 import { sendWelcomeEmail } from "./email-service";
@@ -678,6 +678,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Erro ao obter CNPJs ativos:', error);
       res.status(500).json({ message: 'Erro interno do servidor' });
+    }
+  });
+
+  // Rota para buscar fornecedores
+  app.get("/api/fornecedores", authenticateToken, async (req: any, res) => {
+    try {
+      const { 
+        search = "", 
+        nome = "", 
+        cnpj = "",
+        page = "1", 
+        limit = "10", 
+        sortBy = "data_cadastro", 
+        sortOrder = "desc" 
+      } = req.query;
+
+      const offset = (parseInt(page) - 1) * parseInt(limit);
+
+      // Build WHERE clause
+      let whereConditions: string[] = [];
+      let queryParams: any[] = [];
+
+      if (search) {
+        whereConditions.push("(nome LIKE ? OR cnpj LIKE ?)");
+        queryParams.push(`%${search}%`, `%${search}%`);
+      }
+
+      if (nome) {
+        whereConditions.push("nome LIKE ?");
+        queryParams.push(`%${nome}%`);
+      }
+
+      if (cnpj) {
+        whereConditions.push("cnpj LIKE ?");
+        queryParams.push(`%${cnpj}%`);
+      }
+
+      const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(" AND ")}` : "";
+
+      // Count total records
+      const countQuery = `SELECT COUNT(*) as total FROM simplefcfo ${whereClause}`;
+      const [countResult] = await mysqlPool.execute(countQuery, queryParams) as any;
+      const total = countResult[0].total;
+
+      // Get fornecedores with pagination and sorting
+      const dataQuery = `
+        SELECT 
+          id,
+          nome,
+          cnpj,
+          codigo_erp,
+          data_cadastro
+        FROM simplefcfo 
+        ${whereClause}
+        ORDER BY ${sortBy} ${sortOrder.toUpperCase()}
+        LIMIT ${parseInt(limit)} OFFSET ${offset}
+      `;
+
+      const [fornecedores] = await mysqlPool.execute(dataQuery, queryParams) as any;
+
+      const totalPages = Math.ceil(total / parseInt(limit));
+
+      const response = {
+        fornecedores,
+        total,
+        page: parseInt(page),
+        totalPages,
+        limit: parseInt(limit)
+      };
+
+      res.json(response);
+    } catch (error) {
+      console.error("Erro ao buscar fornecedores:", error);
+      res.status(500).json({ message: "Erro ao buscar fornecedores" });
     }
   });
 

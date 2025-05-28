@@ -143,6 +143,18 @@ export function Layout({ children, currentPage }: LayoutProps) {
                 </Link>
               </li>
               <li>
+                <Link href="/fornecedores">
+                  <a className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer ${
+                    isActive("/fornecedores")
+                      ? "text-white bg-primary/20 border border-primary/30"
+                      : "text-gray-300 hover:text-white hover:bg-white/10"
+                  }`}>
+                    <Truck className="w-5 h-5" />
+                    <span>Fornecedores</span>
+                  </a>
+                </Link>
+              </li>
+              <li>
                 <Link href="/usuarios">
                   <a className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer ${
                     isActive("/usuarios")
