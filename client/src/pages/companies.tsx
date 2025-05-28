@@ -138,17 +138,26 @@ export default function CompaniesPage() {
   };
 
   const handleView = (company: Company) => {
-    toast({
-      title: "Visualizar Empresa",
-      description: `Visualizando dados de ${company.company_name}`,
-    });
+    setSelectedCompany(company);
+    setViewModalOpen(true);
   };
 
   const handleEdit = (company: Company) => {
-    toast({
-      title: "Editar Empresa",
-      description: `Editando dados de ${company.company_name}`,
+    setSelectedCompany(company);
+    editForm.reset({
+      company_name: company.company_name,
+      company_fantasy: company.company_fantasy,
+      company_cpf_cnpj: company.company_cpf_cnpj,
+      company_email: company.company_email,
+      company_city: company.company_city,
+      company_uf: company.company_uf
     });
+    setEditModalOpen(true);
+  };
+
+  const onEditSubmit = (data: z.infer<typeof updateCompanySchema>) => {
+    if (!selectedCompany) return;
+    updateMutation.mutate({ id: selectedCompany.company_id, data });
   };
 
   const getSortIcon = (column: keyof Company) => {
@@ -426,6 +435,197 @@ export default function CompaniesPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Modal de Visualização */}
+      <Dialog open={viewModalOpen} onOpenChange={setViewModalOpen}>
+        <DialogContent className="glassmorphism border-white/20 bg-black/90 max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-white">Visualizar Empresa</DialogTitle>
+          </DialogHeader>
+          {selectedCompany && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-gray-300 text-sm font-medium">ID</label>
+                  <p className="text-white">{selectedCompany.company_id}</p>
+                </div>
+                <div>
+                  <label className="text-gray-300 text-sm font-medium">CPF/CNPJ</label>
+                  <p className="text-white">{selectedCompany.company_cpf_cnpj}</p>
+                </div>
+              </div>
+              <div>
+                <label className="text-gray-300 text-sm font-medium">Nome da Empresa</label>
+                <p className="text-white">{selectedCompany.company_name}</p>
+              </div>
+              <div>
+                <label className="text-gray-300 text-sm font-medium">Nome Fantasia</label>
+                <p className="text-white">{selectedCompany.company_fantasy}</p>
+              </div>
+              <div>
+                <label className="text-gray-300 text-sm font-medium">Email</label>
+                <p className="text-white">{selectedCompany.company_email}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-gray-300 text-sm font-medium">Cidade</label>
+                  <p className="text-white">{selectedCompany.company_city}</p>
+                </div>
+                <div>
+                  <label className="text-gray-300 text-sm font-medium">UF</label>
+                  <p className="text-white">{selectedCompany.company_uf}</p>
+                </div>
+              </div>
+              <div className="flex justify-end pt-4">
+                <Button 
+                  onClick={() => setViewModalOpen(false)}
+                  className="bg-purple-600 hover:bg-purple-700"
+                >
+                  Fechar
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Edição */}
+      <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
+        <DialogContent className="glassmorphism border-white/20 bg-black/90 max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-white">Editar Empresa</DialogTitle>
+          </DialogHeader>
+          <Form {...editForm}>
+            <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={editForm.control}
+                  name="company_name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-white">Nome da Empresa</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Digite o nome da empresa"
+                          {...field}
+                          className="bg-white/10 border-white/20 text-white"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={editForm.control}
+                  name="company_fantasy"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-white">Nome Fantasia</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Digite o nome fantasia"
+                          {...field}
+                          className="bg-white/10 border-white/20 text-white"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <FormField
+                control={editForm.control}
+                name="company_cpf_cnpj"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-white">CPF/CNPJ</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Digite o CPF/CNPJ"
+                        {...field}
+                        className="bg-white/10 border-white/20 text-white"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editForm.control}
+                name="company_email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-white">Email</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="email"
+                        placeholder="Digite o email"
+                        {...field}
+                        className="bg-white/10 border-white/20 text-white"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={editForm.control}
+                  name="company_city"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-white">Cidade</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Digite a cidade"
+                          {...field}
+                          className="bg-white/10 border-white/20 text-white"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={editForm.control}
+                  name="company_uf"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-white">UF</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Digite a UF"
+                          maxLength={2}
+                          {...field}
+                          className="bg-white/10 border-white/20 text-white"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="flex justify-end space-x-2 pt-4">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setEditModalOpen(false)}
+                  className="border-white/20 text-white hover:bg-white/10"
+                >
+                  Cancelar
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={updateMutation.isPending}
+                  className="bg-purple-600 hover:bg-purple-700"
+                >
+                  {updateMutation.isPending ? "Salvando..." : "Salvar Alterações"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
       </div>
     </Layout>
   );
