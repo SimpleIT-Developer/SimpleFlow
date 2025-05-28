@@ -32,7 +32,7 @@ function formatDate(dateString: string) {
   }
 }
 
-export default function FornecedoresPage() {
+function FornecedoresPage() {
   const { toast } = useToast();
   
   // Estados dos filtros
@@ -390,3 +390,5 @@ export default function FornecedoresPage() {
     </Layout>
   );
 }
+
+export default FornecedoresPage;

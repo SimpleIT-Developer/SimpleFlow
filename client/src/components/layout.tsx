@@ -4,7 +4,7 @@ import { logout } from "@/lib/auth";
 import { AnimatedLogo } from "@/components/animated-logo";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { LogOut, BarChart3, Settings, FileText, Building2, Receipt, FileCheck, Users } from "lucide-react";
+import { LogOut, BarChart3, Settings, FileText, Building2, Receipt, FileCheck, Users, Truck } from "lucide-react";
 
 interface LayoutProps {
   children: React.ReactNode;
