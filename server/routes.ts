@@ -913,8 +913,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const {
         search = "",
-        nome = "",
-        cnpj = "",
         page = "1",
         limit = "10",
         sortBy = "data_cadastro",
@@ -928,8 +926,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const queryParams: any[] = [];
 
       if (search) {
-        whereClause = "WHERE (nome LIKE ? OR cnpj LIKE ?)";
-        queryParams.push(`%${search}%`, `%${search}%`);
+        whereClause = "WHERE (nome LIKE ? OR cnpj LIKE ? OR codigo_erp LIKE ?)";
+        queryParams.push(`%${search}%`, `%${search}%`, `%${search}%`);
       }
 
       // Count total records
@@ -956,6 +954,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Erro ao buscar fornecedores:", error);
       res.status(500).json({ message: "Erro ao buscar fornecedores" });
+    }
+  });
+
+  // Rota para editar fornecedor
+  app.put("/api/fornecedores/:id", authenticateToken, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      const { nome, cnpj, codigo_erp } = req.body;
+
+      // Validação básica
+      if (!nome || !cnpj) {
+        return res.status(400).json({ message: "Nome e CNPJ são obrigatórios" });
+      }
+
+      // Verificar se o fornecedor existe
+      const checkQuery = "SELECT id FROM simplefcfo WHERE id = ?";
+      const [existing] = await mysqlPool.execute(checkQuery, [id]) as any;
+      
+      if (!existing || existing.length === 0) {
+        return res.status(404).json({ message: "Fornecedor não encontrado" });
+      }
+
+      // Atualizar fornecedor
+      const updateQuery = `
+        UPDATE simplefcfo 
+        SET nome = ?, cnpj = ?, codigo_erp = ?
+        WHERE id = ?
+      `;
+      
+      await mysqlPool.execute(updateQuery, [nome, cnpj, codigo_erp || null, id]);
+
+      // Buscar o fornecedor atualizado
+      const selectQuery = "SELECT id, nome, cnpj, codigo_erp, data_cadastro FROM simplefcfo WHERE id = ?";
+      const [updated] = await mysqlPool.execute(selectQuery, [id]) as any;
+
+      res.json({ 
+        message: "Fornecedor atualizado com sucesso", 
+        fornecedor: updated[0] 
+      });
+    } catch (error) {
+      console.error("Erro ao atualizar fornecedor:", error);
+      res.status(500).json({ message: "Erro ao atualizar fornecedor" });
     }
   });
 

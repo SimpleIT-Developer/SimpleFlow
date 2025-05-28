@@ -270,12 +270,12 @@ function FornecedoresPage() {
                   <Card className="glassmorphism border-yellow-500/20">
                     <CardContent className="pt-6 text-center">
                       <p className="text-yellow-400">
-                        {search || nome || cnpj
+                        {search
                           ? "Nenhum fornecedor encontrado com os filtros aplicados"
                           : "Nenhum fornecedor encontrado"}
                       </p>
                       <p className="text-gray-400 text-sm mt-2">
-                        {search || nome || cnpj
+                        {search
                           ? "Tente ajustar os filtros de busca"
                           : "Os fornecedores aparecerão aqui quando disponíveis"}
                       </p>
@@ -453,6 +453,135 @@ function FornecedoresPage() {
             )}
           </CardContent>
         </Card>
+
+        {/* Modal de Visualização */}
+        <Dialog open={viewModalOpen} onOpenChange={setViewModalOpen}>
+          <DialogContent className="glassmorphism border-white/20 bg-black/90 max-w-2xl">
+            <DialogHeader>
+              <DialogTitle className="text-white">Visualizar Fornecedor</DialogTitle>
+            </DialogHeader>
+            {selectedFornecedor && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-gray-300 text-sm font-medium">ID</label>
+                    <p className="text-white">{selectedFornecedor.id}</p>
+                  </div>
+                  <div>
+                    <label className="text-gray-300 text-sm font-medium">CNPJ</label>
+                    <p className="text-white">{formatCNPJ(selectedFornecedor.cnpj)}</p>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-gray-300 text-sm font-medium">Nome</label>
+                  <p className="text-white">{selectedFornecedor.nome}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-gray-300 text-sm font-medium">Código ERP</label>
+                    <p className="text-white">
+                      {selectedFornecedor.codigo_erp || "Não cadastrado no ERP"}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-gray-300 text-sm font-medium">Data de Cadastro</label>
+                    <p className="text-white">{formatDate(selectedFornecedor.data_cadastro)}</p>
+                  </div>
+                </div>
+                <div className="flex justify-end pt-4">
+                  <Button 
+                    onClick={() => setViewModalOpen(false)}
+                    className="bg-purple-600 hover:bg-purple-700"
+                  >
+                    Fechar
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Modal de Edição */}
+        <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
+          <DialogContent className="glassmorphism border-white/20 bg-black/90 max-w-2xl">
+            <DialogHeader>
+              <DialogTitle className="text-white">Editar Fornecedor</DialogTitle>
+            </DialogHeader>
+            <Form {...editForm}>
+              <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-4">
+                <FormField
+                  control={editForm.control}
+                  name="nome"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-white">Nome</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Digite o nome do fornecedor"
+                          {...field}
+                          className="bg-white/10 border-white/20 text-white"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={editForm.control}
+                  name="cnpj"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-white">CNPJ</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Digite o CNPJ"
+                          {...field}
+                          className="bg-white/10 border-white/20 text-white"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={editForm.control}
+                  name="codigo_erp"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-white">Código ERP</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Digite o código ERP (opcional)"
+                          {...field}
+                          value={field.value || ""}
+                          className="bg-white/10 border-white/20 text-white"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="flex justify-end space-x-2 pt-4">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => setEditModalOpen(false)}
+                    className="border-white/20 text-white hover:bg-white/10"
+                  >
+                    Cancelar
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    disabled={updateMutation.isPending}
+                    className="bg-purple-600 hover:bg-purple-700"
+                  >
+                    {updateMutation.isPending ? "Salvando..." : "Salvar Alterações"}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );
