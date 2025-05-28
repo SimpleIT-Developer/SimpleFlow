@@ -684,64 +684,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Rota para buscar fornecedores
   app.get("/api/fornecedores", authenticateToken, async (req: any, res) => {
     try {
-      const { 
-        search = "", 
-        nome = "", 
+      const {
+        search = "",
+        nome = "",
         cnpj = "",
-        page = "1", 
-        limit = "10", 
-        sortBy = "data_cadastro", 
-        sortOrder = "desc" 
+        page = "1",
+        limit = "10",
+        sortBy = "data_cadastro",
+        sortOrder = "desc"
       } = req.query;
 
       const offset = (parseInt(page) - 1) * parseInt(limit);
-
-      // Build WHERE clause
-      let whereConditions: string[] = [];
-      let queryParams: any[] = [];
+      
+      // Build search conditions
+      let whereClause = "";
+      const queryParams: any[] = [];
 
       if (search) {
-        whereConditions.push("(nome LIKE ? OR cnpj LIKE ?)");
+        whereClause = "WHERE (nome LIKE ? OR cnpj LIKE ?)";
         queryParams.push(`%${search}%`, `%${search}%`);
       }
-
-      if (nome) {
-        whereConditions.push("nome LIKE ?");
-        queryParams.push(`%${nome}%`);
-      }
-
-      if (cnpj) {
-        whereConditions.push("cnpj LIKE ?");
-        queryParams.push(`%${cnpj}%`);
-      }
-
-      const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(" AND ")}` : "";
 
       // Count total records
       const countQuery = `SELECT COUNT(*) as total FROM simplefcfo ${whereClause}`;
       const [countResult] = await mysqlPool.execute(countQuery, queryParams) as any;
       const total = countResult[0].total;
 
-      // Get fornecedores with pagination and sorting
-      const dataQuery = `
-        SELECT 
-          id,
-          nome,
-          cnpj,
-          codigo_erp,
-          data_cadastro
-        FROM simplefcfo 
-        ${whereClause}
-        ORDER BY ${sortBy} ${sortOrder.toUpperCase()}
-        LIMIT ${parseInt(limit)} OFFSET ${offset}
-      `;
-
+      // Get fornecedores with pagination and sorting  
+      const dataQuery = `SELECT id, nome, cnpj, codigo_erp, data_cadastro FROM simplefcfo ${whereClause} ORDER BY ${sortBy} ${sortOrder.toUpperCase()} LIMIT ${parseInt(limit)} OFFSET ${offset}`;
+      
       const [fornecedores] = await mysqlPool.execute(dataQuery, queryParams) as any;
 
       const totalPages = Math.ceil(total / parseInt(limit));
 
       const response = {
-        fornecedores,
+        fornecedores: fornecedores,
         total,
         page: parseInt(page),
         totalPages,
