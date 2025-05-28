@@ -193,10 +193,12 @@ export default function DashboardPage() {
                       <YAxis stroke="#9CA3AF" />
                       <Tooltip 
                         contentStyle={{ 
-                          backgroundColor: '#1F2937', 
+                          backgroundColor: 'rgba(31, 41, 55, 0.95)', 
                           border: '1px solid #374151',
-                          color: '#F9FAFB'
-                        }} 
+                          color: '#F9FAFB',
+                          borderRadius: '6px'
+                        }}
+                        cursor={{ fill: 'transparent' }}
                       />
                       <Legend />
                       <Bar dataKey="nfe" fill="#3b82f6" name="NFe" />
