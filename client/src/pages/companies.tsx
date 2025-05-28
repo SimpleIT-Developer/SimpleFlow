@@ -233,10 +233,19 @@ export default function CompaniesPage() {
               Gerencie as empresas cadastradas no sistema
             </p>
           </div>
-        <Badge variant="secondary" className="text-primary">
-          {total} {total === 1 ? "empresa" : "empresas"}
-        </Badge>
-      </div>
+          <div className="flex items-center gap-3">
+            <Badge variant="secondary" className="text-primary">
+              {total} {total === 1 ? "empresa" : "empresas"}
+            </Badge>
+            <Button
+              onClick={handleRefreshEmpresas}
+              className="bg-purple-600 hover:bg-purple-700 text-white"
+            >
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Atualizar Empresas
+            </Button>
+          </div>
+        </div>
 
       {/* Search and Filters */}
       <Card className="glassmorphism border-white/20">

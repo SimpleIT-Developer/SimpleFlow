@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Edit, Trash2, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Filter, Plus, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { Edit, Trash2, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Filter, Plus, ArrowUpDown, ArrowUp, ArrowDown, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -48,6 +48,14 @@ export default function UsuariosPage() {
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<Usuario | null>(null);
+
+  const handleRefreshUsuarios = () => {
+    queryClient.invalidateQueries({ queryKey: ["/api/usuarios"] });
+    toast({
+      title: "Usuários Atualizados",
+      description: "Dados dos usuários atualizados com sucesso!",
+    });
+  };
 
   // Forms
   const createForm = useForm({
@@ -294,6 +302,14 @@ export default function UsuariosPage() {
             <Badge variant="secondary" className="text-primary">
               {total} {total === 1 ? "usuário" : "usuários"}
             </Badge>
+            
+            <Button
+              onClick={handleRefreshUsuarios}
+              className="bg-purple-600 hover:bg-purple-700 text-white"
+            >
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Atualizar Usuários
+            </Button>
             
             {/* Botão Novo Usuário */}
             <Dialog open={createModalOpen} onOpenChange={setCreateModalOpen}>

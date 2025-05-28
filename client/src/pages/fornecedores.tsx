@@ -49,6 +49,14 @@ function FornecedoresPage() {
   const [selectedFornecedor, setSelectedFornecedor] = useState<Fornecedor | null>(null);
   const [verificandoERP, setVerificandoERP] = useState<number | null>(null);
 
+  const handleRefreshFornecedores = () => {
+    queryClient.invalidateQueries({ queryKey: ["/api/fornecedores"] });
+    toast({
+      title: "Fornecedores Atualizados",
+      description: "Dados dos fornecedores atualizados com sucesso!",
+    });
+  };
+
   const { data: fornecedorData, isLoading, error } = useQuery({
     queryKey: ["/api/fornecedores", { 
       search, 
@@ -182,9 +190,18 @@ function FornecedoresPage() {
               Gerencie os fornecedores do sistema
             </p>
           </div>
-          <Badge variant="secondary" className="text-primary">
-            {total} {total === 1 ? "fornecedor" : "fornecedores"}
-          </Badge>
+          <div className="flex items-center gap-3">
+            <Badge variant="secondary" className="text-primary">
+              {total} {total === 1 ? "fornecedor" : "fornecedores"}
+            </Badge>
+            <Button
+              onClick={handleRefreshFornecedores}
+              className="bg-purple-600 hover:bg-purple-700 text-white"
+            >
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Atualizar Fornecedores
+            </Button>
+          </div>
         </div>
 
         {/* Search and Filters */}
