@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUpDown, ArrowUp, ArrowDown, Eye, CheckCircle } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, ArrowUpDown, ArrowUp, ArrowDown, Eye, CheckCircle, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { Fornecedor, FornecedorResponse } from "@shared/schema";
 
@@ -289,7 +289,8 @@ function FornecedoresPage() {
                               </Badge>
                             ) : (
                               <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30 text-xs">
-                                Pendente
+                                <AlertCircle className="w-3 h-3 mr-1" />
+                                Não cadastrado no ERP
                               </Badge>
                             )}
                           </td>

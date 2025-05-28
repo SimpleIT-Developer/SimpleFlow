@@ -318,7 +318,7 @@ export default function NFSeRecebidasPage() {
                                   : "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
                               }`}
                             >
-                              {nfse.nfse_status_integracao === 1 ? "OK" : "Pendente"}
+                              {nfse.nfse_status_integracao === 1 ? "Integrado" : "Não integrado"}
                             </Badge>
                           </td>
                           <td className="py-2 px-2">

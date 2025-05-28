@@ -377,7 +377,7 @@ export default function NFeRecebidasPage() {
                               : "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
                           }`}
                         >
-                          {nfe.doc_status_integracao === 1 ? "OK" : "Pendente"}
+                          {nfe.doc_status_integracao === 1 ? "Integrado" : "Não integrado"}
                         </Badge>
                       </td>
                       <td className="py-2 px-2">
