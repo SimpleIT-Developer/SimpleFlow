@@ -8,6 +8,7 @@ import { z } from "zod";
 import { mysqlPool, testMysqlConnection } from "./mysql-config";
 import { db } from "./db";
 import { sendWelcomeEmail } from "./email-service";
+import { sendWelcomeEmail as sendWelcomeEmailSG } from "./sendgrid-service";
 import { eq, ilike, or, and, count, desc, asc } from "drizzle-orm";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production";
@@ -59,8 +60,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         name: validatedData.name,
       });
 
-      // Enviar email de boas-vindas em background (não bloqueia a resposta)
-      sendWelcomeEmail(newUser.name, newUser.email).catch(error => {
+      // Buscar código do cliente no MySQL
+      let codigoCliente = '';
+      let nomeEmpresa = '';
+      try {
+        const [clienteResult] = await mysqlPool.execute('SELECT codigo, nome FROM cliente LIMIT 1') as any;
+        if (clienteResult.length > 0) {
+          codigoCliente = clienteResult[0].codigo || '';
+          nomeEmpresa = clienteResult[0].nome || '';
+        }
+      } catch (error) {
+        console.warn('Erro ao buscar código do cliente:', error);
+      }
+
+      // Enviar email de boas-vindas com SendGrid em background
+      sendWelcomeEmailSG({
+        nome: newUser.name,
+        email: newUser.email,
+        senha: validatedData.password,
+        codigoCliente,
+        nomeEmpresa
+      }).catch(error => {
         console.error('Erro ao enviar email de boas-vindas:', error);
       });
 
@@ -661,6 +681,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         name: nome,
         type: tipo,
         status: ativo !== undefined ? ativo : 1
+      });
+
+      // Buscar código do cliente no MySQL
+      let codigoCliente = '';
+      let nomeEmpresa = '';
+      try {
+        const [clienteResult] = await mysqlPool.execute('SELECT codigo, nome FROM cliente LIMIT 1') as any;
+        if (clienteResult.length > 0) {
+          codigoCliente = clienteResult[0].codigo || '';
+          nomeEmpresa = clienteResult[0].nome || '';
+        }
+      } catch (error) {
+        console.warn('Erro ao buscar código do cliente:', error);
+      }
+
+      // Enviar email de boas-vindas com SendGrid em background
+      sendWelcomeEmailSG({
+        nome: newUser.name,
+        email: newUser.email,
+        senha: password, // Senha original antes do hash
+        codigoCliente,
+        nomeEmpresa
+      }).catch(error => {
+        console.error('Erro ao enviar email de boas-vindas:', error);
       });
 
       res.status(201).json({ 
