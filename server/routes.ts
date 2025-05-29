@@ -8,7 +8,7 @@ import { z } from "zod";
 import { mysqlPool, testMysqlConnection } from "./mysql-config";
 import { db } from "./db";
 import { sendWelcomeEmail } from "./email-service";
-import { sendWelcomeEmail as sendWelcomeEmailSG } from "./sendgrid-service";
+import { sendWelcomeEmail as sendWelcomeEmailResend } from "./resend-service";
 import { eq, ilike, or, and, count, desc, asc } from "drizzle-orm";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production";
@@ -73,8 +73,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.warn('Erro ao buscar código do cliente:', error);
       }
 
-      // Enviar email de boas-vindas com SendGrid em background
-      sendWelcomeEmailSG({
+      // Enviar email de boas-vindas com Resend em background
+      sendWelcomeEmailResend({
         nome: newUser.name,
         email: newUser.email,
         senha: validatedData.password,
@@ -696,8 +696,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.warn('Erro ao buscar código do cliente:', error);
       }
 
-      // Enviar email de boas-vindas com SendGrid em background
-      sendWelcomeEmailSG({
+      // Enviar email de boas-vindas com Resend em background
+      sendWelcomeEmailResend({
         nome: newUser.name,
         email: newUser.email,
         senha: password, // Senha original antes do hash
