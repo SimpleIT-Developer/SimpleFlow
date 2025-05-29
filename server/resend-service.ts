@@ -238,7 +238,7 @@ export async function sendWelcomeEmail(data: WelcomeEmailData): Promise<boolean>
     const htmlContent = createWelcomeEmailHTML(data);
     
     const result = await resend.emails.send({
-      from: 'SimpleDFE <onboarding@resend.dev>',
+      from: 'SimpleDFE <simpledfe@simpleit.com.br>',
       to: [data.email],
       subject: `🎉 Bem-vindo ao SimpleDFE${data.nomeEmpresa ? ` – ${data.nomeEmpresa}` : ''}`,
       html: htmlContent,
@@ -284,7 +284,7 @@ export async function testResendConnection(): Promise<boolean> {
     
     // Teste usando email simples
     const result = await resend.emails.send({
-      from: 'SimpleDFE <onboarding@resend.dev>',
+      from: 'SimpleDFE <simpledfe@simpleit.com.br>',
       to: ['test@example.com'],
       subject: 'Teste de conexão Resend',
       html: '<p>Este é um teste de conexão.</p>',
