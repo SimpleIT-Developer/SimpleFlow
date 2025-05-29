@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Layout } from "@/components/layout";
 import { AnimatedLogo } from "@/components/animated-logo";
 import { Button } from "@/components/ui/button";
@@ -85,6 +85,14 @@ export default function NFeRecebidasPage() {
   const handleSearch = (value: string) => {
     setSearch(value);
     setPage(1);
+  };
+
+  const handleRefreshNFe = () => {
+    queryClient.invalidateQueries({ queryKey: ["/api/nfe-recebidas"] });
+    toast({
+      title: "NFe Atualizadas",
+      description: "Dados das NFe recebidas atualizados com sucesso!",
+    });
   };
 
   const clearFilters = () => {
@@ -209,18 +217,16 @@ export default function NFeRecebidasPage() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <Button
-              onClick={() => window.location.reload()}
-              variant="outline"
-              size="sm"
-              className="border-blue-500/30 text-blue-400 hover:bg-blue-500/20"
-            >
-              <RefreshCw className="w-4 h-4 mr-2" />
-              ATUALIZAR
-            </Button>
             <Badge variant="secondary" className="text-primary">
               {total} {total === 1 ? "NFe" : "NFes"}
             </Badge>
+            <Button
+              onClick={handleRefreshNFe}
+              className="bg-purple-600 hover:bg-purple-700 text-white"
+            >
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Atualizar NFe
+            </Button>
           </div>
         </div>
 
