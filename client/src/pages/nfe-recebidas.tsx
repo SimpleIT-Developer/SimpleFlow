@@ -208,9 +208,20 @@ export default function NFeRecebidasPage() {
               Gerencie as notas fiscais eletrônicas recebidas
             </p>
           </div>
-          <Badge variant="secondary" className="text-primary">
-            {total} {total === 1 ? "NFe" : "NFes"}
-          </Badge>
+          <div className="flex items-center gap-3">
+            <Button
+              onClick={() => window.location.reload()}
+              variant="outline"
+              size="sm"
+              className="border-blue-500/30 text-blue-400 hover:bg-blue-500/20"
+            >
+              <RefreshCw className="w-4 h-4 mr-2" />
+              ATUALIZAR
+            </Button>
+            <Badge variant="secondary" className="text-primary">
+              {total} {total === 1 ? "NFe" : "NFes"}
+            </Badge>
+          </div>
         </div>
 
         {/* Search and Filters */}
