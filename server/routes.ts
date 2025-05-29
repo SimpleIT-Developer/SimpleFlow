@@ -64,7 +64,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let codigoCliente = '';
       let nomeEmpresa = '';
       try {
-        const [clienteResult] = await mysqlPool.execute('SELECT codigo, nome FROM cliente LIMIT 1') as any;
+        const [clienteResult] = await mysqlPool.execute('SELECT codigo, nome_fantasia as nome FROM cliente LIMIT 1') as any;
         if (clienteResult.length > 0) {
           codigoCliente = clienteResult[0].codigo || '';
           nomeEmpresa = clienteResult[0].nome || '';
@@ -687,7 +687,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let codigoCliente = '';
       let nomeEmpresa = '';
       try {
-        const [clienteResult] = await mysqlPool.execute('SELECT codigo, nome FROM cliente LIMIT 1') as any;
+        const [clienteResult] = await mysqlPool.execute('SELECT codigo, nome_fantasia as nome FROM cliente LIMIT 1') as any;
         if (clienteResult.length > 0) {
           codigoCliente = clienteResult[0].codigo || '';
           nomeEmpresa = clienteResult[0].nome || '';

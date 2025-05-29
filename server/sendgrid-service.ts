@@ -255,7 +255,7 @@ export async function sendWelcomeEmail(data: WelcomeEmailData): Promise<boolean>
     const msg = {
       to: data.email,
       from: {
-        email: 'contato@simpledfe.com.br',
+        email: 'test@example.com',
         name: 'SimpleDFE - Suporte'
       },
       subject: `🎉 Bem-vindo ao SimpleDFE${data.nomeEmpresa ? ` – ${data.nomeEmpresa}` : ''}`,
