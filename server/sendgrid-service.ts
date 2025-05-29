@@ -278,8 +278,20 @@ contato@simpledfe.com.br
     await mailService.send(msg);
     console.log(`Email de boas-vindas enviado para: ${data.email}`);
     return true;
-  } catch (error) {
-    console.error('Erro ao enviar email de boas-vindas:', error);
+  } catch (error: any) {
+    console.error('Erro ao enviar email de boas-vindas:', {
+      message: error.message,
+      code: error.code,
+      response: error.response?.body
+    });
+    
+    if (error.code === 403) {
+      console.error('Erro 403 - Possíveis causas:');
+      console.error('1. API Key inválida ou sem permissões de envio');
+      console.error('2. Email remetente não verificado no SendGrid');
+      console.error('3. Conta SendGrid suspensa ou com restrições');
+    }
+    
     return false;
   }
 }
