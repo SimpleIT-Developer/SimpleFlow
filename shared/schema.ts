@@ -78,6 +78,7 @@ export interface NFeRecebida {
   doc_nat_op: string;
   doc_status_integracao: number;
   doc_id_integracao: string | null;
+  doc_codcfo: string | null;
 }
 
 export interface NFeFilters {

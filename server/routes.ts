@@ -398,7 +398,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           doc_valor,
           doc_nat_op,
           doc_status_integracao,
-          doc_id_integracao
+          doc_id_integracao,
+          doc_codcfo
         FROM doc 
         ${whereClause}
         ORDER BY ${sortBy} ${sortOrder.toUpperCase()}
@@ -439,7 +440,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           doc_valor,
           doc_nat_op,
           doc_status_integracao,
-          doc_id_integracao
+          doc_id_integracao,
+          doc_codcfo
         FROM doc 
         WHERE doc_num = ?
       `;

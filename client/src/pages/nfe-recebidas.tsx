@@ -151,6 +151,19 @@ export default function NFeRecebidasPage() {
     return date.toLocaleDateString('pt-BR');
   };
 
+  const getStatusBadge = (nfe: NFeRecebida) => {
+    if (nfe.doc_status_integracao === 1) {
+      return <Badge className="bg-green-100 text-green-800 border-green-200">Integrado</Badge>;
+    } else if (nfe.doc_status_integracao === 0) {
+      if (!nfe.doc_codcfo || nfe.doc_codcfo === null) {
+        return <Badge className="bg-red-100 text-red-800 border-red-200">Fornecedor não cadastrado!</Badge>;
+      } else {
+        return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">Não Integrado</Badge>;
+      }
+    }
+    return <Badge className="bg-gray-100 text-gray-800 border-gray-200">Indefinido</Badge>;
+  };
+
   if (isLoading) {
     return (
       <Layout currentPage="NFe Recebidas">
@@ -369,16 +382,7 @@ export default function NFeRecebidasPage() {
                         {formatCurrency(nfe.doc_valor)}
                       </td>
                       <td className="py-2 px-2">
-                        <Badge
-                          variant={nfe.doc_status_integracao === 1 ? "default" : "secondary"}
-                          className={`text-xs ${
-                            nfe.doc_status_integracao === 1
-                              ? "bg-green-500/20 text-green-400 border-green-500/30"
-                              : "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
-                          }`}
-                        >
-                          {nfe.doc_status_integracao === 1 ? "Integrado" : "Não integrado"}
-                        </Badge>
+                        {getStatusBadge(nfe)}
                       </td>
                       <td className="py-2 px-2">
                         <div className="flex space-x-1">
