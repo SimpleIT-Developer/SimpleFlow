@@ -26,6 +26,7 @@ import type { NFeRecebida, NFeResponse } from "@shared/schema";
 
 export default function NFeRecebidasPage() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<"all" | "integrated" | "not_integrated">("all");
   const [empresa, setEmpresa] = useState("");

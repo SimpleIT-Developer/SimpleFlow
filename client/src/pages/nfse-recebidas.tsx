@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Layout } from "@/components/layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -59,6 +59,7 @@ function getStatusBadge(nfse: NFSeRecebida) {
 
 export default function NFSeRecebidasPage() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   
   // Estados dos filtros
   const [search, setSearch] = useState("");
@@ -152,6 +153,14 @@ export default function NFSeRecebidasPage() {
     setPage(1);
   };
 
+  const handleRefreshNFSe = () => {
+    queryClient.invalidateQueries({ queryKey: ["/api/nfse-recebidas"] });
+    toast({
+      title: "NFSe Atualizadas",
+      description: "Dados das NFSe recebidas atualizados com sucesso!",
+    });
+  };
+
   return (
     <Layout currentPage="NFSe Recebidas">
       <div className="space-y-6">
@@ -163,18 +172,16 @@ export default function NFSeRecebidasPage() {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <Button
-              onClick={() => window.location.reload()}
-              variant="outline"
-              size="sm"
-              className="border-blue-500/30 text-blue-400 hover:bg-blue-500/20"
-            >
-              <RefreshCw className="w-4 h-4 mr-2" />
-              ATUALIZAR
-            </Button>
             <Badge variant="secondary" className="text-primary">
               {total} {total === 1 ? "NFSe" : "NFSes"}
             </Badge>
+            <Button
+              onClick={handleRefreshNFSe}
+              className="bg-purple-600 hover:bg-purple-700 text-white"
+            >
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Atualizar NFSe
+            </Button>
           </div>
         </div>
 
