@@ -530,7 +530,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const total = countResult[0].total;
 
       // Get NFSes with pagination and sorting  
-      const dataQuery = `SELECT nfse_emitente, nfse_doc, nfse_tomador, nfse_tipo, nfse_local_prestacao, nfse_data_hora, nfse_valor_servico, nfse_status_integracao, nfse_id_integracao FROM nfse ${whereClause} ORDER BY ${sortBy} ${sortOrder.toUpperCase()} LIMIT ${parseInt(limit)} OFFSET ${offset}`;
+      const dataQuery = `SELECT nfse_emitente, nfse_doc, nfse_tomador, nfse_tipo, nfse_local_prestacao, nfse_data_hora, nfse_valor_servico, nfse_status_integracao, nfse_id_integracao, nfse_codcfo FROM nfse ${whereClause} ORDER BY ${sortBy} ${sortOrder.toUpperCase()} LIMIT ${parseInt(limit)} OFFSET ${offset}`;
       
       const [nfses] = await mysqlPool.execute(dataQuery, searchParams) as any;
 
