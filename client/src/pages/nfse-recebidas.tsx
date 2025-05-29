@@ -154,7 +154,7 @@ export default function NFSeRecebidasPage() {
   };
 
   const handleRefreshNFSe = () => {
-    queryClient.invalidateQueries({ queryKey: ["/api/nfse-recebidas"] });
+    queryClient.invalidateQueries({ queryKey: ["nfse-recebidas"] });
     toast({
       title: "NFSe Atualizadas",
       description: "Dados das NFSe recebidas atualizados com sucesso!",

@@ -89,7 +89,7 @@ export default function NFeRecebidasPage() {
   };
 
   const handleRefreshNFe = () => {
-    queryClient.invalidateQueries({ queryKey: ["/api/nfe-recebidas"] });
+    queryClient.invalidateQueries({ queryKey: ["nfe-recebidas"] });
     toast({
       title: "NFe Atualizadas",
       description: "Dados das NFe recebidas atualizados com sucesso!",
