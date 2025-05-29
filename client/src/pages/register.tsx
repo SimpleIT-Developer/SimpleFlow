@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
 import { useState } from "react";
@@ -26,6 +27,7 @@ export default function RegisterPage() {
       password: "",
       confirmPassword: "",
       name: "",
+      type: "user",
     },
   });
 
@@ -133,6 +135,30 @@ export default function RegisterPage() {
                   {form.formState.errors.email && (
                     <p className="text-red-400 text-sm mt-1">
                       {form.formState.errors.email.message}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <Label htmlFor="type" className="text-gray-200">
+                    Tipo de Usuário
+                  </Label>
+                  <Select
+                    value={form.watch("type")}
+                    onValueChange={(value) => form.setValue("type", value)}
+                  >
+                    <SelectTrigger className="bg-white/10 border-white/20 text-white focus:ring-2 focus:ring-primary focus:border-transparent">
+                      <SelectValue placeholder="Selecione o tipo de usuário" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="user">Usuário</SelectItem>
+                      <SelectItem value="admin">Administrador</SelectItem>
+                      <SelectItem value="system">Sistema</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {form.formState.errors.type && (
+                    <p className="text-red-400 text-sm mt-1">
+                      {form.formState.errors.type.message}
                     </p>
                   )}
                 </div>
