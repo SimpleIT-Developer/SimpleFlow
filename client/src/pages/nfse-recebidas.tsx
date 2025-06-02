@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Download, RefreshCw, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Filter } from "lucide-react";
+import { Download, RefreshCw, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Filter, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { NFSeRecebida, NFSeResponse } from "@shared/schema";
 
@@ -141,6 +141,13 @@ export default function NFSeRecebidasPage() {
   const handleSearch = (value: string) => {
     setSearch(value);
     setPage(1);
+  };
+
+  const getSortIcon = (column: keyof NFSeRecebida) => {
+    if (sortBy !== column) {
+      return <ArrowUpDown className="w-4 h-4" />;
+    }
+    return sortOrder === "asc" ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />;
   };
 
   const clearFilters = () => {
@@ -307,28 +314,70 @@ export default function NFSeRecebidasPage() {
               ) : (
                 <div className="bg-white/5 rounded-lg">
                   <table className="w-full table-fixed">
-                    <thead className="bg-white/10">
-                      <tr>
+                    <thead>
+                      <tr className="border-b border-white/10">
                         <th className="text-left py-3 px-2 w-32">
-                          <span className="text-gray-300 font-semibold text-xs">Emitente</span>
+                          <Button
+                            variant="ghost"
+                            onClick={() => handleSort("nfse_emitente")}
+                            className="text-gray-300 hover:text-white p-0 h-auto font-semibold text-xs"
+                          >
+                            Emitente {getSortIcon("nfse_emitente")}
+                          </Button>
                         </th>
                         <th className="text-left py-3 px-2 w-24">
-                          <span className="text-gray-300 font-semibold text-xs">CNPJ</span>
+                          <Button
+                            variant="ghost"
+                            onClick={() => handleSort("nfse_doc")}
+                            className="text-gray-300 hover:text-white p-0 h-auto font-semibold text-xs"
+                          >
+                            CNPJ {getSortIcon("nfse_doc")}
+                          </Button>
                         </th>
                         <th className="text-left py-3 px-2 w-32">
-                          <span className="text-gray-300 font-semibold text-xs">Tomador</span>
+                          <Button
+                            variant="ghost"
+                            onClick={() => handleSort("nfse_tomador")}
+                            className="text-gray-300 hover:text-white p-0 h-auto font-semibold text-xs"
+                          >
+                            Tomador {getSortIcon("nfse_tomador")}
+                          </Button>
                         </th>
                         <th className="text-left py-3 px-2 w-20">
-                          <span className="text-gray-300 font-semibold text-xs">Tipo</span>
+                          <Button
+                            variant="ghost"
+                            onClick={() => handleSort("nfse_tipo")}
+                            className="text-gray-300 hover:text-white p-0 h-auto font-semibold text-xs"
+                          >
+                            Tipo {getSortIcon("nfse_tipo")}
+                          </Button>
                         </th>
                         <th className="text-left py-3 px-2 w-24">
-                          <span className="text-gray-300 font-semibold text-xs">Data</span>
+                          <Button
+                            variant="ghost"
+                            onClick={() => handleSort("nfse_data_hora")}
+                            className="text-gray-300 hover:text-white p-0 h-auto font-semibold text-xs"
+                          >
+                            Data {getSortIcon("nfse_data_hora")}
+                          </Button>
                         </th>
                         <th className="text-left py-3 px-2 w-24">
-                          <span className="text-gray-300 font-semibold text-xs">Valor</span>
+                          <Button
+                            variant="ghost"
+                            onClick={() => handleSort("nfse_valor_servico")}
+                            className="text-gray-300 hover:text-white p-0 h-auto font-semibold text-xs"
+                          >
+                            Valor {getSortIcon("nfse_valor_servico")}
+                          </Button>
                         </th>
                         <th className="text-left py-3 px-2 w-24">
-                          <span className="text-gray-300 font-semibold text-xs">Status</span>
+                          <Button
+                            variant="ghost"
+                            onClick={() => handleSort("nfse_status_integracao")}
+                            className="text-gray-300 hover:text-white p-0 h-auto font-semibold text-xs"
+                          >
+                            Status {getSortIcon("nfse_status_integracao")}
+                          </Button>
                         </th>
                         <th className="text-left py-3 px-2 w-28">
                           <span className="text-gray-300 font-semibold text-xs">Ações</span>
