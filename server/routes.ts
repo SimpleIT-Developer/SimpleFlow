@@ -1216,6 +1216,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Rota para gerar e exibir DANFE da NFe
+  app.get("/api/nfe-danfe/:doc_id", authenticateToken, async (req: any, res) => {
+    try {
+      const { doc_id } = req.params;
+      
+      // Primeiro, baixar o XML da API externa
+      const apiUrl = `https://roboeac.simpledfe.com.br/api/doc_download_api.php?doc_id=${doc_id}`;
+      const response = await fetch(apiUrl);
+      
+      if (!response.ok) {
+        throw new Error(`Erro ao baixar XML da API externa: ${response.status}`);
+      }
+      
+      const xmlContent = await response.text();
+      
+      // Importar a função para gerar DANFE
+      const { generateDANFE } = await import('./danfe-utils');
+      
+      // Gerar o PDF do DANFE
+      const result = await generateDANFE(xmlContent);
+      
+      if (!result.success) {
+        throw new Error(`Erro ao gerar DANFE: ${result.error}`);
+      }
+      
+      // Ler o arquivo PDF gerado
+      const fs = await import('fs');
+      const pdfBuffer = fs.readFileSync(result.pdfPath!);
+      
+      // Definir headers para exibir o PDF no navegador
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `inline; filename="danfe_${doc_id}.pdf"`);
+      res.send(pdfBuffer);
+      
+      // Limpar arquivo temporário
+      fs.unlinkSync(result.pdfPath!);
+      
+    } catch (error) {
+      console.error("Erro ao gerar DANFE:", error);
+      res.status(500).json({ message: "Erro ao gerar DANFE", error: (error as Error).message });
+    }
+  });
+
   // Rota de teste para envio de email
   app.post("/api/test-email", authenticateToken, async (req: any, res) => {
     try {

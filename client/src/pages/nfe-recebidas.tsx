@@ -163,10 +163,21 @@ export default function NFeRecebidasPage() {
   };
 
   const handleImprimirDANFE = (nfe: NFeRecebida) => {
-    toast({
-      title: "Imprimir DANFE",
-      description: `Imprimindo DANFE da NFe ${nfe.doc_num}`,
-    });
+    try {
+      const url = `/api/nfe-danfe/${nfe.doc_id}`;
+      window.open(url, '_blank');
+      
+      toast({
+        title: "DANFE Aberto",
+        description: `DANFE da NFe ${nfe.doc_num} aberto em nova guia`,
+      });
+    } catch (error) {
+      toast({
+        title: "Erro ao Abrir DANFE",
+        description: "Não foi possível abrir o DANFE. Verifique se o serviço está disponível.",
+        variant: "destructive",
+      });
+    }
   };
 
   const getSortIcon = (column: keyof NFeRecebida) => {
