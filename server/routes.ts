@@ -530,7 +530,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const total = countResult[0].total;
 
       // Get NFSes with pagination and sorting  
-      const dataQuery = `SELECT nfse_emitente, nfse_doc, nfse_tomador, nfse_tipo, nfse_local_prestacao, nfse_data_hora, nfse_valor_servico, nfse_status_integracao, nfse_id_integracao, nfse_codcfo FROM nfse ${whereClause} ORDER BY ${sortBy} ${sortOrder.toUpperCase()} LIMIT ${parseInt(limit)} OFFSET ${offset}`;
+      const dataQuery = `SELECT nfse_id, nfse_emitente, nfse_doc, nfse_tomador, nfse_tipo, nfse_local_prestacao, nfse_data_hora, nfse_valor_servico, nfse_status_integracao, nfse_id_integracao, nfse_codcfo FROM nfse ${whereClause} ORDER BY ${sortBy} ${sortOrder.toUpperCase()} LIMIT ${parseInt(limit)} OFFSET ${offset}`;
       
       const [nfses] = await mysqlPool.execute(dataQuery, searchParams) as any;
 
@@ -1138,6 +1138,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Erro ao verificar cadastro no ERP:", error);
       res.status(500).json({ message: "Erro ao verificar cadastro no ERP" });
+    }
+  });
+
+  // Rota para download de XML da NFSe via API externa
+  app.get("/api/nfse-download/:nfse_id", authenticateToken, async (req: any, res) => {
+    try {
+      const { nfse_id } = req.params;
+      const apiUrl = `https://roboeac.simpledfe.com.br/api/nfse_download_api.php?nfse_id=${nfse_id}`;
+      
+      // Fazer a chamada para a API externa
+      const response = await fetch(apiUrl);
+      
+      if (!response.ok) {
+        throw new Error(`Erro na API externa: ${response.status}`);
+      }
+      
+      // Encaminhar o arquivo para o cliente
+      const buffer = await response.arrayBuffer();
+      
+      res.setHeader('Content-Type', 'application/xml');
+      res.setHeader('Content-Disposition', `attachment; filename="nfse_${nfse_id}.xml"`);
+      res.send(Buffer.from(buffer));
+      
+    } catch (error) {
+      console.error("Erro ao baixar XML da NFSe:", error);
+      res.status(500).json({ message: "Erro ao baixar XML da NFSe" });
     }
   });
 
