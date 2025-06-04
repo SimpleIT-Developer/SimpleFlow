@@ -69,6 +69,7 @@ export interface CompanyResponse {
 
 // Types for NFe Recebidas (MySQL table)
 export interface NFeRecebida {
+  doc_id: number;
   doc_num: string;
   doc_dest_nome: string;
   doc_emit_nome: string;

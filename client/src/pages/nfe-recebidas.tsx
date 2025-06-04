@@ -106,11 +106,42 @@ export default function NFeRecebidasPage() {
     setPage(1);
   };
 
-  const handleBaixarXML = (nfe: NFeRecebida) => {
-    toast({
-      title: "Baixar XML",
-      description: `Baixando XML da NFe ${nfe.doc_num}`,
-    });
+  const handleBaixarXML = async (nfe: NFeRecebida) => {
+    try {
+      // Chama a API através do nosso backend para evitar problemas de CORS
+      const response = await fetch(`/api/nfe-download/${nfe.doc_id}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Erro ao baixar XML da NFe');
+      }
+
+      // Baixa o arquivo
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `nfe_${nfe.doc_id}.xml`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast({
+        title: "Download Concluído",
+        description: `XML da NFe ${nfe.doc_num} baixado com sucesso!`,
+      });
+    } catch (error) {
+      toast({
+        title: "Erro no Download",
+        description: "Não foi possível baixar o XML da NFe. Verifique se o serviço está disponível.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleIntegrarERP = (nfe: NFeRecebida) => {

@@ -390,6 +390,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get NFes with pagination and sorting
       const dataQuery = `
         SELECT 
+          doc_id,
           doc_num,
           doc_dest_nome,
           doc_emit_nome,
@@ -1138,6 +1139,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Erro ao verificar cadastro no ERP:", error);
       res.status(500).json({ message: "Erro ao verificar cadastro no ERP" });
+    }
+  });
+
+  // Rota para download de XML da NFe via API externa
+  app.get("/api/nfe-download/:doc_id", authenticateToken, async (req: any, res) => {
+    try {
+      const { doc_id } = req.params;
+      const apiUrl = `https://roboeac.simpledfe.com.br/api/doc_download_api.php?doc_id=${doc_id}`;
+      
+      // Fazer a chamada para a API externa
+      const response = await fetch(apiUrl);
+      
+      if (!response.ok) {
+        throw new Error(`Erro na API externa: ${response.status}`);
+      }
+      
+      // Encaminhar o arquivo para o cliente
+      const buffer = await response.arrayBuffer();
+      
+      res.setHeader('Content-Type', 'application/xml');
+      res.setHeader('Content-Disposition', `attachment; filename="nfe_${doc_id}.xml"`);
+      res.send(Buffer.from(buffer));
+      
+    } catch (error) {
+      console.error("Erro ao baixar XML da NFe:", error);
+      res.status(500).json({ message: "Erro ao baixar XML da NFe" });
     }
   });
 
