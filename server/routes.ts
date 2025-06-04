@@ -1155,11 +1155,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         throw new Error(`Erro na API externa: ${response.status}`);
       }
       
+      // Extrair o nome do arquivo do cabeçalho Content-Disposition
+      const contentDisposition = response.headers.get('content-disposition');
+      let filename = `nfe_${doc_id}.xml`; // fallback
+      
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        if (filenameMatch) {
+          filename = filenameMatch[1].replace(/['"]/g, '');
+        }
+      }
+      
       // Encaminhar o arquivo para o cliente
       const buffer = await response.arrayBuffer();
       
-      res.setHeader('Content-Type', 'application/xml');
-      res.setHeader('Content-Disposition', `attachment; filename="nfe_${doc_id}.xml"`);
+      res.setHeader('Content-Type', response.headers.get('content-type') || 'application/xml');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
       res.send(Buffer.from(buffer));
       
     } catch (error) {
@@ -1181,11 +1192,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         throw new Error(`Erro na API externa: ${response.status}`);
       }
       
+      // Extrair o nome do arquivo do cabeçalho Content-Disposition
+      const contentDisposition = response.headers.get('content-disposition');
+      let filename = `nfse_${nfse_id}.xml`; // fallback
+      
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        if (filenameMatch) {
+          filename = filenameMatch[1].replace(/['"]/g, '');
+        }
+      }
+      
       // Encaminhar o arquivo para o cliente
       const buffer = await response.arrayBuffer();
       
-      res.setHeader('Content-Type', 'application/xml');
-      res.setHeader('Content-Disposition', `attachment; filename="nfse_${nfse_id}.xml"`);
+      res.setHeader('Content-Type', response.headers.get('content-type') || 'application/xml');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
       res.send(Buffer.from(buffer));
       
     } catch (error) {

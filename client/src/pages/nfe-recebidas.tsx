@@ -120,12 +120,23 @@ export default function NFeRecebidasPage() {
         throw new Error('Erro ao baixar XML da NFe');
       }
 
+      // Extrair o nome do arquivo do cabeçalho Content-Disposition
+      const contentDisposition = response.headers.get('content-disposition');
+      let filename = `nfe_${nfe.doc_id}.xml`; // fallback
+      
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        if (filenameMatch) {
+          filename = filenameMatch[1].replace(/['"]/g, '');
+        }
+      }
+
       // Baixa o arquivo
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `nfe_${nfe.doc_id}.xml`;
+      link.download = filename;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
