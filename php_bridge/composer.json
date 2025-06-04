@@ -1,0 +1,16 @@
+{
+    "name": "simpledfe/danfe-generator",
+    "description": "Gerador de DANFE para SimpleDFe",
+    "type": "project",
+    "require": {
+        "php": ">=8.0",
+        "nfephp-org/sped-da": "^1.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "SimpleDfe\\": "src/"
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
