@@ -191,7 +191,7 @@ export async function generateDANFE(xmlContent: string): Promise<{ success: bool
     // Protocolo de autorização
     if (nfeData.protocolo) {
       doc.text(`Protocolo: ${nfeData.protocolo}`, 400, 90);
-      doc.text(`Data Autorização: ${formatDate(nfeData.dataAutorizacao)}`, 400, 105);
+      doc.text(`Data Autorização: ${formatDate(nfeData.dataAutorizacao || '')}`, 400, 105);
     }
     
     let yPos = 140;

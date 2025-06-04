@@ -162,10 +162,29 @@ export default function NFeRecebidasPage() {
     });
   };
 
-  const handleImprimirDANFE = (nfe: NFeRecebida) => {
+  const handleImprimirDANFE = async (nfe: NFeRecebida) => {
     try {
-      const url = `/api/nfe-danfe/${nfe.doc_id}`;
+      // Fazer a requisição com autenticação
+      const response = await fetch(`/api/nfe-danfe/${nfe.doc_id}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Erro ao gerar DANFE');
+      }
+
+      // Criar blob do PDF e abrir em nova guia
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
       window.open(url, '_blank');
+      
+      // Limpar URL após um breve delay
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+      }, 1000);
       
       toast({
         title: "DANFE Aberto",
