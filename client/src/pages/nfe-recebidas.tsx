@@ -157,8 +157,8 @@ export default function NFeRecebidasPage() {
 
   const handleIntegrarERP = (nfe: NFeRecebida) => {
     toast({
-      title: "Integrar com ERP",
-      description: `Integrando NFe ${nfe.doc_num} com o ERP`,
+      title: "Integração Automática",
+      description: "As NFe estão sendo integradas automaticamente. A funcionalidade de integração individual será implementada em breve.",
     });
   };
 

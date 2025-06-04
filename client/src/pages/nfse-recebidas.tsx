@@ -164,8 +164,8 @@ export default function NFSeRecebidasPage() {
 
   const handleIntegrarERP = (nfse: NFSeRecebida) => {
     toast({
-      title: "Integrar com ERP",
-      description: `Iniciando integração da NFSe do emitente ${nfse.nfse_emitente} com o ERP`,
+      title: "Integração Automática",
+      description: "As NFSe estão sendo integradas automaticamente. A funcionalidade de integração individual será implementada em breve.",
     });
   };
 
