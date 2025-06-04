@@ -1,3 +1,11 @@
+import { exec } from 'child_process';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as util from 'util';
+import * as os from 'os';
+
+const execAsync = util.promisify(exec);
+
 /**
  * Gera um PDF do DANFE a partir do XML do documento fiscal usando a biblioteca sped-da via PHP
  * 
