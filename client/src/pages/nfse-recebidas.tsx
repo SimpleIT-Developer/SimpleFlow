@@ -113,11 +113,44 @@ export default function NFSeRecebidasPage() {
   const totalPages = nfseData?.totalPages || 0;
 
   // Funções de ação
-  const handleBaixarXML = (nfse: NFSeRecebida) => {
-    toast({
-      title: "Baixar XML",
-      description: `Iniciando download do XML da NFSe do emitente ${nfse.nfse_emitente}`,
-    });
+  const handleBaixarXML = async (nfse: NFSeRecebida) => {
+    try {
+      const apiUrl = `https://roboeac.simpledfe.com.br/api/nfse_download_api.php?nfse_id=${nfse.nfse_id}`;
+      
+      // Faz a chamada para a API
+      const response = await fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Erro ao baixar XML da NFSe');
+      }
+
+      // Baixa o arquivo
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `nfse_${nfse.nfse_id}.xml`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast({
+        title: "Download Concluído",
+        description: `XML da NFSe ${nfse.nfse_id} baixado com sucesso!`,
+      });
+    } catch (error) {
+      toast({
+        title: "Erro no Download",
+        description: "Não foi possível baixar o XML da NFSe. Tente novamente.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleIntegrarERP = (nfse: NFSeRecebida) => {

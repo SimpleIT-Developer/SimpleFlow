@@ -104,6 +104,7 @@ export interface NFeResponse {
 
 // NFSe Recebidas interfaces
 export interface NFSeRecebida {
+  nfse_id: number;
   nfse_emitente: string;
   nfse_doc: string;
   nfse_tomador: string;
