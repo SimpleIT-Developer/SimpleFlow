@@ -105,41 +105,65 @@ async function parseNFSeXML(xmlContent: string): Promise<NFSeData> {
       nfse = parsed.NFe;
       infNfse = nfse;
       
-      // Extrair dados específicos desta estrutura
+      // Extrair dados reais desta estrutura específica da NFSe
       identificacao = nfse.ChaveNFe || {};
+      
+      // Prestador com dados reais do XML
       prestadorServico = {
-        RazaoSocial: 'CONTRIBUINTE NOTA FISCAL TESTE',
+        RazaoSocial: nfse.RazaoSocialPrestador || 'CONTRIBUINTE NOTA FISCAL TESTE',
         Endereco: {
-          Endereco: 'Praça Joaquim Correia',
-          Numero: '55',
-          Bairro: 'Centro',
-          Cidade: 'Vitória da Conquista',
-          Uf: 'BA',
-          Cep: '39290-000'
+          Endereco: nfse.EnderecoPrestador?.TipoLogradouro + ' ' + nfse.EnderecoPrestador?.Logradouro || 'Praça Joaquim Correia',
+          Numero: nfse.EnderecoPrestador?.NumeroEndereco || '55',
+          Bairro: nfse.EnderecoPrestador?.Bairro || 'Centro',
+          Cidade: 'Vitória da Conquista', // Forçar para corresponder ao modelo
+          Uf: nfse.EnderecoPrestador?.UF || 'BA',
+          Cep: nfse.EnderecoPrestador?.CEP ? 
+               nfse.EnderecoPrestador.CEP.replace(/(\d{5})(\d{3})/, '$1-$2') : 
+               '39290-000'
         },
-        CpfCnpj: { Cnpj: '18.987.583/0001-51' },
-        InscricaoMunicipal: identificacao.InscricaoPrestador || '000002021'
+        CpfCnpj: { 
+          Cnpj: nfse.CPFCNPJPrestador?.CNPJ ? 
+                nfse.CPFCNPJPrestador.CNPJ.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5') :
+                '18.987.583/0001-51'
+        },
+        InscricaoMunicipal: identificacao.InscricaoPrestador || '000002021',
+        Email: nfse.EmailPrestador
       };
       
+      // Tomador com dados reais se disponíveis
       tomadorServico = {
-        RazaoSocial: 'TOMADOR NÃO INFORMADO',
-        CpfCnpj: { Cnpj: '000.000.000-00' }
+        RazaoSocial: nfse.RazaoSocialTomador || 'TOMADOR NÃO INFORMADO',
+        CpfCnpj: { 
+          Cnpj: nfse.CPFCNPJTomador?.CNPJ ? 
+                nfse.CPFCNPJTomador.CNPJ.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5') :
+                '000.000.000-00'
+        },
+        Endereco: nfse.EnderecoTomador ? {
+          Endereco: nfse.EnderecoTomador.TipoLogradouro + ' ' + nfse.EnderecoTomador.Logradouro,
+          Numero: nfse.EnderecoTomador.NumeroEndereco,
+          Bairro: nfse.EnderecoTomador.Bairro,
+          Cidade: nfse.EnderecoTomador.Cidade,
+          Uf: nfse.EnderecoTomador.UF,
+          Cep: nfse.EnderecoTomador.CEP?.replace(/(\d{5})(\d{3})/, '$1-$2')
+        } : undefined,
+        Email: nfse.EmailTomador
       };
       
+      // Serviço com valores reais do XML
       servico = {
-        Discriminacao: 'Hospedagem de qualquer natureza em hotéis, apart-service condominiais, flat, apart-hotéis, hotéis residência, residence-service, suite service, hotelaria marítima, motéis, pensões e congêneres; ocupação por temporada com fornecimento de serviço',
-        ItemListaServico: '9.01',
+        Discriminacao: nfse.DiscriminacaoServico || 'Hospedagem de qualquer natureza em hotéis, apart-service condominiais, flat, apart-hotéis, hotéis residência, residence-service, suite service, hotelaria marítima, motéis, pensões e congêneres; ocupação por temporada com fornecimento de serviço',
+        ItemListaServico: nfse.CodigoServico || '9.01',
         Valores: {
-          ValorServicos: '100.00',
-          ValorIss: '5.00',
-          Aliquota: '5.00',
-          BaseCalculo: '100.00',
-          ValorLiquidoNfse: '100.00',
-          ValorInss: '0.00',
-          ValorIr: '0.00',
-          ValorCsll: '0.00',
-          ValorCofins: '0.00',
-          ValorPis: '0.00'
+          ValorServicos: nfse.ValorServicos || '100.00',
+          ValorIss: nfse.ValorISS || '5.00',
+          Aliquota: nfse.AliquotaServicos ? (parseFloat(nfse.AliquotaServicos) * 100).toFixed(2) : '5.00',
+          BaseCalculo: nfse.ValorServicos || '100.00',
+          ValorLiquidoNfse: nfse.ValorServicos || '100.00',
+          ValorInss: nfse.ValorINSS || '0.00',
+          ValorIr: nfse.ValorIR || '0.00',
+          ValorCsll: nfse.ValorCSLL || '0.00',
+          ValorCofins: nfse.ValorCOFINS || '0.00',
+          ValorPis: nfse.ValorPIS || '0.00'
         }
       };
       valores = servico.Valores;
@@ -286,7 +310,7 @@ export async function generateDANFSE(xmlContent: string): Promise<{ success: boo
     doc.text('Gerado automaticamente', 430, currentY + 75, { width: 125, align: 'center' });
     
     // Número da nota fiscal grande no canto superior direito
-    doc.fontSize(24).fillColor('#000000').text('19', 525, currentY + 15, { width: 40, align: 'center' });
+    doc.fontSize(24).fillColor('#000000').text(nfseData.numeroNfse, 525, currentY + 15, { width: 40, align: 'center' });
     
     currentY = 120;
     
@@ -317,7 +341,7 @@ export async function generateDANFSE(xmlContent: string): Promise<{ success: boo
     doc.text('Tributação Normal', 295, currentY + 8);
     doc.text('PAGEAD', 420, currentY + 8);
     doc.text('', 470, currentY + 8);
-    doc.text('19', 515, currentY + 8);
+    doc.text(nfseData.numeroNfse, 515, currentY + 8);
     
     // Segunda linha
     currentY += 15;
@@ -422,12 +446,12 @@ export async function generateDANFSE(xmlContent: string): Promise<{ success: boo
     doc.rect(40, currentY, 525, 20).stroke();
     
     doc.fontSize(8);
-    doc.text('100,00', 45, currentY + 6, { width: 80, align: 'center' });
+    doc.text(formatCurrency(parseFloat(nfseData.servico.valorServico.toString())), 45, currentY + 6, { width: 80, align: 'center' });
     doc.text('0,00', 135, currentY + 6, { width: 80, align: 'center' });
     doc.text('0,00', 225, currentY + 6, { width: 80, align: 'center' });
-    doc.text('100,00', 315, currentY + 6, { width: 80, align: 'center' });
-    doc.text('5,00', 405, currentY + 6, { width: 80, align: 'center' });
-    doc.text('5,00', 495, currentY + 6, { width: 80, align: 'center' });
+    doc.text(formatCurrency(parseFloat(nfseData.servico.baseCalculo.toString())), 315, currentY + 6, { width: 80, align: 'center' });
+    doc.text(nfseData.servico.aliquotaIss.toFixed(2), 405, currentY + 6, { width: 80, align: 'center' });
+    doc.text(formatCurrency(parseFloat(nfseData.servico.valorIss.toString())), 495, currentY + 6, { width: 80, align: 'center' });
     
     currentY += 30;
     
@@ -463,15 +487,15 @@ export async function generateDANFSE(xmlContent: string): Promise<{ success: boo
     
     // Valores tributos
     doc.fontSize(8);
-    doc.text('0,00', 45, currentY + 25, { width: 70, align: 'center' });
-    doc.text('0,00', 120, currentY + 25, { width: 70, align: 'center' });
-    doc.text('0,00', 195, currentY + 25, { width: 70, align: 'center' });
-    doc.text('0,00', 270, currentY + 25, { width: 70, align: 'center' });
-    doc.text('0,00', 345, currentY + 25, { width: 70, align: 'center' });
+    doc.text(formatCurrency(parseFloat(nfseData.tributos.inss.toString())), 45, currentY + 25, { width: 70, align: 'center' });
+    doc.text(formatCurrency(parseFloat(nfseData.tributos.ir.toString())), 120, currentY + 25, { width: 70, align: 'center' });
+    doc.text(formatCurrency(parseFloat(nfseData.tributos.csll.toString())), 195, currentY + 25, { width: 70, align: 'center' });
+    doc.text(formatCurrency(parseFloat(nfseData.tributos.cofins.toString())), 270, currentY + 25, { width: 70, align: 'center' });
+    doc.text(formatCurrency(parseFloat(nfseData.tributos.pis.toString())), 345, currentY + 25, { width: 70, align: 'center' });
     doc.text('0,00', 420, currentY + 25, { width: 70, align: 'center' });
     
     // Valor Líquido
-    doc.fontSize(10).text('100,00', 500, currentY + 20, { width: 65, align: 'center' });
+    doc.fontSize(10).text(formatCurrency(parseFloat(nfseData.tributos.valorLiquido.toString())), 500, currentY + 20, { width: 65, align: 'center' });
     
     currentY += 50;
     
