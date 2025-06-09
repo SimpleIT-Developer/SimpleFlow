@@ -59,6 +59,26 @@ interface DANFSeLayoutFinalData {
   outrasInformacoes: string;
 }
 
+// Função auxiliar para buscar vISSQN recursivamente
+function buscarVISSQN(obj: any, caminho = ''): any {
+  if (typeof obj !== 'object' || obj === null) return null;
+  
+  for (const [key, value] of Object.entries(obj)) {
+    const caminhoAtual = caminho ? `${caminho}.${key}` : key;
+    
+    if (key === 'vISSQN' && value) {
+      console.log(`Encontrado vISSQN em ${caminhoAtual}:`, value);
+      return value;
+    }
+    
+    if (typeof value === 'object') {
+      const resultado = buscarVISSQN(value, caminhoAtual);
+      if (resultado) return resultado;
+    }
+  }
+  return null;
+}
+
 async function extrairDadosLayoutFinal(xmlContent: string): Promise<DANFSeLayoutFinalData> {
   try {
     let cleanXml = xmlContent.trim();
@@ -72,21 +92,18 @@ async function extrairDadosLayoutFinal(xmlContent: string): Promise<DANFSeLayout
     
     const parsed = await parseStringPromise(cleanXml, { explicitArray: false });
     
-    // Buscar valor ISS recursivamente
-    function buscarVISSQN(obj: any): any {
-      if (typeof obj !== 'object' || obj === null) return null;
-      
-      for (const [key, value] of Object.entries(obj)) {
-        if (key === 'vISSQN' && value) {
-          return value;
-        }
-        if (typeof value === 'object') {
-          const resultado = buscarVISSQN(value);
-          if (resultado) return resultado;
-        }
-      }
-      return null;
-    }
+    console.log('Procurando valor ISS em:');
+    const valores = parsed.NFSe?.infNFSe?.DPS?.infDPS?.valores || parsed.NFSe?.infNFSe?.valores || {};
+    console.log('valores.vISSQN:', valores.vISSQN);
+    console.log('valores.vISS:', valores.vISS);
+    
+    const serv = parsed.NFSe?.infNFSe?.DPS?.infDPS?.serv || {};
+    console.log('serv.vISSQN:', serv.vISSQN);
+    
+    const infNFSe = parsed.NFSe?.infNFSe || {};
+    console.log('infNFSe.vISSQN:', infNFSe.vISSQN);
+    
+    console.log('parsed.NFSe.vISSQN:', parsed.NFSe?.vISSQN);
     
     const valorIssEncontrado = buscarVISSQN(parsed);
     
@@ -485,57 +502,60 @@ function criarDANFSeLayoutFinal(data: DANFSeLayoutFinalData): jsPDF {
   
   y += valorHeight + 5;
   
-  // === TABELA DE VALORES ===
-  const colunas = [30, 30, 30, 30, 20, 20, 20];
-  const cabecalhos = ['Código de Serviço', 'Valor Serviços (R$)', 'Valor Deduções (R$)', 'Base Cálculo (R$)', 'Alíquota (%)', 'ISS Retido', 'Valor Líquido (R$)'];
+  // === TABELA DE VALORES CONFORME MODELO ===
+  // Primeira linha: Valor Retenções, Base Cálculo ISS, Valor Líquido, Alíquota ISS, ISS Retido, Valor do ISS
+  const colunas1 = [33, 33, 33, 25, 25, 33];
+  const cabecalhos1 = ['Valor Retenções (R$)', 'Base Cálculo ISS (R$)', 'Valor Líquido (R$)', 'Alíquota ISS (%)', 'ISS Retido', 'Valor do ISS (R$)'];
   
   let x = margem + 5;
-  doc.setFontSize(6);
+  doc.setFontSize(5);
   doc.setFont('helvetica', 'bold');
   
-  cabecalhos.forEach((cabecalho, i) => {
-    doc.rect(x, y, colunas[i], 6);
-    doc.text(cabecalho, x + colunas[i]/2, y + 4, { align: 'center' });
-    x += colunas[i];
+  cabecalhos1.forEach((cabecalho, i) => {
+    doc.rect(x, y, colunas1[i], 8);
+    const linhasCabecalho = doc.splitTextToSize(cabecalho, colunas1[i] - 2);
+    linhasCabecalho.forEach((linha: string, index: number) => {
+      doc.text(linha, x + colunas1[i]/2, y + 3 + (index * 2), { align: 'center' });
+    });
+    x += colunas1[i];
   });
   
-  y += 6;
+  y += 8;
   x = margem + 5;
   doc.setFont('helvetica', 'normal');
   
-  const valoresTabela = [
-    data.codigoServico,
-    formatarMoeda(data.valorServicos),
-    formatarMoeda(data.valorDeducoes),
+  const retencoes = data.pis + data.cofins + data.inss + data.ir + data.csll;
+  const valoresTabela1 = [
+    formatarMoeda(retencoes),
     formatarMoeda(data.baseCalculo),
+    formatarMoeda(data.valorTotalNota - retencoes),
     data.aliquota.toFixed(2),
     data.issRetido ? 'Sim' : 'Não',
-    formatarMoeda(data.valorTotalNota)
+    formatarMoeda(data.valorIss)
   ];
   
-  valoresTabela.forEach((valor, i) => {
-    doc.rect(x, y, colunas[i], 6);
-    doc.text(valor, x + colunas[i]/2, y + 4, { align: 'center' });
-    x += colunas[i];
+  valoresTabela1.forEach((valor, i) => {
+    doc.rect(x, y, colunas1[i], 8);
+    doc.text(valor, x + colunas1[i]/2, y + 5, { align: 'center' });
+    x += colunas1[i];
   });
   
-  y += 10;
+  y += 8;
   
-  // === TRIBUTOS FEDERAIS ===
-  const tribColunas = [32, 32, 32, 32, 32];
-  const tribCabecalhos = ['PIS (%)', 'COFINS (%)', 'INSS (%)', 'IR (%)', 'CSLL (%)'];
+  // Segunda linha: PIS, COFINS, INSS, IR, CSLL (sem pular linha)
+  const colunas2 = [36, 36, 36, 36, 36];
+  const cabecalhos2 = ['PIS (R$)', 'COFINS (R$)', 'INSS (R$)', 'IR (R$)', 'CSLL (R$)'];
   
   x = margem + 5;
-  doc.setFontSize(6);
   doc.setFont('helvetica', 'bold');
   
-  tribCabecalhos.forEach((cabecalho, i) => {
-    doc.rect(x, y, tribColunas[i], 6);
-    doc.text(cabecalho, x + tribColunas[i]/2, y + 4, { align: 'center' });
-    x += tribColunas[i];
+  cabecalhos2.forEach((cabecalho, i) => {
+    doc.rect(x, y, colunas2[i], 8);
+    doc.text(cabecalho, x + colunas2[i]/2, y + 3, { align: 'center' });
+    x += colunas2[i];
   });
   
-  y += 6;
+  y += 8;
   x = margem + 5;
   doc.setFont('helvetica', 'normal');
   
@@ -548,12 +568,12 @@ function criarDANFSeLayoutFinal(data: DANFSeLayoutFinalData): jsPDF {
   ];
   
   tribValores.forEach((valor, i) => {
-    doc.rect(x, y, tribColunas[i], 6);
-    doc.text(valor, x + tribColunas[i]/2, y + 4, { align: 'center' });
-    x += tribColunas[i];
+    doc.rect(x, y, colunas2[i], 8);
+    doc.text(valor, x + colunas2[i]/2, y + 5, { align: 'center' });
+    x += colunas2[i];
   });
   
-  y += 12;
+  y += 8;
   
   // === OUTRAS INFORMAÇÕES ===
   doc.setFontSize(8);
