@@ -1263,39 +1263,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/nfse-danfse/:nfse_id", authenticateToken, async (req: any, res) => {
     try {
       const { nfse_id } = req.params;
+      console.log('DANFSe - Requisição recebida para NFSe ID:', nfse_id);
       
       // Buscar o XML da NFSe na base de dados MySQL
       const query = "SELECT nfse_xml FROM nfse WHERE nfse_id = ?";
-      const results = await new Promise<any[]>((resolve, reject) => {
+      console.log('Executando query MySQL:', query);
+      
+      const results: any[] = await new Promise((resolve, reject) => {
         mysqlPool.query(query, [nfse_id], (error: any, results: any) => {
-          if (error) reject(error);
-          else resolve(results);
+          if (error) {
+            console.error('Erro na query MySQL:', error);
+            reject(error);
+          } else {
+            console.log('Query executada, resultados:', results?.length || 0, 'registros');
+            resolve(results);
+          }
         });
       });
       
       if (!results || results.length === 0) {
+        console.log('NFSe não encontrada para ID:', nfse_id);
         return res.status(404).json({ message: "NFSe não encontrada" });
       }
       
       const xmlContent = results[0].nfse_xml;
       
       if (!xmlContent) {
+        console.log('XML da NFSe não encontrado para ID:', nfse_id);
         return res.status(404).json({ message: "XML da NFSe não encontrado" });
       }
       
-      // Importar a função para gerar DANFSe
+      console.log('XML encontrado, tamanho:', xmlContent.length, 'caracteres');
+      
+      // Importar e usar a função para gerar DANFSe
       const { generateDANFSE } = await import('./danfse-utils');
       
       // Gerar o PDF da DANFSe
+      console.log('Iniciando geração da DANFSe...');
       const result = await generateDANFSE(xmlContent);
       
       if (!result.success) {
+        console.error('Erro ao gerar DANFSe:', result.error);
         throw new Error(`Erro ao gerar DANFSe: ${result.error}`);
       }
+      
+      console.log('DANFSe gerada com sucesso:', result.pdfPath);
       
       // Ler o arquivo PDF gerado
       const fs = await import('fs');
       const pdfBuffer = fs.readFileSync(result.pdfPath!);
+      
+      console.log('PDF lido, tamanho:', pdfBuffer.length, 'bytes');
       
       // Definir headers para exibir o PDF no navegador
       res.setHeader('Content-Type', 'application/pdf');
@@ -1304,6 +1322,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Limpar arquivo temporário
       fs.unlinkSync(result.pdfPath!);
+      console.log('Arquivo temporário removido');
       
     } catch (error) {
       console.error("Erro ao gerar DANFSe:", error);
