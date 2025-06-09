@@ -1296,8 +1296,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('XML encontrado, tamanho:', xmlContent.length, 'caracteres');
       console.log('Primeiros 100 caracteres do XML:', xmlContent.substring(0, 100));
       
-      // Importar e usar a função para gerar DANFSe com HTML
-      const { generateDANFSE } = await import('./danfse-html-generator');
+      // Importar e usar a função para gerar DANFSe com jsPDF
+      const { generateDANFSE } = await import('./danfse-jspdf-generator');
       
       // Gerar o PDF da DANFSe
       console.log('Iniciando geração da DANFSe...');
