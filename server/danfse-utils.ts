@@ -53,7 +53,32 @@ interface NFSeData {
 
 async function parseNFSeXML(xmlContent: string): Promise<NFSeData> {
   try {
-    const parsed = await parseStringPromise(xmlContent, { explicitArray: false });
+    // Limpar e validar o XML
+    let cleanXml = xmlContent.trim();
+    
+    // Verificar se o conteúdo está codificado em base64
+    if (!cleanXml.startsWith('<')) {
+      try {
+        // Tentar decodificar se estiver em base64
+        cleanXml = Buffer.from(cleanXml, 'base64').toString('utf-8');
+        console.log('XML decodificado de base64');
+      } catch (e) {
+        console.log('Não foi possível decodificar base64, tentando como texto puro');
+      }
+    }
+    
+    // Remover caracteres de controle e BOM
+    cleanXml = cleanXml.replace(/^\uFEFF/, ''); // Remove BOM
+    cleanXml = cleanXml.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, ''); // Remove caracteres de controle
+    
+    // Verificar se ainda não é XML válido
+    if (!cleanXml.includes('<')) {
+      throw new Error('Conteúdo não parece ser XML válido');
+    }
+    
+    console.log('XML limpo, primeiros 200 caracteres:', cleanXml.substring(0, 200));
+    
+    const parsed = await parseStringPromise(cleanXml, { explicitArray: false });
     
     // Navegação pela estrutura XML da NFSe (pode variar por município)
     let nfse = parsed;

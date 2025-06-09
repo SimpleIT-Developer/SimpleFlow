@@ -1,0 +1,219 @@
+inpage.js:1 [ChromeTransport] connectChrome error: TypeError: Cannot read properties of undefined (reading 'addListener')
+    at Object.connect (inpage.js:1:19482)
+    at async r (inpage.js:1:17952)
+connect @ inpage.js:1
+content.1.bundle.js:16215 Refused to apply inline style because it violates the following Content Security Policy directive: "style-src 'self' 'sha256-0hAheEzaMe6uXIKV4EehS9pu1am1lj/KnnzrOYqckXk='". Either the 'unsafe-inline' keyword, a hash ('sha256-33YGiROm4Pzv0xXIPo82M0Dt2zrdnP4IgbJq1WeAtf8='), or a nonce ('nonce-...') is required to enable inline execution. Note that hashes do not apply to event handlers, style attributes and javascript: navigations unless the 'unsafe-hashes' keyword is present.
+
+(anônimo) @ content.1.bundle.js:16215
+ Refused to apply inline style because it violates the following Content Security Policy directive: "style-src 'self' 'sha256-0hAheEzaMe6uXIKV4EehS9pu1am1lj/KnnzrOYqckXk='". Either the 'unsafe-inline' keyword, a hash ('sha256-33YGiROm4Pzv0xXIPo82M0Dt2zrdnP4IgbJq1WeAtf8='), or a nonce ('nonce-...') is required to enable inline execution. Note that hashes do not apply to event handlers, style attributes and javascript: navigations unless the 'unsafe-hashes' keyword is present.
+
+(anônimo) @ content.1.bundle.js:16215
+ [ChromeTransport] connectChrome error: TypeError: Cannot read properties of undefined (reading 'addListener')
+    at Object.connect (inpage.js:1:19482)
+    at async r (inpage.js:1:17952)
+connect @ inpage.js:1
+content.1.bundle.js:30695 Uncaught SecurityError: Failed to read a named property 'originalWindow' from 'Window': Blocked a frame with origin "https://www.googletagmanager.com" from accessing a cross-origin frame.
+    at new Recorder (content.1.bundle.js:30633:35)
+    at Proxy.<anonymous> (content.1.bundle.js:30741:16)
+    at content.1.bundle.js:38374:6
+    at content.1.bundle.js:38381:3
+inpage.js:1 [ChromeTransport] connectChrome error: TypeError: Cannot read properties of undefined (reading 'addListener')
+    at Object.connect (inpage.js:1:19482)
+    at async r (inpage.js:1:17952)
+connect @ inpage.js:1
+ [ChromeTransport] connectChrome error: TypeError: Cannot read properties of undefined (reading 'addListener')
+    at Object.connect (inpage.js:1:19482)
+    at async r (inpage.js:1:17952)
+connect @ inpage.js:1
+ [ChromeTransport] connectChrome error: TypeError: Cannot read properties of undefined (reading 'addListener')
+    at Object.connect (inpage.js:1:19482)
+    at async r (inpage.js:1:17952)
+connect @ chrome-extension://n…scripts/inpage.js:1
+content.1.bundle.js:16215 Refused to apply inline style because it violates the following Content Security Policy directive: "style-src 'self'". Either the 'unsafe-inline' keyword, a hash ('sha256-33YGiROm4Pzv0xXIPo82M0Dt2zrdnP4IgbJq1WeAtf8='), or a nonce ('nonce-...') is required to enable inline execution. Note that hashes do not apply to event handlers, style attributes and javascript: navigations unless the 'unsafe-hashes' keyword is present.
+
+(anônimo) @ content.1.bundle.js:16215
+ Refused to apply inline style because it violates the following Content Security Policy directive: "style-src 'self'". Either the 'unsafe-inline' keyword, a hash ('sha256-33YGiROm4Pzv0xXIPo82M0Dt2zrdnP4IgbJq1WeAtf8='), or a nonce ('nonce-...') is required to enable inline execution. Note that hashes do not apply to event handlers, style attributes and javascript: navigations unless the 'unsafe-hashes' keyword is present.
+
+(anônimo) @ content.1.bundle.js:16215
+inpage.js:1 [ChromeTransport] connectChrome error: TypeError: Cannot read properties of undefined (reading 'addListener')
+    at Object.connect (inpage.js:1:19482)
+    at async r (inpage.js:1:17952)
+connect @ inpage.js:1
+content.1.bundle.js:16215 Refused to apply inline style because it violates the following Content Security Policy directive: "style-src https://m.stripe.network". Either the 'unsafe-inline' keyword, a hash ('sha256-33YGiROm4Pzv0xXIPo82M0Dt2zrdnP4IgbJq1WeAtf8='), or a nonce ('nonce-...') is required to enable inline execution. Note that hashes do not apply to event handlers, style attributes and javascript: navigations unless the 'unsafe-hashes' keyword is present.
+
+(anônimo) @ content.1.bundle.js:16215
+content.1.bundle.js:30695 Uncaught SecurityError: Failed to read a named property 'originalWindow' from 'Window': Blocked a frame with origin "https://m.stripe.network" from accessing a cross-origin frame.
+    at new Recorder (content.1.bundle.js:30633:35)
+    at Proxy.<anonymous> (content.1.bundle.js:30741:16)
+    at content.1.bundle.js:38374:6
+    at content.1.bundle.js:38381:3
+inpage.js:1 [ChromeTransport] connectChrome error: TypeError: Cannot read properties of undefined (reading 'addListener')
+    at Object.connect (inpage.js:1:19482)
+    at async r (inpage.js:1:17952)
+connect @ inpage.js:1
+ [ChromeTransport] connectChrome error: TypeError: Cannot read properties of undefined (reading 'addListener')
+    at Object.connect (inpage.js:1:19482)
+    at async r (inpage.js:1:17952)
+connect @ inpage.js:1
+ [ChromeTransport] connectChrome error: TypeError: Cannot read properties of undefined (reading 'addListener')
+    at Object.connect (inpage.js:1:19482)
+    at async r (inpage.js:1:17952)
+connect @ inpage.js:1
+inpage.js:1 [ChromeTransport] connectChrome error: TypeError: Cannot read properties of undefined (reading 'addListener')
+    at Object.connect (inpage.js:1:19482)
+    at async r (inpage.js:1:17952)
+connect @ inpage.js:1
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+content.1.bundle.js:222 Uncaught TypeError: Cannot read properties of null (reading 'top')
+    at content.1.bundle.js:222:27
+content.1.bundle.js:222 Uncaught TypeError: Cannot read properties of null (reading 'top')
+    at content.1.bundle.js:222:27
+content.1.bundle.js:222 Uncaught TypeError: Cannot read properties of null (reading 'top')
+    at content.1.bundle.js:222:27
+content.1.bundle.js:222 Uncaught TypeError: Cannot read properties of null (reading 'top')
+    at content.1.bundle.js:222:27
+content.1.bundle.js:222 Uncaught TypeError: Cannot read properties of null (reading 'top')
+    at content.1.bundle.js:222:27
+content.1.bundle.js:222 Uncaught TypeError: Cannot read properties of null (reading 'top')
+    at content.1.bundle.js:222:27
+content.1.bundle.js:222 Uncaught TypeError: Cannot read properties of null (reading 'top')
+    at content.1.bundle.js:222:27
+content.1.bundle.js:222 Uncaught TypeError: Cannot read properties of null (reading 'top')
+    at content.1.bundle.js:222:27
+content.1.bundle.js:222 Uncaught TypeError: Cannot read properties of null (reading 'top')
+    at content.1.bundle.js:222:27
+content.1.bundle.js:222 Uncaught TypeError: Cannot read properties of null (reading 'top')
+    at content.1.bundle.js:222:27
+content.1.bundle.js:222 Uncaught TypeError: Cannot read properties of null (reading 'top')
+    at content.1.bundle.js:222:27
+content.1.bundle.js:222 Uncaught TypeError: Cannot read properties of null (reading 'top')
+    at content.1.bundle.js:222:27
+content.1.bundle.js:222 Uncaught TypeError: Cannot read properties of null (reading 'top')
+    at content.1.bundle.js:222:27
+content.1.bundle.js:222 Uncaught TypeError: Cannot read properties of null (reading 'top')
+    at content.1.bundle.js:222:27
+content.1.bundle.js:222 Uncaught TypeError: Cannot read properties of null (reading 'top')
+    at content.1.bundle.js:222:27
+content.1.bundle.js:222 Uncaught TypeError: Cannot read properties of null (reading 'top')
+    at content.1.bundle.js:222:27
+content.1.bundle.js:222 Uncaught TypeError: Cannot read properties of null (reading 'top')
+    at content.1.bundle.js:222:27
+content.1.bundle.js:222 Uncaught TypeError: Cannot read properties of null (reading 'top')
+    at content.1.bundle.js:222:27
+content.1.bundle.js:222 Uncaught TypeError: Cannot read properties of null (reading 'top')
+    at content.1.bundle.js:222:27
+content.1.bundle.js:222 Uncaught TypeError: Cannot read properties of null (reading 'top')
+    at content.1.bundle.js:222:27
+content.1.bundle.js:222 Uncaught TypeError: Cannot read properties of null (reading 'top')
+    at content.1.bundle.js:222:27
+content.1.bundle.js:222 Uncaught TypeError: Cannot read properties of null (reading 'top')
+    at content.1.bundle.js:222:27
+content.1.bundle.js:222 Uncaught TypeError: Cannot read properties of null (reading 'top')
+    at content.1.bundle.js:222:27
+content.1.bundle.js:222 Uncaught TypeError: Cannot read properties of null (reading 'top')
+    at content.1.bundle.js:222:27
+content.1.bundle.js:222 Uncaught TypeError: Cannot read properties of null (reading 'top')
+    at content.1.bundle.js:222:27
+content.1.bundle.js:222 Uncaught TypeError: Cannot read properties of null (reading 'top')
+    at content.1.bundle.js:222:27
+content.1.bundle.js:222 Uncaught TypeError: Cannot read properties of null (reading 'top')
+    at content.1.bundle.js:222:27
+content.1.bundle.js:222 Uncaught TypeError: Cannot read properties of null (reading 'top')
+    at content.1.bundle.js:222:27
+content.1.bundle.js:222 Uncaught TypeError: Cannot read properties of null (reading 'top')
+    at content.1.bundle.js:222:27
+content.1.bundle.js:222 Uncaught TypeError: Cannot read properties of null (reading 'top')
+    at content.1.bundle.js:222:27
+content.1.bundle.js:222 Uncaught TypeError: Cannot read properties of null (reading 'top')
+    at content.1.bundle.js:222:27
+content.1.bundle.js:222 Uncaught TypeError: Cannot read properties of null (reading 'top')
+    at content.1.bundle.js:222:27
+content.1.bundle.js:222 Uncaught TypeError: Cannot read properties of null (reading 'top')
+    at content.1.bundle.js:222:27
+content.1.bundle.js:222 Uncaught TypeError: Cannot read properties of null (reading 'top')
+    at content.1.bundle.js:222:27
+content.1.bundle.js:222 Uncaught TypeError: Cannot read properties of null (reading 'top')
+    at content.1.bundle.js:222:27
+content.1.bundle.js:222 Uncaught TypeError: Cannot read properties of null (reading 'top')
+    at content.1.bundle.js:222:27
+content.1.bundle.js:222 Uncaught TypeError: Cannot read properties of null (reading 'top')
+    at content.1.bundle.js:222:27
+content.1.bundle.js:222 Uncaught TypeError: Cannot read properties of null (reading 'top')
+    at content.1.bundle.js:222:27
+content.1.bundle.js:222 Uncaught TypeError: Cannot read properties of null (reading 'top')
+    at content.1.bundle.js:222:27
+content.1.bundle.js:222 Uncaught TypeError: Cannot read properties of null (reading 'top')
+    at content.1.bundle.js:222:27
+content.1.bundle.js:222 Uncaught TypeError: Cannot read properties of null (reading 'top')
+    at content.1.bundle.js:222:27
+content.1.bundle.js:222 Uncaught TypeError: Cannot read properties of null (reading 'top')
+    at content.1.bundle.js:222:27
+content.1.bundle.js:222 Uncaught TypeError: Cannot read properties of null (reading 'top')
+    at content.1.bundle.js:222:27
+content.1.bundle.js:222 Uncaught TypeError: Cannot read properties of null (reading 'top')
+    at content.1.bundle.js:222:27
+content.1.bundle.js:222 Uncaught TypeError: Cannot read properties of null (reading 'top')
+    at content.1.bundle.js:222:27
+content.1.bundle.js:222 Uncaught TypeError: Cannot read properties of null (reading 'top')
+    at content.1.bundle.js:222:27
+content.1.bundle.js:222 Uncaught TypeError: Cannot read properties of null (reading 'top')
+    at content.1.bundle.js:222:27
+inpage.js:1 [ChromeTransport] connectChrome error: TypeError: Cannot read properties of undefined (reading 'addListener')
+    at Object.connect (inpage.js:1:19482)
+    at async r (inpage.js:1:17952)
+connect @ inpage.js:1
+inpage.js:1 [ChromeTransport] connectChrome error: TypeError: Cannot read properties of undefined (reading 'addListener')
+    at Object.connect (inpage.js:1:19482)
+    at async r (inpage.js:1:17952)
+connect @ inpage.js:1
+c01e3549-417a-48d5-948c-fa91f20915f3-00-1w42qzj8sq1r7.janeway.replit.dev/api/auth/me:1 
+            
+            
+           Failed to load resource: the server responded with a status of 401 (Unauthorized)
+Console.js:61 Warning: validateDOMNesting(...): <a> cannot appear as a descendant of <a>.
+    at a
+    at a
+    at https://c01e3549-417a-48d5-948c-fa91f20915f3-00-1w42qzj8sq1r7.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=33119fa0:337:18
+    at li
+    at ul
+    at nav
+    at div
+    at div
+    at div
+    at Layout (https://c01e3549-417a-48d5-948c-fa91f20915f3-00-1w42qzj8sq1r7.janeway.replit.dev/src/components/layout.tsx:25:26)
+    at DashboardPage (https://c01e3549-417a-48d5-948c-fa91f20915f3-00-1w42qzj8sq1r7.janeway.replit.dev/src/pages/dashboard.tsx:47:47)
+    at ProtectedRoute (https://c01e3549-417a-48d5-948c-fa91f20915f3-00-1w42qzj8sq1r7.janeway.replit.dev/src/components/protected-route.tsx:22:34)
+    at Route (https://c01e3549-417a-48d5-948c-fa91f20915f3-00-1w42qzj8sq1r7.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=33119fa0:323:16)
+    at Switch (https://c01e3549-417a-48d5-948c-fa91f20915f3-00-1w42qzj8sq1r7.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=33119fa0:379:17)
+    at Router
+    at Provider (https://c01e3549-417a-48d5-948c-fa91f20915f3-00-1w42qzj8sq1r7.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-W6PG6DRF.js?v=33119fa0:38:15)
+    at TooltipProvider (https://c01e3549-417a-48d5-948c-fa91f20915f3-00-1w42qzj8sq1r7.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=33119fa0:59:5)
+    at QueryClientProvider (https://c01e3549-417a-48d5-948c-fa91f20915f3-00-1w42qzj8sq1r7.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=33119fa0:2805:3)
+    at App (https://c01e3549-417a-48d5-948c-fa91f20915f3-00-1w42qzj8sq1r7.janeway.replit.dev/src/App.tsx?v=cJWqHDS0LIxfI8JLtSYCK:166:3)
+Mt.forEach.n.<computed> @ Console.js:61
+c01e3549-417a-48d5-948c-fa91f20915f3-00-1w42qzj8sq1r7.janeway.replit.dev/api/nfse-danfse/1774:1 
+            
+            
+           Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+Console.js:61 Erro na resposta: {"message":"Erro ao gerar DANFSe","error":"Erro ao gerar DANFSe: Erro ao processar XML da NFSe"}
+Mt.forEach.n.<computed> @ Console.js:61
+Console.js:61 Erro ao gerar DANFSe: Error: Erro ao gerar DANFSe: 500 - {"message":"Erro ao gerar DANFSe","error":"Erro ao gerar DANFSe: Erro ao processar XML da NFSe"}
+    at handleImprimirDANFSE (nfse-recebidas.tsx:191:15)
+Mt.forEach.n.<computed> @ Console.js:61
+c01e3549-417a-48d5-948c-fa91f20915f3-00-1w42qzj8sq1r7.janeway.replit.dev/api/nfse-danfse/1773:1 
+            
+            
+           Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+Console.js:61 Erro na resposta: {"message":"Erro ao gerar DANFSe","error":"Erro ao gerar DANFSe: Erro ao processar XML da NFSe"}
+Mt.forEach.n.<computed> @ Console.js:61
+Console.js:61 Erro ao gerar DANFSe: Error: Erro ao gerar DANFSe: 500 - {"message":"Erro ao gerar DANFSe","error":"Erro ao gerar DANFSe: Erro ao processar XML da NFSe"}
+    at handleImprimirDANFSE (nfse-recebidas.tsx:191:15)
+Mt.forEach.n.<computed> @ Console.js:61
