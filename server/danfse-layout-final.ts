@@ -488,23 +488,19 @@ function criarDANFSeLayoutFinal(data: DANFSeLayoutFinalData): jsPDF {
   y += descricaoHeight;
   
   // === VALOR TOTAL DA NOTA ===
-  const valorHeight = 15;
+  const valorHeight = 12;
   doc.rect(margem + 5, y, larguraConteudo - 10, valorHeight);
   
-  // Título centralizado dentro da caixa
-  doc.setFontSize(9);
+  // Título e valor na mesma linha centralizado
+  doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
-  doc.text('VALOR TOTAL DA NOTA', largura/2, y + 4, { align: 'center' });
-  
-  doc.setFontSize(12);
-  doc.setFont('helvetica', 'bold');
-  doc.text(`R$ ${formatarMoeda(data.valorTotalNota)}`, largura/2, y + 12, { align: 'center' });
+  doc.text(`VALOR TOTAL DA NOTA - R$ ${formatarMoeda(data.valorTotalNota)}`, largura/2, y + 8, { align: 'center' });
   
   y += valorHeight;
   
   // === TABELA DE VALORES CONFORME MODELO ===
   // Primeira linha: Valor Retenções, Base Cálculo ISS, Valor Líquido, Alíquota ISS, ISS Retido, Valor do ISS
-  const colunas1 = [33, 33, 33, 25, 25, 33];
+  const colunas1 = [32, 32, 32, 24, 24, 34]; // Ajustado para totalizar 178mm (larguraConteudo - 10)
   const cabecalhos1 = ['Valor Retenções (R$)', 'Base Cálculo ISS (R$)', 'Valor Líquido (R$)', 'Alíquota ISS (%)', 'ISS Retido', 'Valor do ISS (R$)'];
   
   let x = margem + 5;
@@ -540,10 +536,9 @@ function criarDANFSeLayoutFinal(data: DANFSeLayoutFinalData): jsPDF {
     x += colunas1[i];
   });
   
-  y += 8;
-  
   // Segunda linha: PIS, COFINS, INSS, IR, CSLL (sem pular linha)
-  const colunas2 = [36, 36, 36, 36, 36];
+  y += 8;
+  const colunas2 = [35.6, 35.6, 35.6, 35.6, 35.6]; // Distribuídos igualmente para 178mm
   const cabecalhos2 = ['PIS (R$)', 'COFINS (R$)', 'INSS (R$)', 'IR (R$)', 'CSLL (R$)'];
   
   x = margem + 5;
