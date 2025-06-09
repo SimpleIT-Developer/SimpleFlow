@@ -288,251 +288,298 @@ function generateDANFSePDF(data: NFSeData): jsPDF {
   const doc = new jsPDF('p', 'mm', 'a4');
   
   // Configurações
-  const margin = 10;
+  const margin = 15;
   const pageWidth = 210 - (margin * 2);
   let currentY = margin;
   
   // Borda externa
-  doc.rect(margin, margin, pageWidth, 287);
+  doc.rect(margin, margin, pageWidth, 267);
   
   // Cabeçalho
-  currentY += 5;
+  currentY += 8;
   
   // Logo placeholder
-  doc.rect(margin + 5, currentY, 20, 20);
-  doc.setFontSize(6);
-  doc.text('LOGO', margin + 15, currentY + 12, { align: 'center' });
+  doc.rect(margin + 5, currentY, 25, 25);
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'normal');
+  doc.text('LOGO', margin + 17.5, currentY + 15, { align: 'center' });
   
   // Título central
-  doc.setFontSize(14);
+  doc.setFontSize(16);
   doc.setFont('helvetica', 'bold');
   doc.text('NOTA FISCAL DE SERVIÇOS ELETRÔNICA - NFSe', 105, currentY + 8, { align: 'center' });
   
-  doc.setFontSize(11);
+  doc.setFontSize(12);
   doc.setFont('helvetica', 'normal');
-  doc.text(`Prefeitura Municipal de ${data.municipio}`, 105, currentY + 15, { align: 'center' });
+  doc.text(`Prefeitura Municipal de ${data.municipio}`, 105, currentY + 16, { align: 'center' });
   
-  doc.setFontSize(9);
-  doc.text('SECRETARIA MUNICIPAL DE FAZENDA E FINANÇAS', 105, currentY + 21, { align: 'center' });
+  doc.setFontSize(10);
+  doc.text('SECRETARIA MUNICIPAL DE FAZENDA E FINANÇAS', 105, currentY + 23, { align: 'center' });
   
   // QR Code placeholder
-  doc.rect(170, currentY, 20, 20);
-  doc.setFontSize(6);
-  doc.text('QR CODE', 180, currentY + 12, { align: 'center' });
+  doc.rect(150, currentY, 25, 25);
+  doc.setFontSize(8);
+  doc.text('QR CODE', 162.5, currentY + 15, { align: 'center' });
   
   // Código de verificação
-  doc.setFontSize(6);
-  doc.text(`Código de Verificação: ${data.codigoVerificacao}`, 170, currentY + 25);
-  doc.text('Gerado automaticamente', 170, currentY + 28);
+  doc.setFontSize(7);
+  const codigoTexto = `Código de Verificação: ${data.codigoVerificacao || 'sem15ol890s01ca805z61'}`;
+  doc.text(codigoTexto, 105, currentY + 30, { align: 'center' });
+  doc.text('Gerado automaticamente', 105, currentY + 35, { align: 'center' });
   
   // Número da NFSe grande
-  doc.setFontSize(20);
+  doc.setFontSize(24);
   doc.setFont('helvetica', 'bold');
-  doc.text(data.numeroNfse, 185, currentY + 35, { align: 'center' });
+  doc.text(data.numeroNfse.substring(data.numeroNfse.length - 4), 185, currentY + 20, { align: 'center' });
   
   currentY += 45;
   
-  // Tabela de informações
-  const tableData = [
-    ['Data de Emissão', 'Exigibilidade do ISS', 'Regime Tributário', 'Número RPS', 'Série', 'Nº da Nota Fiscal'],
-    [formatDate(data.dataEmissao), 'Exigível no Município', 'Tributação Normal', 'PAGEAD', data.serieNfse, data.numeroNfse],
-    ['Tipo de Recolhimento', '', 'Local de Prestação', '', '', ''],
-    ['Simples Nacional', 'Não Retido', 'Não Optante', 'No Município', '', '']
-  ];
+  // Tabela de informações do cabeçalho
+  doc.setFontSize(7);
+  doc.setFont('helvetica', 'bold');
   
-  // Desenhar tabela
-  const colWidths = [35, 35, 35, 25, 15, 25];
-  let tableY = currentY;
+  // Primeira linha - cabeçalhos
+  const headerY = currentY;
+  const colWidths = [30, 30, 30, 25, 15, 25];
+  let cellX = margin + 5;
   
-  tableData.forEach((row, rowIndex) => {
-    let cellX = margin + 5;
-    row.forEach((cell, cellIndex) => {
-      if (cellIndex < colWidths.length) {
-        doc.rect(cellX, tableY, colWidths[cellIndex], 8);
-        doc.setFontSize(rowIndex < 2 ? 7 : 8);
-        doc.setFont('helvetica', rowIndex === 0 || rowIndex === 2 ? 'bold' : 'normal');
-        doc.text(cell, cellX + 1, tableY + 5);
-        cellX += colWidths[cellIndex];
-      }
-    });
-    tableY += 8;
+  // Desenhar células da primeira linha
+  const headers1 = ['Data de Emissão', 'Exigibilidade do ISS', 'Regime Tributário', 'Número RPS', 'Série', 'Nº da Nota Fiscal'];
+  headers1.forEach((header, index) => {
+    doc.rect(cellX, headerY, colWidths[index], 6);
+    doc.text(header, cellX + 1, headerY + 4);
+    cellX += colWidths[index];
   });
   
-  currentY = tableY + 5;
+  // Primeira linha - valores
+  const valuesY = headerY + 6;
+  cellX = margin + 5;
+  doc.setFont('helvetica', 'normal');
+  const values1 = [formatDate(data.dataEmissao), 'Exigível no Município', 'Tributação Normal', 'PAGEAD', data.serieNfse || '', data.numeroNfse.slice(-4)];
+  values1.forEach((value, index) => {
+    doc.rect(cellX, valuesY, colWidths[index], 6);
+    doc.text(value, cellX + 1, valuesY + 4);
+    cellX += colWidths[index];
+  });
+  
+  // Segunda linha - cabeçalhos
+  const header2Y = valuesY + 6;
+  cellX = margin + 5;
+  doc.setFont('helvetica', 'bold');
+  
+  doc.rect(cellX, header2Y, 60, 6);
+  doc.text('Tipo de Recolhimento', cellX + 1, header2Y + 4);
+  cellX += 60;
+  
+  doc.rect(cellX, header2Y, 95, 6);
+  doc.text('Local de Prestação', cellX + 1, header2Y + 4);
+  
+  // Segunda linha - valores
+  const values2Y = header2Y + 6;
+  cellX = margin + 5;
+  doc.setFont('helvetica', 'normal');
+  
+  doc.rect(cellX, values2Y, 30, 6);
+  doc.text('Simples Nacional', cellX + 1, values2Y + 4);
+  cellX += 30;
+  
+  doc.rect(cellX, values2Y, 30, 6);
+  doc.text('Não Retido', cellX + 1, values2Y + 4);
+  cellX += 30;
+  
+  doc.rect(cellX, values2Y, 30, 6);
+  doc.text('Não Optante', cellX + 1, values2Y + 4);
+  cellX += 30;
+  
+  doc.rect(cellX, values2Y, 65, 6);
+  doc.text('No Município', cellX + 1, values2Y + 4);
+  
+  currentY = values2Y + 12;
   
   // PRESTADOR
-  doc.setFontSize(10);
+  doc.setFontSize(9);
   doc.setFont('helvetica', 'bold');
-  doc.rect(margin + 5, currentY, pageWidth - 10, 8);
-  doc.text('PRESTADOR', 105, currentY + 5, { align: 'center' });
+  doc.rect(margin + 5, currentY, pageWidth - 10, 6);
+  doc.text('PRESTADOR', 105, currentY + 4, { align: 'center' });
   
-  currentY += 8;
-  doc.rect(margin + 5, currentY, pageWidth - 10, 25);
+  currentY += 6;
+  doc.rect(margin + 5, currentY, pageWidth - 10, 24);
   doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
   
-  doc.text(`Razão Social: ${data.prestador.razaoSocial}`, margin + 7, currentY + 5);
-  doc.text(`Nome Fantasia: ${data.prestador.nomeFantasia || ''}`, margin + 7, currentY + 10);
-  doc.text(`Endereço: ${data.prestador.endereco.logradouro}, ${data.prestador.endereco.numero} - ${data.prestador.endereco.bairro}`, margin + 7, currentY + 15);
-  doc.text(`Cidade: ${data.prestador.endereco.cidade} - ${data.prestador.endereco.uf} - CEP: ${data.prestador.endereco.cep}`, margin + 7, currentY + 20);
-  doc.text(`E-mail: ${data.prestador.email} - Fone: ${data.prestador.telefone} - Inscrição Municipal: ${data.prestador.inscricaoMunicipal} - CNPJ: ${data.prestador.cnpj}`, margin + 7, currentY + 25);
+  doc.text(`Razão Social: ${data.prestador.razaoSocial}`, margin + 7, currentY + 4);
+  doc.text(`Nome Fantasia: ${data.prestador.nomeFantasia || ''}`, margin + 7, currentY + 8);
+  doc.text(`Endereço: ${data.prestador.endereco.logradouro}, ${data.prestador.endereco.numero} - ${data.prestador.endereco.bairro}`, margin + 7, currentY + 12);
+  doc.text(`Cidade: ${data.prestador.endereco.cidade} - ${data.prestador.endereco.uf} - CEP: ${data.prestador.endereco.cep}`, margin + 7, currentY + 16);
+  doc.text(`E-mail: ${data.prestador.email || 'email@email.com'} - Fone: ${data.prestador.telefone || ''} - Celular: - Site:`, margin + 7, currentY + 20);
+  doc.text(`Inscrição Estadual: - Inscrição Municipal: ${data.prestador.inscricaoMunicipal} - CPF/CNPJ: ${data.prestador.cnpj}`, margin + 7, currentY + 24);
   
-  currentY += 30;
+  currentY += 28;
   
   // TOMADOR
-  doc.setFontSize(10);
+  doc.setFontSize(9);
   doc.setFont('helvetica', 'bold');
-  doc.rect(margin + 5, currentY, pageWidth - 10, 8);
-  doc.text('TOMADOR', 105, currentY + 5, { align: 'center' });
+  doc.rect(margin + 5, currentY, pageWidth - 10, 6);
+  doc.text('TOMADOR', 105, currentY + 4, { align: 'center' });
   
-  currentY += 8;
-  doc.rect(margin + 5, currentY, pageWidth - 10, 20);
+  currentY += 6;
+  doc.rect(margin + 5, currentY, pageWidth - 10, 18);
   doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
   
-  doc.text(`Razão Social: ${data.tomador.razaoSocial}`, margin + 7, currentY + 5);
+  doc.text(`Razão Social: ${data.tomador.razaoSocial}`, margin + 7, currentY + 4);
   if (data.tomador.endereco) {
-    doc.text(`Endereço: ${data.tomador.endereco.logradouro}, ${data.tomador.endereco.numero} - ${data.tomador.endereco.bairro}`, margin + 7, currentY + 10);
-    doc.text(`Cidade: ${data.tomador.endereco.cidade} - ${data.tomador.endereco.uf} - CEP: ${data.tomador.endereco.cep}`, margin + 7, currentY + 15);
+    doc.text(`Endereço: ${data.tomador.endereco.logradouro}, ${data.tomador.endereco.numero} - ${data.tomador.endereco.bairro} - CEP: ${data.tomador.endereco.cep}`, margin + 7, currentY + 8);
+  } else {
+    doc.text(`Endereço: - CEP:`, margin + 7, currentY + 8);
   }
-  doc.text(`E-mail: ${data.tomador.email} - CPF/CNPJ: ${data.tomador.cnpjCpf}`, margin + 7, currentY + 20);
+  doc.text(`E-mail: ${data.tomador.email || ''} - Fone: ${data.tomador.telefone || ''} - Celular:`, margin + 7, currentY + 12);
+  doc.text(`Inscrição Estadual: ${data.tomador.inscricaoEstadual || ''} - CPF/CNPJ: ${data.tomador.cnpjCpf}`, margin + 7, currentY + 16);
   
-  currentY += 25;
+  currentY += 22;
   
   // SERVIÇO
-  doc.setFontSize(10);
+  doc.setFontSize(9);
   doc.setFont('helvetica', 'bold');
-  doc.rect(margin + 5, currentY, pageWidth - 10, 8);
-  doc.text('SERVIÇO', 105, currentY + 5, { align: 'center' });
+  doc.rect(margin + 5, currentY, pageWidth - 10, 6);
+  doc.text('SERVIÇO', 105, currentY + 4, { align: 'center' });
   
-  currentY += 8;
-  doc.rect(margin + 5, currentY, pageWidth - 10, 15);
+  currentY += 6;
+  doc.rect(margin + 5, currentY, pageWidth - 10, 12);
   doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
-  doc.text(`${data.servico.codigo} - ${data.servico.discriminacao}`, margin + 7, currentY + 5, { maxWidth: pageWidth - 20 });
+  doc.text(`${data.servico.codigo} - ${data.servico.discriminacao}`, margin + 7, currentY + 4, { maxWidth: pageWidth - 20 });
   
-  currentY += 20;
+  currentY += 16;
   
   // DISCRIMINAÇÃO DOS SERVIÇOS
-  doc.setFontSize(10);
+  doc.setFontSize(9);
   doc.setFont('helvetica', 'bold');
-  doc.rect(margin + 5, currentY, pageWidth - 10, 8);
-  doc.text('DISCRIMINAÇÃO DOS SERVIÇOS', 105, currentY + 5, { align: 'center' });
+  doc.rect(margin + 5, currentY, pageWidth - 10, 6);
+  doc.text('DISCRIMINAÇÃO DOS SERVIÇOS', 105, currentY + 4, { align: 'center' });
   
-  currentY += 8;
-  doc.rect(margin + 5, currentY, pageWidth - 10, 20);
+  currentY += 6;
+  doc.rect(margin + 5, currentY, pageWidth - 10, 30);
   doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
-  doc.text('DIGITE AQUI A DISCRIMINAÇÃO DOS SERVIÇOS DA NOTA FISCAL', margin + 7, currentY + 5);
+  doc.text('DIGITE AQUI A DISCRIMINAÇÃO DOS SERVIÇOS DA NOTA FISCAL', margin + 7, currentY + 4);
   
-  currentY += 25;
+  currentY += 35;
   
-  // Tabela de valores
-  const valorColWidths = [30, 30, 30, 30, 20, 20];
+  // Tabela de valores principais
+  const valorColWidths = [28, 28, 28, 28, 22, 22];
   const valorHeaders = ['VALOR SERVIÇO (R$)', 'DEDUÇÕES (R$)', 'DESC. INCOD. (R$)', 'BASE DE CÁLCULO (R$)', 'ALÍQUOTA (%)', 'ISS (R$)'];
-  const valorData = [
-    formatCurrency(data.servico.valorServicos),
-    formatCurrency(data.servico.valorDeducoes),
-    '0,00',
-    formatCurrency(data.servico.baseCalculo),
-    data.servico.aliquota.toFixed(2),
-    formatCurrency(data.servico.valorIss)
-  ];
   
-  // Cabeçalhos
+  // Cabeçalhos da tabela
   let valorX = margin + 5;
+  doc.setFontSize(7);
+  doc.setFont('helvetica', 'bold');
+  
   valorHeaders.forEach((header, index) => {
-    doc.rect(valorX, currentY, valorColWidths[index], 8);
-    doc.setFontSize(7);
-    doc.setFont('helvetica', 'bold');
-    doc.text(header, valorX + valorColWidths[index]/2, currentY + 5, { align: 'center' });
+    doc.rect(valorX, currentY, valorColWidths[index], 6);
+    doc.text(header, valorX + valorColWidths[index]/2, currentY + 4, { align: 'center' });
     valorX += valorColWidths[index];
   });
   
-  currentY += 8;
+  currentY += 6;
   
-  // Valores
+  // Valores da tabela usando dados reais
   valorX = margin + 5;
-  valorData.forEach((value, index) => {
-    doc.rect(valorX, currentY, valorColWidths[index], 8);
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'normal');
-    doc.text(value, valorX + valorColWidths[index]/2, currentY + 5, { align: 'center' });
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'normal');
+  
+  const valorServicos = formatCurrency(data.servico.valorServicos);
+  const valorDeducoes = formatCurrency(data.servico.valorDeducoes);
+  const valorBase = formatCurrency(data.servico.baseCalculo);
+  const aliquota = data.servico.aliquota.toFixed(2);
+  const valorIss = formatCurrency(data.servico.valorIss);
+  
+  [valorServicos, valorDeducoes, '0,00', valorBase, aliquota, valorIss].forEach((value, index) => {
+    doc.rect(valorX, currentY, valorColWidths[index], 6);
+    doc.text(value, valorX + valorColWidths[index]/2, currentY + 4, { align: 'center' });
     valorX += valorColWidths[index];
   });
   
-  currentY += 15;
+  currentY += 12;
   
-  // Tributos e Valor Líquido
+  // Seção de tributos federais e valor líquido
   doc.setFontSize(8);
   doc.setFont('helvetica', 'bold');
-  doc.rect(margin + 5, currentY, 140, 8);
-  doc.text('DEMONSTRATIVO DOS TRIBUTOS FEDERAIS', margin + 7, currentY + 5);
   
-  doc.rect(145, currentY, 45, 8);
-  doc.text('VALOR LÍQUIDO (R$)', 167.5, currentY + 5, { align: 'center' });
+  // Cabeçalho tributos federais
+  doc.rect(margin + 5, currentY, 120, 6);
+  doc.text('DEMONSTRATIVO DOS TRIBUTOS FEDERAIS', margin + 65, currentY + 4, { align: 'center' });
   
-  currentY += 8;
+  // Cabeçalho descontos diversos
+  doc.rect(margin + 125, currentY, 35, 6);
+  doc.text('DESCONTOS DIVERSOS', margin + 142.5, currentY + 4, { align: 'center' });
   
-  // Tabela tributos
-  const tributoHeaders = ['INSS (R$)', 'IR (R$)', 'CSLL (R$)', 'COFINS (R$)', 'PIS (R$)', 'DESCONTOS (R$)'];
-  const tributoData = [
+  // Cabeçalho valor líquido
+  doc.rect(margin + 160, currentY, 35, 6);
+  doc.text('VALOR LÍQUIDO (R$)', margin + 177.5, currentY + 4, { align: 'center' });
+  
+  currentY += 6;
+  
+  // Cabeçalhos das colunas de tributos
+  const tributoColWidth = 20;
+  let tributoX = margin + 5;
+  const tributoHeaders = ['INSS (R$)', 'IR (R$)', 'CSLL (R$)', 'COFINS (R$)', 'PIS (R$)', 'DESCONTOS'];
+  
+  doc.setFontSize(7);
+  tributoHeaders.forEach((header) => {
+    doc.rect(tributoX, currentY, tributoColWidth, 6);
+    doc.text(header, tributoX + tributoColWidth/2, currentY + 4, { align: 'center' });
+    tributoX += tributoColWidth;
+  });
+  
+  // Valor líquido (célula grande)
+  doc.rect(margin + 125, currentY, 70, 12);
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.text(formatCurrency(data.servico.valorLiquido), margin + 160, currentY + 8, { align: 'center' });
+  
+  currentY += 6;
+  
+  // Valores dos tributos usando dados reais
+  tributoX = margin + 5;
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'normal');
+  
+  const tributoValues = [
     formatCurrency(data.servico.valorInss),
-    formatCurrency(data.servico.valorIr),
+    formatCurrency(data.servico.valorIr), 
     formatCurrency(data.servico.valorCsll),
     formatCurrency(data.servico.valorCofins),
     formatCurrency(data.servico.valorPis),
     '0,00'
   ];
   
-  const tributoColWidth = 140 / 6;
-  let tributoX = margin + 5;
-  
-  tributoHeaders.forEach((header, index) => {
-    doc.rect(tributoX, currentY, tributoColWidth, 8);
-    doc.setFontSize(7);
-    doc.setFont('helvetica', 'bold');
-    doc.text(header, tributoX + tributoColWidth/2, currentY + 5, { align: 'center' });
+  tributoValues.forEach((value) => {
+    doc.rect(tributoX, currentY, tributoColWidth, 6);
+    doc.text(value, tributoX + tributoColWidth/2, currentY + 4, { align: 'center' });
     tributoX += tributoColWidth;
   });
   
-  // Valor Líquido
-  doc.rect(145, currentY, 45, 15);
-  doc.setFontSize(12);
-  doc.setFont('helvetica', 'bold');
-  doc.text(formatCurrency(data.servico.valorLiquido), 167.5, currentY + 10, { align: 'center' });
-  
-  currentY += 8;
-  
-  // Valores tributos
-  tributoX = margin + 5;
-  tributoData.forEach((value, index) => {
-    doc.rect(tributoX, currentY, tributoColWidth, 7);
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'normal');
-    doc.text(value, tributoX + tributoColWidth/2, currentY + 5, { align: 'center' });
-    tributoX += tributoColWidth;
-  });
-  
-  currentY += 15;
+  currentY += 18;
   
   // OUTRAS INFORMAÇÕES
-  doc.setFontSize(10);
+  doc.setFontSize(9);
   doc.setFont('helvetica', 'bold');
-  doc.rect(margin + 5, currentY, pageWidth - 10, 8);
-  doc.text('OUTRAS INFORMAÇÕES', 105, currentY + 5, { align: 'center' });
+  doc.rect(margin + 5, currentY, pageWidth - 10, 6);
+  doc.text('OUTRAS INFORMAÇÕES', 105, currentY + 4, { align: 'center' });
   
-  currentY += 8;
-  doc.rect(margin + 5, currentY, pageWidth - 10, 15);
+  currentY += 6;
+  doc.rect(margin + 5, currentY, pageWidth - 10, 12);
   doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
-  doc.text('Valor Líquido = Valor Serviço - INSS - IR - CSLL - COFINS - PIS - Descontos Diversos - ISS Retido - Desconto Incondicional', margin + 7, currentY + 5, { maxWidth: pageWidth - 20 });
+  doc.text('Valor Líquido = Valor Serviço - INSS - IR - CSLL - COFINS - PIS - Descontos Diversos - ISS Retido - Desconto Incondicional', margin + 7, currentY + 4, { maxWidth: pageWidth - 20 });
   
   currentY += 20;
   
   // Footer
   doc.setFontSize(8);
-  doc.text(`Consulte a autenticidade deste documento acessando o site https://www.pm${data.municipio.toLowerCase().replace(/\s+/g, '')}.${data.uf.toLowerCase()}.gov.br`, 105, currentY, { align: 'center' });
+  doc.setFont('helvetica', 'normal');
+  doc.text(`Consulte a autenticidade deste documento acessando o site https://www.pmvc.ba.gov.br`, 105, currentY, { align: 'center' });
   
   return doc;
 }
