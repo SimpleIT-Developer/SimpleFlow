@@ -301,44 +301,53 @@ function criarDANFSeLayoutFinal(data: DANFSeLayoutFinalData): jsPDF {
   // Borda principal
   doc.rect(margem, margem, larguraConteudo, altura - (margem * 2));
   
-  // === CABEÇALHO SIMPLIFICADO ===
+  // === CABEÇALHO CONFORME MODELO ANEXADO ===
   y += 5;
   
-  // Primeira linha - duas colunas
-  const larguraEsquerda = 140;
-  const larguraDireita = 50;
+  // Caixa do cabeçalho com mesma largura das outras seções
+  const cabecalhoHeight = 25;
+  const larguraCabecalho = larguraConteudo - 10;
+  doc.rect(margem + 5, y, larguraCabecalho, cabecalhoHeight);
   
-  // Coluna esquerda - apenas título
-  doc.setFontSize(14);
+  // Coluna esquerda: 65% para o título
+  const larguraEsquerda = larguraCabecalho * 0.65;
+  doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
-  doc.text('NOTA FISCAL DE SERVIÇOS ELETRÔNICA - NFSe', margem + 5, y + 5);
+  doc.text('NOTA FISCAL DE SERVIÇOS ELETRÔNICA', margem + 5 + larguraEsquerda/2, y + 13, { align: 'center' });
   
-  // Coluna direita - caixa com informações
-  doc.rect(margem + larguraEsquerda, margem + 2, larguraDireita, 35);
+  // Linha vertical separadora
+  const xSeparador = margem + 5 + larguraEsquerda;
+  doc.line(xSeparador, y, xSeparador, y + cabecalhoHeight);
   
-  // Número da NFSe (pequeno)
-  doc.setFontSize(8);
-  doc.setFont('helvetica', 'normal');
-  doc.text('Número da NF-e', margem + larguraEsquerda + 25, y - 2, { align: 'center' });
+  // Coluna direita: 35% dividida em 3 linhas
+  const larguraDireita = larguraCabecalho * 0.35;
+  const alturaLinha = cabecalhoHeight / 3;
   
-  doc.setFontSize(16);
-  doc.setFont('helvetica', 'bold');
-  doc.text(data.numeroNfse, margem + larguraEsquerda + 25, y + 5, { align: 'center' });
+  // Linhas horizontais para dividir as 3 seções
+  doc.line(xSeparador, y + alturaLinha, margem + 5 + larguraCabecalho, y + alturaLinha);
+  doc.line(xSeparador, y + (alturaLinha * 2), margem + 5 + larguraCabecalho, y + (alturaLinha * 2));
   
-  // Data e Hora de Emissão
   doc.setFontSize(7);
+  
+  // Primeira linha: Número da NFSe
+  doc.setFont('helvetica', 'bold');
+  doc.text('Número da NF-e:', xSeparador + 2, y + 4);
   doc.setFont('helvetica', 'normal');
-  doc.text('Data e Hora de Emissão', margem + larguraEsquerda + 25, y + 12, { align: 'center' });
-  doc.text(formatarData(data.dataEmissao), margem + larguraEsquerda + 25, y + 16, { align: 'center' });
+  doc.text(data.numeroNfse, xSeparador + 2, y + 7);
   
-  // Código de Verificação
-  if (data.codigoVerificacao) {
-    doc.setFontSize(7);
-    doc.text('Código de Verificação', margem + larguraEsquerda + 25, y + 22, { align: 'center' });
-    doc.text(data.codigoVerificacao, margem + larguraEsquerda + 25, y + 26, { align: 'center' });
-  }
+  // Segunda linha: Data e Hora
+  doc.setFont('helvetica', 'bold');
+  doc.text('Data e Hora de Emissão:', xSeparador + 2, y + alturaLinha + 3);
+  doc.setFont('helvetica', 'normal');
+  doc.text(formatarData(data.dataEmissao), xSeparador + 2, y + alturaLinha + 6);
   
-  y += 25;
+  // Terceira linha: Código de Verificação
+  doc.setFont('helvetica', 'bold');
+  doc.text('Código de Verificação:', xSeparador + 2, y + (alturaLinha * 2) + 3);
+  doc.setFont('helvetica', 'normal');
+  doc.text(data.codigoVerificacao || 'N/A', xSeparador + 2, y + (alturaLinha * 2) + 6);
+  
+  y += cabecalhoHeight;
   
   // === PRESTADOR DE SERVIÇOS ===
   const prestadorHeight = 40;
