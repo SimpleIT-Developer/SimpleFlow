@@ -171,26 +171,37 @@ export default function NFSeRecebidasPage() {
 
   const handleImprimirDANFSE = async (nfse: NFSeRecebida) => {
     try {
+      console.log('Iniciando impressão DANFSe para NFSe ID:', nfse.nfse_id);
+      
       // Fazer a requisição com autenticação
       const token = localStorage.getItem('authToken');
+      console.log('Token de autenticação:', token ? 'Presente' : 'Ausente');
+      
       const response = await fetch(`/api/nfse-danfse/${nfse.nfse_id}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
 
+      console.log('Resposta da API:', response.status, response.statusText);
+
       if (!response.ok) {
-        throw new Error('Erro ao gerar DANFSe');
+        const errorText = await response.text();
+        console.error('Erro na resposta:', errorText);
+        throw new Error(`Erro ao gerar DANFSe: ${response.status} - ${errorText}`);
       }
 
       // Converter a resposta em blob
       const blob = await response.blob();
+      console.log('Blob gerado, tamanho:', blob.size);
       
       // Criar URL temporária para o blob
       const url = window.URL.createObjectURL(blob);
+      console.log('URL criada:', url);
       
       // Abrir em nova janela/tab
-      window.open(url, '_blank');
+      const newWindow = window.open(url, '_blank');
+      console.log('Nova janela aberta:', newWindow ? 'Sucesso' : 'Falhou');
       
       // Limpar a URL após um tempo
       setTimeout(() => {
@@ -205,7 +216,7 @@ export default function NFSeRecebidasPage() {
       console.error('Erro ao gerar DANFSe:', error);
       toast({
         title: "Erro ao Abrir DANFSe",
-        description: "Não foi possível abrir a DANFSe. Verifique se o serviço está disponível.",
+        description: `Não foi possível abrir a DANFSe: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
         variant: "destructive",
       });
     }
