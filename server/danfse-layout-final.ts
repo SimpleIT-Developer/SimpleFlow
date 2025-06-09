@@ -59,7 +59,7 @@ interface DANFSeLayoutFinalData {
   outrasInformacoes: string;
 }
 
-// Função auxiliar para buscar vISSQN recursivamente
+// Função auxiliar para buscar vISSQN e vServ recursivamente
 function buscarVISSQN(obj: any, caminho = ''): any {
   if (typeof obj !== 'object' || obj === null) return null;
   
@@ -79,6 +79,26 @@ function buscarVISSQN(obj: any, caminho = ''): any {
   return null;
 }
 
+// Função auxiliar para buscar vServ recursivamente
+function buscarVServ(obj: any, caminho = ''): any {
+  if (typeof obj !== 'object' || obj === null) return null;
+  
+  for (const [key, value] of Object.entries(obj)) {
+    const caminhoAtual = caminho ? `${caminho}.${key}` : key;
+    
+    if (key === 'vServ' && value) {
+      console.log(`Encontrado vServ em ${caminhoAtual}:`, value);
+      return value;
+    }
+    
+    if (typeof value === 'object') {
+      const resultado = buscarVServ(value, caminhoAtual);
+      if (resultado) return resultado;
+    }
+  }
+  return null;
+}
+
 async function extrairDadosLayoutFinal(xmlContent: string): Promise<DANFSeLayoutFinalData> {
   try {
     let cleanXml = xmlContent.trim();
@@ -92,13 +112,15 @@ async function extrairDadosLayoutFinal(xmlContent: string): Promise<DANFSeLayout
     
     const parsed = await parseStringPromise(cleanXml, { explicitArray: false });
     
-    console.log('Procurando valor ISS em:');
+    console.log('Procurando valor ISS e valor dos serviços em:');
     const valores = parsed.NFSe?.infNFSe?.DPS?.infDPS?.valores || parsed.NFSe?.infNFSe?.valores || {};
     console.log('valores.vISSQN:', valores.vISSQN);
     console.log('valores.vISS:', valores.vISS);
+    console.log('valores.vServ:', valores.vServ);
     
     const serv = parsed.NFSe?.infNFSe?.DPS?.infDPS?.serv || {};
     console.log('serv.vISSQN:', serv.vISSQN);
+    console.log('serv.vServ:', serv.vServ);
     
     const infNFSe = parsed.NFSe?.infNFSe || {};
     console.log('infNFSe.vISSQN:', infNFSe.vISSQN);
@@ -106,6 +128,7 @@ async function extrairDadosLayoutFinal(xmlContent: string): Promise<DANFSeLayout
     console.log('parsed.NFSe.vISSQN:', parsed.NFSe?.vISSQN);
     
     const valorIssEncontrado = buscarVISSQN(parsed);
+    const valorServEncontrado = buscarVServ(parsed);
     
     // Estrutura NFSe padrão
     if (parsed.NFSe && parsed.NFSe.infNFSe) {
@@ -158,13 +181,13 @@ async function extrairDadosLayoutFinal(xmlContent: string): Promise<DANFSeLayout
         observacoes: valores.xOutInf || '',
         
         codigoServico: cServ.cTribNac || '',
-        valorServicos: parseFloat(valores.vServPrest?.vServ || valores.vServ || '0'),
+        valorServicos: parseFloat(valorServEncontrado || valores.vServPrest?.vServ || valores.vServ || serv.vServ || '0'),
         valorDeducoes: 0,
-        baseCalculo: parseFloat(valores.vBC || valores.vServ || '0'),
+        baseCalculo: parseFloat(valores.vBC || valorServEncontrado || valores.vServ || serv.vServ || '0'),
         aliquota: parseFloat(valores.pAliqAplic || '0'),
         valorIss: parseFloat(valorIssEncontrado || '0'),
         issRetido: valores.tpRetISSQN === '1',
-        valorTotalNota: parseFloat(valores.vLiq || valores.vServ || '0'),
+        valorTotalNota: parseFloat(valores.vLiq || valorServEncontrado || valores.vServ || serv.vServ || '0'),
         
         pis: parseFloat(valores.vPIS || '0'),
         cofins: parseFloat(valores.vCOFINS || '0'),
