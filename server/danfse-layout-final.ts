@@ -344,10 +344,10 @@ function criarDANFSeLayoutFinal(data: DANFSeLayoutFinalData): jsPDF {
   const prestadorHeight = 40;
   doc.rect(margem + 5, y, larguraConteudo - 10, prestadorHeight);
   
-  // Título dentro da caixa
+  // Título centralizado dentro da caixa
   doc.setFontSize(9);
   doc.setFont('helvetica', 'bold');
-  doc.text('PRESTADOR DE SERVIÇOS', margem + 8, y + 4);
+  doc.text('PRESTADOR DE SERVIÇOS', largura/2, y + 4, { align: 'center' });
   
   doc.setFontSize(7);
   doc.setFont('helvetica', 'normal');
@@ -413,10 +413,10 @@ function criarDANFSeLayoutFinal(data: DANFSeLayoutFinalData): jsPDF {
   const tomadorHeight = 30;
   doc.rect(margem + 5, y, larguraConteudo - 10, tomadorHeight);
   
-  // Título dentro da caixa
+  // Título centralizado dentro da caixa
   doc.setFontSize(9);
   doc.setFont('helvetica', 'bold');
-  doc.text('TOMADOR DE SERVIÇOS', margem + 8, y + 4);
+  doc.text('TOMADOR DE SERVIÇOS', largura/2, y + 4, { align: 'center' });
   
   doc.setFontSize(7);
   doc.setFont('helvetica', 'normal');
@@ -469,10 +469,10 @@ function criarDANFSeLayoutFinal(data: DANFSeLayoutFinalData): jsPDF {
   const descricaoHeight = 50;
   doc.rect(margem + 5, y, larguraConteudo - 10, descricaoHeight);
   
-  // Título dentro da caixa
+  // Título centralizado dentro da caixa
   doc.setFontSize(9);
   doc.setFont('helvetica', 'bold');
-  doc.text('DESCRIÇÃO DOS SERVIÇOS', margem + 8, y + 4);
+  doc.text('DESCRIÇÃO DOS SERVIÇOS', largura/2, y + 4, { align: 'center' });
   
   doc.setFontSize(6);
   doc.setFont('helvetica', 'normal');
@@ -491,9 +491,14 @@ function criarDANFSeLayoutFinal(data: DANFSeLayoutFinalData): jsPDF {
   const valorHeight = 15;
   doc.rect(margem + 5, y, larguraConteudo - 10, valorHeight);
   
+  // Título centralizado dentro da caixa
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'bold');
+  doc.text('VALOR TOTAL DA NOTA', largura/2, y + 4, { align: 'center' });
+  
   doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
-  doc.text(`VALOR TOTAL DA NOTA - R$ ${formatarMoeda(data.valorTotalNota)}`, largura/2, y + 10, { align: 'center' });
+  doc.text(`R$ ${formatarMoeda(data.valorTotalNota)}`, largura/2, y + 12, { align: 'center' });
   
   y += valorHeight;
   
@@ -571,13 +576,14 @@ function criarDANFSeLayoutFinal(data: DANFSeLayoutFinalData): jsPDF {
   y += 8;
   
   // === OUTRAS INFORMAÇÕES ===
-  doc.setFontSize(8);
-  doc.setFont('helvetica', 'bold');
-  doc.text('OUTRAS INFORMAÇÕES', margem + 5, y);
-  
-  y += 5;
-  const outrasHeight = 20;
+  const outrasHeight = 25;
   doc.rect(margem + 5, y, larguraConteudo - 10, outrasHeight);
+  
+  // Título centralizado dentro da caixa
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'bold');
+  doc.text('OUTRAS INFORMAÇÕES', largura/2, y + 4, { align: 'center' });
+  
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(6);
   
@@ -585,7 +591,7 @@ function criarDANFSeLayoutFinal(data: DANFSeLayoutFinalData): jsPDF {
     const linhasOutras = doc.splitTextToSize(data.outrasInformacoes, larguraConteudo - 20);
     const linhasLimitadas = linhasOutras.slice(0, 3);
     linhasLimitadas.forEach((linha: string, index: number) => {
-      doc.text(linha, margem + 8, y + 5 + (index * 4));
+      doc.text(linha, margem + 8, y + 8 + (index * 4));
     });
   }
   
