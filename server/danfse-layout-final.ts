@@ -413,7 +413,7 @@ function criarDANFSeLayoutFinal(data: DANFSeLayoutFinalData): jsPDF {
   doc.setFont('helvetica', 'normal');
   doc.text(data.prestador.uf, margem + 135, y + 30);
   
-  y += prestadorHeight + 10;
+  y += prestadorHeight;
   
   // === TOMADOR DE SERVIÇOS ===
   doc.setFontSize(10);
@@ -468,7 +468,7 @@ function criarDANFSeLayoutFinal(data: DANFSeLayoutFinalData): jsPDF {
   doc.setFont('helvetica', 'normal');
   doc.text(data.tomador.uf, margem + 155, y + 24);
   
-  y += tomadorHeight + 10;
+  y += tomadorHeight;
   
   // === DESCRIÇÃO DOS SERVIÇOS ===
   doc.setFontSize(10);
@@ -490,7 +490,7 @@ function criarDANFSeLayoutFinal(data: DANFSeLayoutFinalData): jsPDF {
     doc.text(linha, margem + 8, y + 5 + (index * 4));
   });
   
-  y += descricaoHeight + 10;
+  y += descricaoHeight;
   
   // === VALOR TOTAL DA NOTA ===
   const valorHeight = 15;
@@ -500,7 +500,7 @@ function criarDANFSeLayoutFinal(data: DANFSeLayoutFinalData): jsPDF {
   doc.setFont('helvetica', 'bold');
   doc.text(`VALOR TOTAL DA NOTA - R$ ${formatarMoeda(data.valorTotalNota)}`, largura/2, y + 10, { align: 'center' });
   
-  y += valorHeight + 5;
+  y += valorHeight;
   
   // === TABELA DE VALORES CONFORME MODELO ===
   // Primeira linha: Valor Retenções, Base Cálculo ISS, Valor Líquido, Alíquota ISS, ISS Retido, Valor do ISS
