@@ -341,115 +341,122 @@ function criarDANFSeLayoutFinal(data: DANFSeLayoutFinalData): jsPDF {
   y += 25;
   
   // === PRESTADOR DE SERVIÇOS ===
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'bold');
-  doc.text('PRESTADOR DE SERVIÇOS', margem + 5, y);
-  
-  y += 5;
-  const prestadorHeight = 50;
+  const prestadorHeight = 40;
   doc.rect(margem + 5, y, larguraConteudo - 10, prestadorHeight);
   
-  doc.setFontSize(8);
+  // Título dentro da caixa
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'bold');
+  doc.text('PRESTADOR DE SERVIÇOS', margem + 8, y + 4);
+  
+  doc.setFontSize(7);
   doc.setFont('helvetica', 'normal');
   
   // Primeira linha
   doc.setFont('helvetica', 'bold');
-  doc.text('CPF/CNPJ:', margem + 8, y + 6);
+  doc.text('CPF/CNPJ:', margem + 8, y + 9);
   doc.setFont('helvetica', 'normal');
-  doc.text(data.prestador.cnpj, margem + 30, y + 6);
+  doc.text(data.prestador.cnpj, margem + 28, y + 9);
   
   doc.setFont('helvetica', 'bold');
-  doc.text('Inscrição Municipal:', margem + 110, y + 6);
+  doc.text('Inscrição Municipal:', margem + 110, y + 9);
   doc.setFont('helvetica', 'normal');
-  doc.text(data.prestador.inscricaoMunicipal, margem + 155, y + 6);
+  doc.text(data.prestador.inscricaoMunicipal, margem + 155, y + 9);
   
   // Segunda linha
   doc.setFont('helvetica', 'bold');
-  doc.text('Razão Social:', margem + 8, y + 12);
+  doc.text('Razão Social:', margem + 8, y + 14);
   doc.setFont('helvetica', 'normal');
   const razaoLimitada = data.prestador.razaoSocial.length > 70 ? 
     data.prestador.razaoSocial.substring(0, 70) + '...' : 
     data.prestador.razaoSocial;
-  doc.text(razaoLimitada, margem + 35, y + 12);
+  doc.text(razaoLimitada, margem + 33, y + 14);
   
   // Terceira linha
   doc.setFont('helvetica', 'bold');
-  doc.text('Endereço:', margem + 8, y + 18);
+  doc.text('Endereço:', margem + 8, y + 19);
   doc.setFont('helvetica', 'normal');
   const enderecoCompleto = `${data.prestador.endereco}, ${data.prestador.numero}`;
-  doc.text(enderecoCompleto, margem + 28, y + 18);
+  doc.text(enderecoCompleto, margem + 26, y + 19);
   
   // Quarta linha
   doc.setFont('helvetica', 'bold');
   doc.text('CEP:', margem + 8, y + 24);
   doc.setFont('helvetica', 'normal');
-  doc.text(data.prestador.cep, margem + 20, y + 24);
+  doc.text(data.prestador.cep, margem + 18, y + 24);
   
   doc.setFont('helvetica', 'bold');
-  doc.text('Bairro:', margem + 50, y + 24);
+  doc.text('Bairro:', margem + 45, y + 24);
   doc.setFont('helvetica', 'normal');
-  doc.text(data.prestador.bairro, margem + 65, y + 24);
+  doc.text(data.prestador.bairro, margem + 58, y + 24);
   
   // Quinta linha
   doc.setFont('helvetica', 'bold');
-  doc.text('Município:', margem + 8, y + 30);
+  doc.text('Município:', margem + 8, y + 29);
   doc.setFont('helvetica', 'normal');
-  doc.text(data.prestador.municipio, margem + 28, y + 30);
+  doc.text(data.prestador.municipio, margem + 26, y + 29);
   
   doc.setFont('helvetica', 'bold');
-  doc.text('Estado:', margem + 120, y + 30);
+  doc.text('Estado:', margem + 120, y + 29);
   doc.setFont('helvetica', 'normal');
-  doc.text(data.prestador.uf, margem + 135, y + 30);
+  doc.text(data.prestador.uf, margem + 135, y + 29);
+  
+  // Sexta linha
+  doc.setFont('helvetica', 'bold');
+  doc.text('E-mail:', margem + 8, y + 34);
+  doc.setFont('helvetica', 'normal');
+  doc.text(data.prestador.email, margem + 22, y + 34);
   
   y += prestadorHeight;
   
   // === TOMADOR DE SERVIÇOS ===
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'bold');
-  doc.text('TOMADOR DE SERVIÇOS', margem + 5, y);
-  
-  y += 5;
-  const tomadorHeight = 40;
+  const tomadorHeight = 30;
   doc.rect(margem + 5, y, larguraConteudo - 10, tomadorHeight);
   
-  doc.setFontSize(8);
+  // Título dentro da caixa
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'bold');
+  doc.text('TOMADOR DE SERVIÇOS', margem + 8, y + 4);
+  
+  doc.setFontSize(7);
+  doc.setFont('helvetica', 'normal');
   
   // Primeira linha
   doc.setFont('helvetica', 'bold');
-  doc.text('CPF/CNPJ:', margem + 8, y + 6);
+  doc.text('CPF/CNPJ:', margem + 8, y + 9);
   doc.setFont('helvetica', 'normal');
-  doc.text(data.tomador.cnpj, margem + 30, y + 6);
+  doc.text(data.tomador.cnpj, margem + 28, y + 9);
   
   if (data.tomador.inscricaoMunicipal) {
     doc.setFont('helvetica', 'bold');
-    doc.text('Inscrição Municipal:', margem + 110, y + 6);
+    doc.text('Inscrição Municipal:', margem + 110, y + 9);
     doc.setFont('helvetica', 'normal');
-    doc.text(data.tomador.inscricaoMunicipal, margem + 155, y + 6);
+    doc.text(data.tomador.inscricaoMunicipal, margem + 155, y + 9);
   }
   
   // Segunda linha
   doc.setFont('helvetica', 'bold');
-  doc.text('Razão Social:', margem + 8, y + 12);
+  doc.text('Razão Social:', margem + 8, y + 14);
   doc.setFont('helvetica', 'normal');
-  doc.text(data.tomador.razaoSocial, margem + 35, y + 12);
+  doc.text(data.tomador.razaoSocial, margem + 33, y + 14);
   
   // Terceira linha
   doc.setFont('helvetica', 'bold');
-  doc.text('Endereço:', margem + 8, y + 18);
+  doc.text('Endereço:', margem + 8, y + 19);
   doc.setFont('helvetica', 'normal');
   const enderecoTomador = `${data.tomador.endereco}, ${data.tomador.numero} - ${data.tomador.bairro}`.replace(/, -/, ' -');
-  doc.text(enderecoTomador, margem + 28, y + 18);
+  doc.text(enderecoTomador, margem + 26, y + 19);
   
   // Quarta linha
   doc.setFont('helvetica', 'bold');
   doc.text('CEP:', margem + 8, y + 24);
   doc.setFont('helvetica', 'normal');
-  doc.text(data.tomador.cep, margem + 20, y + 24);
+  doc.text(data.tomador.cep, margem + 18, y + 24);
   
   doc.setFont('helvetica', 'bold');
-  doc.text('Município:', margem + 50, y + 24);
+  doc.text('Município:', margem + 45, y + 24);
   doc.setFont('helvetica', 'normal');
-  doc.text(data.tomador.municipio, margem + 70, y + 24);
+  doc.text(data.tomador.municipio, margem + 65, y + 24);
   
   doc.setFont('helvetica', 'bold');
   doc.text('Estado:', margem + 140, y + 24);
@@ -459,23 +466,23 @@ function criarDANFSeLayoutFinal(data: DANFSeLayoutFinalData): jsPDF {
   y += tomadorHeight;
   
   // === DESCRIÇÃO DOS SERVIÇOS ===
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'bold');
-  doc.text('DESCRIÇÃO DOS SERVIÇOS', margem + 5, y);
-  
-  y += 5;
-  const descricaoHeight = 60;
+  const descricaoHeight = 50;
   doc.rect(margem + 5, y, larguraConteudo - 10, descricaoHeight);
   
-  doc.setFontSize(7);
+  // Título dentro da caixa
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'bold');
+  doc.text('DESCRIÇÃO DOS SERVIÇOS', margem + 8, y + 4);
+  
+  doc.setFontSize(6);
   doc.setFont('helvetica', 'normal');
   
   const textoCompleto = `${data.codigoServico} - ${data.descricaoServicos}`;
   const linhasDescricao = doc.splitTextToSize(textoCompleto, larguraConteudo - 20);
-  const linhasLimitadas = linhasDescricao.slice(0, 8);
+  const linhasLimitadas = linhasDescricao.slice(0, 7);
   
   linhasLimitadas.forEach((linha: string, index: number) => {
-    doc.text(linha, margem + 8, y + 5 + (index * 4));
+    doc.text(linha, margem + 8, y + 8 + (index * 3.5));
   });
   
   y += descricaoHeight;
