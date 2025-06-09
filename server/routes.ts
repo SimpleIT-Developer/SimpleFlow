@@ -1259,6 +1259,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Rota para gerar e exibir DANFSe da NFSe
+  app.get("/api/nfse-danfse/:nfse_id", authenticateToken, async (req: any, res) => {
+    try {
+      const { nfse_id } = req.params;
+      
+      // Buscar o XML da NFSe na base de dados MySQL
+      const query = "SELECT nfse_xml FROM nfse WHERE nfse_id = ?";
+      const results = await new Promise<any[]>((resolve, reject) => {
+        mysqlPool.query(query, [nfse_id], (error: any, results: any) => {
+          if (error) reject(error);
+          else resolve(results);
+        });
+      });
+      
+      if (!results || results.length === 0) {
+        return res.status(404).json({ message: "NFSe não encontrada" });
+      }
+      
+      const xmlContent = results[0].nfse_xml;
+      
+      if (!xmlContent) {
+        return res.status(404).json({ message: "XML da NFSe não encontrado" });
+      }
+      
+      // Importar a função para gerar DANFSe
+      const { generateDANFSE } = await import('./danfse-utils');
+      
+      // Gerar o PDF da DANFSe
+      const result = await generateDANFSE(xmlContent);
+      
+      if (!result.success) {
+        throw new Error(`Erro ao gerar DANFSe: ${result.error}`);
+      }
+      
+      // Ler o arquivo PDF gerado
+      const fs = await import('fs');
+      const pdfBuffer = fs.readFileSync(result.pdfPath!);
+      
+      // Definir headers para exibir o PDF no navegador
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `inline; filename="danfse_${nfse_id}.pdf"`);
+      res.send(pdfBuffer);
+      
+      // Limpar arquivo temporário
+      fs.unlinkSync(result.pdfPath!);
+      
+    } catch (error) {
+      console.error("Erro ao gerar DANFSe:", error);
+      res.status(500).json({ message: "Erro ao gerar DANFSe", error: (error as Error).message });
+    }
+  });
+
   // Rota de teste para envio de email
   app.post("/api/test-email", authenticateToken, async (req: any, res) => {
     try {

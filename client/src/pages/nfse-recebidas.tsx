@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Download, RefreshCw, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Filter, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { Download, RefreshCw, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Filter, ArrowUpDown, ArrowUp, ArrowDown, Printer } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { NFSeRecebida, NFSeResponse } from "@shared/schema";
 
@@ -167,6 +167,48 @@ export default function NFSeRecebidasPage() {
       title: "Integração Automática",
       description: "As NFSe estão sendo integradas automaticamente. A funcionalidade de integração individual será implementada em breve.",
     });
+  };
+
+  const handleImprimirDANFSE = async (nfse: NFSeRecebida) => {
+    try {
+      // Fazer a requisição com autenticação
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`/api/nfse-danfse/${nfse.nfse_id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Erro ao gerar DANFSe');
+      }
+
+      // Converter a resposta em blob
+      const blob = await response.blob();
+      
+      // Criar URL temporária para o blob
+      const url = window.URL.createObjectURL(blob);
+      
+      // Abrir em nova janela/tab
+      window.open(url, '_blank');
+      
+      // Limpar a URL após um tempo
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+      }, 1000);
+
+      toast({
+        title: "DANFSe Gerada",
+        description: "A DANFSe foi gerada e aberta em nova janela.",
+      });
+    } catch (error) {
+      console.error('Erro ao gerar DANFSe:', error);
+      toast({
+        title: "Erro ao Abrir DANFSe",
+        description: "Não foi possível abrir a DANFSe. Verifique se o serviço está disponível.",
+        variant: "destructive",
+      });
+    }
   };
 
   // Funções de manipulação dos filtros (idênticas às da NFe Recebidas)
@@ -472,6 +514,15 @@ export default function NFSeRecebidasPage() {
                                 title="Integrar com ERP"
                               >
                                 <RefreshCw className="w-3 h-3" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleImprimirDANFSE(nfse)}
+                                className="border-purple-500/30 text-purple-400 hover:bg-purple-500/20 w-7 h-7 p-0"
+                                title="Imprimir DANFSe"
+                              >
+                                <Printer className="w-3 h-3" />
                               </Button>
                             </div>
                           </td>
