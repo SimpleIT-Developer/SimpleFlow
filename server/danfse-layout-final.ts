@@ -499,8 +499,11 @@ function criarDANFSeLayoutFinal(data: DANFSeLayoutFinalData): jsPDF {
   y += valorHeight;
   
   // === TABELA DE VALORES CONFORME MODELO ===
+  // Usar a mesma largura das outras seções para alinhamento uniforme
+  const larguraTabela = larguraConteudo - 10;
+  
   // Primeira linha: Valor Retenções, Base Cálculo ISS, Valor Líquido, Alíquota ISS, ISS Retido, Valor do ISS
-  const colunas1 = [32, 32, 32, 24, 24, 34]; // Ajustado para totalizar 178mm (larguraConteudo - 10)
+  const colunas1 = [larguraTabela/6, larguraTabela/6, larguraTabela/6, larguraTabela/6, larguraTabela/6, larguraTabela/6];
   const cabecalhos1 = ['Valor Retenções (R$)', 'Base Cálculo ISS (R$)', 'Valor Líquido (R$)', 'Alíquota ISS (%)', 'ISS Retido', 'Valor do ISS (R$)'];
   
   let x = margem + 5;
@@ -538,7 +541,7 @@ function criarDANFSeLayoutFinal(data: DANFSeLayoutFinalData): jsPDF {
   
   // Segunda linha: PIS, COFINS, INSS, IR, CSLL (sem pular linha)
   y += 8;
-  const colunas2 = [35.6, 35.6, 35.6, 35.6, 35.6]; // Distribuídos igualmente para 178mm
+  const colunas2 = [larguraTabela/5, larguraTabela/5, larguraTabela/5, larguraTabela/5, larguraTabela/5];
   const cabecalhos2 = ['PIS (R$)', 'COFINS (R$)', 'INSS (R$)', 'IR (R$)', 'CSLL (R$)'];
   
   x = margem + 5;
