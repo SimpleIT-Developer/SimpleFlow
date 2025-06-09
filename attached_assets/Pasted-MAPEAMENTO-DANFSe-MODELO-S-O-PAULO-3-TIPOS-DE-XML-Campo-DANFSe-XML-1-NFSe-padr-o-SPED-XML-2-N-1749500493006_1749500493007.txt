@@ -1,0 +1,83 @@
+MAPEAMENTO DANFSe (MODELO SÃO PAULO) + 3 TIPOS DE XML
+Campo DANFSe	XML 1 (NFSe padrão SPED)	XML 2 (NFSe padrão Campinas)	XML 3 (NFe Simplificada, Pref. Campinas/Outras)
+Número da NF-e	/NFSe/infNFSe/nNFSe	/NFSe/infNFSe/nNFSe	/NFe/ChaveNFe/NumeroNFe
+Data Emissão	/NFSe/infNFSe/DPS/infDPS/dhEmi	/NFSe/infNFSe/DPS/infDPS/dhEmi	/NFe/DataEmissaoNFe
+Código Verificação	(não existe)	(não existe)	/NFe/ChaveNFe/CodigoVerificacao
+
+PRESTADOR DE SERVIÇOS
+Campo	XML 1	XML 2	XML 3
+CNPJ	/NFSe/infNFSe/emit/CNPJ	/NFSe/infNFSe/emit/CNPJ	/NFe/CPFCNPJPrestador/CNPJ
+Razão Social	/NFSe/infNFSe/emit/xNome	/NFSe/infNFSe/emit/xNome	/NFe/RazaoSocialPrestador
+Endereço (Logradouro)	/NFSe/infNFSe/emit/enderNac/xLgr	/NFSe/infNFSe/emit/enderNac/xLgr	/NFe/EnderecoPrestador/Logradouro
+Número	/NFSe/infNFSe/emit/enderNac/nro	/NFSe/infNFSe/emit/enderNac/nro	/NFe/EnderecoPrestador/NumeroEndereco
+Complemento	/NFSe/infNFSe/emit/enderNac/xCpl	/NFSe/infNFSe/emit/enderNac/xCpl (não tem)	/NFe/EnderecoPrestador/ComplementoEndereco
+Bairro	/NFSe/infNFSe/emit/enderNac/xBairro	/NFSe/infNFSe/emit/enderNac/xBairro	/NFe/EnderecoPrestador/Bairro
+CEP	/NFSe/infNFSe/emit/enderNac/CEP	/NFSe/infNFSe/emit/enderNac/CEP	/NFe/EnderecoPrestador/CEP
+Município	/NFSe/infNFSe/emit/enderNac/cMun (cód.)	/NFSe/infNFSe/emit/enderNac/cMun (cód.)	/NFe/EnderecoPrestador/Cidade (cód.)
+UF	/NFSe/infNFSe/emit/enderNac/UF	/NFSe/infNFSe/emit/enderNac/UF	/NFe/EnderecoPrestador/UF
+Inscrição Municipal	/NFSe/infNFSe/emit/IM	/NFSe/infNFSe/emit/IM	/NFe/ChaveNFe/InscricaoPrestador
+Inscrição Estadual	(não tem)	(não tem)	(não tem)
+Telefone	(não tem)	/NFSe/infNFSe/emit/fone	(não tem)
+E-mail	(não tem)	/NFSe/infNFSe/emit/email	/NFe/EmailPrestador
+
+TOMADOR DE SERVIÇOS
+Campo	XML 1	XML 2	XML 3
+CNPJ	/NFSe/infNFSe/DPS/infDPS/toma/CNPJ	/NFSe/infNFSe/DPS/infDPS/toma/CNPJ	/NFe/CPFCNPJTomador/CNPJ
+Razão Social	/NFSe/infNFSe/DPS/infDPS/toma/xNome	/NFSe/infNFSe/DPS/infDPS/toma/xNome	/NFe/RazaoSocialTomador
+Endereço (Logradouro)	/NFSe/infNFSe/DPS/infDPS/toma/end/xLgr	/NFSe/infNFSe/DPS/infDPS/toma/end/xLgr	/NFe/EnderecoTomador/Logradouro
+Número	/NFSe/infNFSe/DPS/infDPS/toma/end/nro	/NFSe/infNFSe/DPS/infDPS/toma/end/nro	/NFe/EnderecoTomador/NumeroEndereco
+Bairro	/NFSe/infNFSe/DPS/infDPS/toma/end/xBairro	/NFSe/infNFSe/DPS/infDPS/toma/end/xBairro	/NFe/EnderecoTomador/Bairro
+CEP	/NFSe/infNFSe/DPS/infDPS/toma/end/endNac/CEP	/NFSe/infNFSe/DPS/infDPS/toma/end/endNac/CEP	/NFe/EnderecoTomador/CEP
+Município	/NFSe/infNFSe/DPS/infDPS/toma/end/endNac/cMun (cód.)	/NFSe/infNFSe/DPS/infDPS/toma/end/endNac/cMun	/NFe/EnderecoTomador/Cidade (cód.)
+UF	/NFSe/infNFSe/DPS/infDPS/toma/end/endNac/UF	/NFSe/infNFSe/DPS/infDPS/toma/end/endNac/UF	/NFe/EnderecoTomador/UF
+Inscrição Municipal	/NFSe/infNFSe/DPS/infDPS/toma/IM	/NFSe/infNFSe/DPS/infDPS/toma/IM (não tem)	(não tem)
+Inscrição Estadual	(não tem)	(não tem)	/NFe/InscricaoEstadualTomador
+E-mail	(não tem)	/NFSe/infNFSe/DPS/infDPS/toma/email	(não tem)
+
+DESCRIÇÃO DOS SERVIÇOS
+Campo	XML 1	XML 2	XML 3
+Descrição dos Serviços	/NFSe/infNFSe/DPS/infDPS/serv/cServ/xDescServ	/NFSe/infNFSe/DPS/infDPS/serv/cServ/xDescServ	/NFe/Discriminacao
+Observações	/NFSe/infNFSe/valores/xOutInf,
+/NFSe/infNFSe/DPS/infDPS/serv/infoCompl/xInfComp	/NFSe/infNFSe/xNBS	(não tem campo; pode usar parte de Discriminacao se necessário)
+
+VALORES DA NOTA
+Campo	XML 1	XML 2	XML 3
+Código do Serviço	/NFSe/infNFSe/DPS/infDPS/serv/cServ/cTribNac	/NFSe/infNFSe/DPS/infDPS/serv/cServ/cTribNac	/NFe/CodigoServico
+Valor dos Serviços	/NFSe/infNFSe/DPS/infDPS/valores/vServPrest/vServ	/NFSe/infNFSe/DPS/infDPS/valores/vServPrest/vServ	/NFe/ValorServicos
+Deduções	(não tem)	(não tem)	(não tem)
+Base de Cálculo	/NFSe/infNFSe/valores/vBC	/NFSe/infNFSe/valores/vLiq	/NFe/ValorServicos (igual valor do serviço)
+Alíquota (%)	/NFSe/infNFSe/valores/pAliqAplic	(não tem)	/NFe/AliquotaServicos
+Valor Líquido	/NFSe/infNFSe/valores/vLiq	/NFSe/infNFSe/valores/vLiq	/NFe/ValorServicos
+ISS	/NFSe/infNFSe/valores/vISSQN	(não tem)	/NFe/ValorISS
+ISS Retido	(não tem, ou ver tpRetISSQN)	/NFSe/infNFSe/DPS/infDPS/valores/trib/tribMun/tpRetISSQN	/NFe/ISSRetido
+Valor Total da Nota	/NFSe/infNFSe/valores/vLiq	/NFSe/infNFSe/valores/vLiq	/NFe/ValorServicos
+PIS, COFINS, INSS, IR, CSLL	(não tem)	(não tem)	(campos de retenção aparecem apenas se houver)
+
+OUTRAS INFORMAÇÕES
+Campo	XML 1	XML 2	XML 3
+Outras Informações	/NFSe/infNFSe/valores/xOutInf
+/NFSe/infNFSe/DPS/infDPS/serv/infoCompl/xInfComp	/NFSe/infNFSe/xNBS	/NFe/Discriminacao
+
+EXEMPLO DE PROMPT CONSOLIDADO PARA AUTOMATIZAÇÃO/IA
+Gere um documento DANFSe fiel ao layout do modelo apresentado.
+Para cada campo, utilize a seguinte ordem de busca (conforme XML disponível):
+
+Número da NF-e: /NFSe/infNFSe/nNFSe (tipo 1 e 2) ou /NFe/ChaveNFe/NumeroNFe (tipo 3)
+
+Data de Emissão: /NFSe/infNFSe/DPS/infDPS/dhEmi (tipo 1 e 2) ou /NFe/DataEmissaoNFe (tipo 3)
+
+Código de Verificação: /NFe/ChaveNFe/CodigoVerificacao (tipo 3) ou deixar em branco nos demais
+
+Prestador: CNPJ, razão social, endereço, etc., conforme tabela acima
+
+Tomador: CNPJ, razão social, endereço, etc., conforme tabela acima
+
+Descrição dos Serviços: /NFSe/infNFSe/DPS/infDPS/serv/cServ/xDescServ ou /NFe/Discriminacao
+
+Valores: Código do serviço, valor, base de cálculo, etc., conforme tabela acima
+
+Outras Informações: Combine campos de observação de todos os modelos (ver tabela acima)
+
+Para campos não encontrados no XML, deixe em branco ou "Não informado".
+
+Sempre siga o layout do DANFSe modelo e o mapeamento de tags para garantir compatibilidade entre todos os XMLs contemplados.
