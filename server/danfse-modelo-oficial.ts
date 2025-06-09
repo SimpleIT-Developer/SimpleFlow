@@ -435,26 +435,33 @@ function gerarDANFSeOficial(data: DANFSeOficialData): jsPDF {
   doc.setFont('helvetica', 'normal');
   doc.text('SECRETARIA MUNICIPAL DA FAZENDA', largura/2, y, { align: 'center' });
   
-  // Caixa para número da NFSe (lado direito)
-  const caixaWidth = 50;
-  const caixaHeight = 25;
-  const caixaX = largura - margem - caixaWidth;
-  const caixaY = y - 15;
+  // Caixa para número da NFSe (lado direito) - ajustada
+  const caixaWidth = 45;
+  const caixaHeight = 30;
+  const caixaX = largura - margem - caixaWidth - 5;
+  const caixaY = y - 20;
   
   doc.rect(caixaX, caixaY, caixaWidth, caixaHeight);
   
-  doc.setFontSize(8);
-  doc.setFont('helvetica', 'bold');
-  doc.text('Número da NF-e', caixaX + caixaWidth/2, caixaY + 5, { align: 'center' });
-  
-  doc.setFontSize(14);
-  doc.setFont('helvetica', 'bold');
-  doc.text(data.numeroNfse, caixaX + caixaWidth/2, caixaY + 12, { align: 'center' });
-  
   doc.setFontSize(7);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Número da NFSe', caixaX + caixaWidth/2, caixaY + 4, { align: 'center' });
+  
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  // Quebrar número se for muito longo
+  const numeroFormatado = data.numeroNfse.length > 8 ? 
+    data.numeroNfse.substring(0, 8) + '\n' + data.numeroNfse.substring(8) : 
+    data.numeroNfse;
+  const linhasNumero = numeroFormatado.split('\n');
+  linhasNumero.forEach((linha, index) => {
+    doc.text(linha, caixaX + caixaWidth/2, caixaY + 9 + (index * 4), { align: 'center' });
+  });
+  
+  doc.setFontSize(6);
   doc.setFont('helvetica', 'normal');
-  doc.text('Data e Hora de Emissão', caixaX + caixaWidth/2, caixaY + 17, { align: 'center' });
-  doc.text(formatarData(data.dataEmissao), caixaX + caixaWidth/2, caixaY + 21, { align: 'center' });
+  doc.text('Data e Hora de Emissão', caixaX + caixaWidth/2, caixaY + 20, { align: 'center' });
+  doc.text(formatarData(data.dataEmissao), caixaX + caixaWidth/2, caixaY + 24, { align: 'center' });
   
   // Código de Verificação (se existir)
   if (data.codigoVerificacao) {
@@ -472,66 +479,73 @@ function gerarDANFSeOficial(data: DANFSeOficialData): jsPDF {
   
   y += 5;
   
-  // Tabela do Prestador
-  const prestadorHeight = 45;
+  // Tabela do Prestador - organizada
+  const prestadorHeight = 50;
   doc.rect(margem + 5, y, larguraConteudo - 10, prestadorHeight);
   
   doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
   
-  // CPF/CNPJ
+  // Linha 1: CPF/CNPJ e Inscrição Municipal
   doc.setFont('helvetica', 'bold');
   doc.text('CPF/CNPJ:', margem + 8, y + 6);
   doc.setFont('helvetica', 'normal');
-  doc.text(data.prestador.cnpj, margem + 25, y + 6);
+  doc.text(data.prestador.cnpj, margem + 30, y + 6);
   
-  // Inscrição Municipal
   doc.setFont('helvetica', 'bold');
-  doc.text('Inscrição Municipal:', largura - 80, y + 6);
+  doc.text('Inscrição Municipal:', margem + 110, y + 6);
   doc.setFont('helvetica', 'normal');
-  doc.text(data.prestador.inscricaoMunicipal, largura - 40, y + 6);
+  doc.text(data.prestador.inscricaoMunicipal, margem + 155, y + 6);
   
-  // Razão Social
+  // Linha 2: Razão Social
   doc.setFont('helvetica', 'bold');
   doc.text('Razão Social:', margem + 8, y + 12);
   doc.setFont('helvetica', 'normal');
-  doc.text(data.prestador.razaoSocial, margem + 30, y + 12);
+  const razaoLimitada = data.prestador.razaoSocial.length > 60 ? 
+    data.prestador.razaoSocial.substring(0, 60) + '...' : 
+    data.prestador.razaoSocial;
+  doc.text(razaoLimitada, margem + 35, y + 12);
   
-  // Endereço
+  // Linha 3: Endereço
   doc.setFont('helvetica', 'bold');
   doc.text('Endereço:', margem + 8, y + 18);
   doc.setFont('helvetica', 'normal');
-  const enderecoCompleto = `${data.prestador.endereco}, ${data.prestador.numero} ${data.prestador.complemento}`.trim();
-  doc.text(enderecoCompleto, margem + 25, y + 18);
+  const enderecoCompleto = `${data.prestador.endereco}, ${data.prestador.numero}`;
+  const enderecoLimitado = enderecoCompleto.length > 50 ? 
+    enderecoCompleto.substring(0, 50) + '...' : 
+    enderecoCompleto;
+  doc.text(enderecoLimitado, margem + 28, y + 18);
   
-  // CEP
+  // Linha 4: Bairro e CEP
   doc.setFont('helvetica', 'bold');
-  doc.text('CEP:', margem + 8, y + 24);
+  doc.text('Bairro:', margem + 8, y + 24);
   doc.setFont('helvetica', 'normal');
-  doc.text(data.prestador.cep, margem + 18, y + 24);
+  doc.text(data.prestador.bairro, margem + 22, y + 24);
   
-  // Bairro
   doc.setFont('helvetica', 'bold');
-  doc.text('Bairro:', margem + 45, y + 24);
+  doc.text('CEP:', margem + 100, y + 24);
   doc.setFont('helvetica', 'normal');
-  doc.text(data.prestador.bairro, margem + 58, y + 24);
+  doc.text(data.prestador.cep, margem + 115, y + 24);
   
-  // Município e UF
+  // Linha 5: Município e UF
   doc.setFont('helvetica', 'bold');
   doc.text('Município:', margem + 8, y + 30);
   doc.setFont('helvetica', 'normal');
-  doc.text(data.prestador.municipio, margem + 25, y + 30);
+  doc.text(data.prestador.municipio, margem + 30, y + 30);
   
   doc.setFont('helvetica', 'bold');
-  doc.text('Estado:', largura - 60, y + 30);
+  doc.text('Estado:', margem + 120, y + 30);
   doc.setFont('helvetica', 'normal');
-  doc.text(data.prestador.uf, largura - 40, y + 30);
+  doc.text(data.prestador.uf, margem + 135, y + 30);
   
-  // E-mail
+  // Linha 6: E-mail
   doc.setFont('helvetica', 'bold');
   doc.text('E-mail:', margem + 8, y + 36);
   doc.setFont('helvetica', 'normal');
-  doc.text(data.prestador.email, margem + 20, y + 36);
+  const emailLimitado = data.prestador.email.length > 50 ? 
+    data.prestador.email.substring(0, 50) + '...' : 
+    data.prestador.email;
+  doc.text(emailLimitado, margem + 22, y + 36);
   
   y += prestadorHeight + 10;
   
