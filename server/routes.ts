@@ -1277,11 +1277,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "NFSe não encontrada" });
       }
       
-      const xmlContent = results[0].nfse_xml;
+      let xmlContent = results[0].nfse_xml;
       
       if (!xmlContent) {
         console.log('XML da NFSe não encontrado para ID:', nfse_id);
         return res.status(404).json({ message: "XML da NFSe não encontrado" });
+      }
+      
+      // Converter para string se for Buffer
+      if (Buffer.isBuffer(xmlContent)) {
+        xmlContent = xmlContent.toString('utf-8');
+        console.log('XML convertido de Buffer para string');
+      } else if (typeof xmlContent !== 'string') {
+        xmlContent = String(xmlContent);
+        console.log('XML convertido para string, tipo original:', typeof results[0].nfse_xml);
       }
       
       console.log('XML encontrado, tamanho:', xmlContent.length, 'caracteres');
