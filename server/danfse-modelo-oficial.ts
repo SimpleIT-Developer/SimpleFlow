@@ -211,22 +211,22 @@ async function processarNFSeOficial(parsed: any): Promise<DANFSeOficialData> {
     baseCalculo: parseFloat(valores.vBC || vServPrest.vServ || '0'),
     
     // Alíquota: /NFSe/infNFSe/valores/pAliqAplic
-    aliquota: parseFloat(valores.pAliqAplic || '0'),
+    aliquota: parseFloat(valores.pAliqAplic || valores.aliq || '0'),
     
     // ISS: /NFSe/infNFSe/valores/vISSQN
-    valorIss: parseFloat(valores.vISSQN || '0'),
+    valorIss: parseFloat(valores.vISSQN || valores.vISS || serv.vISS || '0'),
     
     issRetido: valores.tpRetISSQN === '1',
     
     // Valor Total: /NFSe/infNFSe/valores/vLiq
     valorTotalNota: parseFloat(valores.vLiq || vServPrest.vServ || '0'),
     
-    // Tributos federais (geralmente não têm no NFSe padrão)
-    pis: 0,
-    cofins: 0,
-    inss: 0,
-    ir: 0,
-    csll: 0,
+    // Tributos federais: buscar em diferentes locais do XML
+    pis: parseFloat(valores.vPIS || serv.vPIS || dps.vPIS || '0'),
+    cofins: parseFloat(valores.vCOFINS || serv.vCOFINS || dps.vCOFINS || '0'),
+    inss: parseFloat(valores.vINSS || serv.vINSS || dps.vINSS || '0'),
+    ir: parseFloat(valores.vIR || serv.vIR || dps.vIR || '0'),
+    csll: parseFloat(valores.vCSLL || serv.vCSLL || dps.vCSLL || '0'),
     
     // Outras Informações: /NFSe/infNFSe/valores/xOutInf
     outrasInformacoes: valores.xOutInf || serv.infoCompl?.xInfComp || ''
@@ -425,44 +425,45 @@ function gerarDANFSeOficial(data: DANFSeOficialData): jsPDF {
   // === CABEÇALHO ===
   y += 5;
   
-  // Título principal
-  doc.setFontSize(14);
-  doc.setFont('helvetica', 'bold');
-  doc.text('PREFEITURA MUNICIPAL DE SÃO PAULO', largura/2, y, { align: 'center' });
-  
-  y += 6;
-  doc.setFontSize(12);
-  doc.text('SECRETARIA MUNICIPAL DA FAZENDA', largura/2, y, { align: 'center' });
-  
-  y += 6;
+  // Título principal (sem prefeitura específica)
   doc.setFontSize(16);
+  doc.setFont('helvetica', 'bold');
   doc.text('NOTA FISCAL DE SERVIÇOS ELETRÔNICA - NFSe', largura/2, y, { align: 'center' });
   
-  y += 4;
-  doc.setFontSize(10);
-  doc.text('(CONSTITUÍDA PELO DECRETO Nº 53.151 DE 10 DE JUNHO DE 2012)', largura/2, y, { align: 'center' });
-  
-  // Número da NFS-e no canto superior direito
+  y += 8;
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
-  doc.text(`Número da NF-e`, largura - 50, y - 10);
-  doc.setFontSize(18);
-  doc.setFont('helvetica', 'bold');
-  doc.text(data.numeroNfse, largura - 30, y - 5, { align: 'center' });
+  doc.text('SECRETARIA MUNICIPAL DA FAZENDA', largura/2, y, { align: 'center' });
   
-  // Data e Hora de Emissão
+  // Caixa para número da NFSe (lado direito)
+  const caixaWidth = 50;
+  const caixaHeight = 25;
+  const caixaX = largura - margem - caixaWidth;
+  const caixaY = y - 15;
+  
+  doc.rect(caixaX, caixaY, caixaWidth, caixaHeight);
+  
   doc.setFontSize(8);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Número da NF-e', caixaX + caixaWidth/2, caixaY + 5, { align: 'center' });
+  
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.text(data.numeroNfse, caixaX + caixaWidth/2, caixaY + 12, { align: 'center' });
+  
+  doc.setFontSize(7);
   doc.setFont('helvetica', 'normal');
-  doc.text(`Data e Hora de Emissão`, largura - 50, y + 5);
-  doc.text(formatarData(data.dataEmissao), largura - 30, y + 10, { align: 'center' });
+  doc.text('Data e Hora de Emissão', caixaX + caixaWidth/2, caixaY + 17, { align: 'center' });
+  doc.text(formatarData(data.dataEmissao), caixaX + caixaWidth/2, caixaY + 21, { align: 'center' });
   
   // Código de Verificação (se existir)
   if (data.codigoVerificacao) {
-    doc.text(`Código de Verificação`, largura - 50, y + 15);
-    doc.text(data.codigoVerificacao, largura - 30, y + 20, { align: 'center' });
+    y += 8;
+    doc.setFontSize(8);
+    doc.text(`Código de Verificação: ${data.codigoVerificacao}`, largura/2, y, { align: 'center' });
   }
   
-  y += 25;
+  y += 15;
   
   // === PRESTADOR DE SERVIÇOS ===
   doc.setFontSize(10);
@@ -600,24 +601,29 @@ function gerarDANFSeOficial(data: DANFSeOficialData): jsPDF {
   
   y += 5;
   
-  const descricaoHeight = 60;
+  const descricaoHeight = 50;
   doc.rect(margem + 5, y, larguraConteudo - 10, descricaoHeight);
   
   doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
   
-  // Código do serviço e descrição
+  // Código do serviço e descrição com limite de caracteres
   const textoDescricao = `${data.codigoServico} - ${data.descricaoServicos}`;
   const linhasDescricao = doc.splitTextToSize(textoDescricao, larguraConteudo - 20);
-  doc.text(linhasDescricao, margem + 8, y + 6);
   
-  // Discriminação completa
-  if (data.outrasInformacoes) {
+  // Limitar a 6 linhas para não transbordar
+  const linhasLimitadas = linhasDescricao.slice(0, 6);
+  doc.text(linhasLimitadas, margem + 8, y + 6);
+  
+  // Se há mais informações, adicionar apenas as primeiras linhas
+  if (data.outrasInformacoes && linhasDescricao.length <= 3) {
     const linhasOutras = doc.splitTextToSize(data.outrasInformacoes, larguraConteudo - 20);
-    doc.text(linhasOutras, margem + 8, y + 25);
+    const linhasRestantes = 6 - linhasDescricao.length;
+    const outrasLimitadas = linhasOutras.slice(0, linhasRestantes);
+    doc.text(outrasLimitadas, margem + 8, y + 6 + (linhasDescricao.length * 4));
   }
   
-  y += descricaoHeight + 10;
+  y += descricaoHeight + 5;
   
   // === VALOR TOTAL DA NOTA ===
   const valorHeight = 20;
@@ -630,9 +636,9 @@ function gerarDANFSeOficial(data: DANFSeOficialData): jsPDF {
   y += valorHeight + 5;
   
   // === TABELA DE VALORES DETALHADOS ===
-  // Cabeçalhos
-  const colunas = [25, 25, 25, 25, 20, 20, 20, 25];
-  const cabecalhos = ['Código do Serviço', 'Valor Serviços (R$)', 'Valor Deduções (R$)', 'Base Cálculo (R$)', 'Alíquota (%)', 'ISS (R$)', 'ISS Retido', 'Valor Líquido (R$)'];
+  // Reorganizada conforme layout original
+  const colunas = [30, 30, 30, 30, 25, 25];
+  const cabecalhos = ['Código do Serviço', 'Valor Serviços (R$)', 'Valor Deduções (R$)', 'Base Cálculo (R$)', 'Alíquota (%)', 'ISS (R$)'];
   
   let x = margem + 5;
   doc.setFontSize(7);
@@ -655,9 +661,7 @@ function gerarDANFSeOficial(data: DANFSeOficialData): jsPDF {
     formatarMoeda(data.valorDeducoes),
     formatarMoeda(data.baseCalculo),
     data.aliquota.toFixed(2),
-    formatarMoeda(data.valorIss),
-    data.issRetido ? 'Sim' : 'Não',
-    formatarMoeda(data.valorTotalNota)
+    formatarMoeda(data.valorIss)
   ];
   
   valoresTabela.forEach((valor, i) => {
@@ -669,39 +673,59 @@ function gerarDANFSeOficial(data: DANFSeOficialData): jsPDF {
   y += 15;
   
   // === TRIBUTOS FEDERAIS ===
+  // Tabela organizada conforme layout original
   if (data.pis > 0 || data.cofins > 0 || data.inss > 0 || data.ir > 0 || data.csll > 0) {
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'bold');
-    doc.text('PIS (%)', margem + 10, y);
-    doc.text('COFINS (%)', margem + 40, y);
-    doc.text('INSS (%)', margem + 70, y);
-    doc.text('IR (%)', margem + 100, y);
-    doc.text('CSLL (%)', margem + 130, y);
+    const tribColunas = [30, 30, 30, 30, 30];
+    const tribCabecalhos = ['PIS (R$)', 'COFINS (R$)', 'INSS (R$)', 'IR (R$)', 'CSLL (R$)'];
     
-    y += 5;
+    x = margem + 5;
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'bold');
+    
+    tribCabecalhos.forEach((cabecalho, i) => {
+      doc.rect(x, y, tribColunas[i], 6);
+      doc.text(cabecalho, x + tribColunas[i]/2, y + 4, { align: 'center' });
+      x += tribColunas[i];
+    });
+    
+    y += 6;
+    x = margem + 5;
     doc.setFont('helvetica', 'normal');
-    doc.text(formatarMoeda(data.pis), margem + 10, y);
-    doc.text(formatarMoeda(data.cofins), margem + 40, y);
-    doc.text(formatarMoeda(data.inss), margem + 70, y);
-    doc.text(formatarMoeda(data.ir), margem + 100, y);
-    doc.text(formatarMoeda(data.csll), margem + 130, y);
+    
+    const tribValores = [
+      formatarMoeda(data.pis),
+      formatarMoeda(data.cofins), 
+      formatarMoeda(data.inss),
+      formatarMoeda(data.ir),
+      formatarMoeda(data.csll)
+    ];
+    
+    tribValores.forEach((valor, i) => {
+      doc.rect(x, y, tribColunas[i], 6);
+      doc.text(valor, x + tribColunas[i]/2, y + 4, { align: 'center' });
+      x += tribColunas[i];
+    });
     
     y += 10;
   }
   
   // === OUTRAS INFORMAÇÕES ===
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'bold');
+  doc.text('OUTRAS INFORMAÇÕES', margem + 5, y);
+  
+  y += 5;
+  const outrasHeight = 20;
+  doc.rect(margem + 5, y, larguraConteudo - 10, outrasHeight);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7);
+  
   if (data.outrasInformacoes) {
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'bold');
-    doc.text('OUTRAS INFORMAÇÕES', margem + 5, y);
-    
-    y += 5;
-    doc.rect(margem + 5, y, larguraConteudo - 10, 15);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7);
-    
     const linhasOutras = doc.splitTextToSize(data.outrasInformacoes, larguraConteudo - 20);
-    doc.text(linhasOutras.slice(0, 3), margem + 8, y + 5);
+    const linhasLimitadas = linhasOutras.slice(0, 3);
+    doc.text(linhasLimitadas, margem + 8, y + 5);
+  } else {
+    doc.text('Valor Líquido = Valor Serviço - INSS - IR - CSLL - COFINS - PIS - Descontos Diversos - ISS Retido', margem + 8, y + 5);
   }
   
   return doc;
