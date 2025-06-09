@@ -1269,17 +1269,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const query = "SELECT nfse_xml FROM nfse WHERE nfse_id = ?";
       console.log('Executando query MySQL:', query);
       
-      const results: any[] = await new Promise((resolve, reject) => {
-        mysqlPool.query(query, [nfse_id], (error: any, results: any) => {
-          if (error) {
-            console.error('Erro na query MySQL:', error);
-            reject(error);
-          } else {
-            console.log('Query executada, resultados:', results?.length || 0, 'registros');
-            resolve(results);
-          }
-        });
-      });
+      const [results] = await mysqlPool.execute(query, [nfse_id]) as any[];
+      console.log('Query executada, resultados:', results?.length || 0, 'registros');
       
       if (!results || results.length === 0) {
         console.log('NFSe não encontrada para ID:', nfse_id);
