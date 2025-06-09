@@ -450,39 +450,48 @@ function gerarDANFSeOficial(data: DANFSeOficialData): jsPDF {
   // Borda principal do documento
   doc.rect(margem, margem, larguraConteudo, altura - (margem * 2));
   
-  // === CABEÇALHO ===
+  // === CABEÇALHO EM DUAS COLUNAS ===
   y += 5;
   
-  // Título principal (sem prefeitura específica)
-  doc.setFontSize(16);
+  // Coluna esquerda - Informações principais
+  doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
-  doc.text('NOTA FISCAL DE SERVIÇOS ELETRÔNICA - NFSe', largura/2, y, { align: 'center' });
+  doc.text('NOTA FISCAL DE SERVIÇOS ELETRÔNICA - NFSe', margem + 5, y);
   
   y += 8;
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
-  doc.text('SECRETARIA MUNICIPAL DA FAZENDA', largura/2, y, { align: 'center' });
-  
-  // Número da NFSe no canto superior direito - em linhas separadas
-  doc.setFontSize(8);
-  doc.setFont('helvetica', 'bold');
-  doc.text('Número da NFSe', largura - 15, y - 15, { align: 'right' });
-  
-  doc.setFontSize(16);
-  doc.setFont('helvetica', 'bold');
-  doc.text(data.numeroNfse, largura - 15, y - 8, { align: 'right' });
-  
-  doc.setFontSize(7);
-  doc.setFont('helvetica', 'normal');
-  doc.text('Data e Hora de Emissão', largura - 15, y - 2, { align: 'right' });
-  doc.text(formatarData(data.dataEmissao), largura - 15, y + 4, { align: 'right' });
+  doc.text('SECRETARIA MUNICIPAL DA FAZENDA', margem + 5, y);
   
   // Código de Verificação (se existir)
   if (data.codigoVerificacao) {
-    y += 8;
+    y += 6;
     doc.setFontSize(8);
-    doc.text(`Código de Verificação: ${data.codigoVerificacao}`, largura/2, y, { align: 'center' });
+    doc.text(`Código de Verificação: ${data.codigoVerificacao}`, margem + 5, y);
   }
+  
+  // Coluna direita - Número da NFSe
+  const colunaDir = largura - 80;
+  let yDir = y - 22; // Voltar para o topo
+  
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Número da NFSe', colunaDir, yDir);
+  
+  yDir += 6;
+  doc.setFontSize(18);
+  doc.setFont('helvetica', 'bold');
+  doc.text(data.numeroNfse, colunaDir, yDir);
+  
+  yDir += 8;
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Data e Hora de Emissão', colunaDir, yDir);
+  
+  yDir += 5;
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.text(formatarData(data.dataEmissao), colunaDir, yDir);
   
   y += 15;
   
