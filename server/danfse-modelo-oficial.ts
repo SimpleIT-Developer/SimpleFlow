@@ -743,15 +743,18 @@ function gerarDANFSeOficial(data: DANFSeOficialData): jsPDF {
   doc.text('OUTRAS INFORMAÇÕES', margem + 5, y);
   
   y += 5;
-  const outrasHeight = 20;
+  const outrasHeight = 25;
   doc.rect(margem + 5, y, larguraConteudo - 10, outrasHeight);
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7);
+  doc.setFontSize(6);
   
   if (data.outrasInformacoes) {
     const linhasOutras = doc.splitTextToSize(data.outrasInformacoes, larguraConteudo - 20);
-    const linhasLimitadas = linhasOutras.slice(0, 3);
-    doc.text(linhasLimitadas, margem + 8, y + 5);
+    // Limitar a 4 linhas para caber na caixa
+    const linhasLimitadas = linhasOutras.slice(0, 4);
+    linhasLimitadas.forEach((linha, index) => {
+      doc.text(linha, margem + 8, y + 5 + (index * 4));
+    });
   } else {
     doc.text('Valor Líquido = Valor Serviço - INSS - IR - CSLL - COFINS - PIS - Descontos Diversos - ISS Retido', margem + 8, y + 5);
   }
