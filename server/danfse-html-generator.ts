@@ -2,6 +2,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import { parseStringPromise } from 'xml2js';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
 const htmlPdf = require('html-pdf-node');
 
 interface NFSeData {
