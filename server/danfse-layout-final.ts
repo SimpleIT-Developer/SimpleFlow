@@ -301,56 +301,44 @@ function criarDANFSeLayoutFinal(data: DANFSeLayoutFinalData): jsPDF {
   // Borda principal
   doc.rect(margem, margem, larguraConteudo, altura - (margem * 2));
   
-  // === CABEÇALHO CONFORME MODELO ===
+  // === CABEÇALHO SIMPLIFICADO ===
   y += 5;
   
-  // Primeira linha - Prefeitura e Número da NF-e
+  // Primeira linha - duas colunas
   const larguraEsquerda = 140;
   const larguraDireita = 50;
   
-  // Lado esquerdo
-  doc.setFontSize(12);
+  // Coluna esquerda - apenas título
+  doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
-  doc.text('PREFEITURA MUNICIPAL DE SÃO PAULO', margem + 5, y);
+  doc.text('NOTA FISCAL DE SERVIÇOS ELETRÔNICA - NFSe', margem + 5, y + 5);
   
-  // Lado direito - Número da NF-e
-  doc.rect(margem + larguraEsquerda, margem + 2, larguraDireita, 25);
+  // Coluna direita - caixa com informações
+  doc.rect(margem + larguraEsquerda, margem + 2, larguraDireita, 35);
+  
+  // Número da NFSe (pequeno)
   doc.setFontSize(8);
+  doc.setFont('helvetica', 'normal');
   doc.text('Número da NF-e', margem + larguraEsquerda + 25, y - 2, { align: 'center' });
   
   doc.setFontSize(16);
   doc.setFont('helvetica', 'bold');
   doc.text(data.numeroNfse, margem + larguraEsquerda + 25, y + 5, { align: 'center' });
   
-  y += 6;
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.text('SECRETARIA MUNICIPAL DA FAZENDA', margem + 5, y);
-  
-  y += 6;
-  doc.setFontSize(14);
-  doc.setFont('helvetica', 'bold');
-  doc.text('NOTA FISCAL DE SERVIÇOS ELETRÔNICA - NFSe', margem + 5, y);
-  
-  // Data e Hora de Emissão no canto direito
+  // Data e Hora de Emissão
   doc.setFontSize(7);
   doc.setFont('helvetica', 'normal');
-  doc.text('Data e Hora de Emissão', margem + larguraEsquerda + 25, y + 8, { align: 'center' });
-  doc.text(formatarData(data.dataEmissao), margem + larguraEsquerda + 25, y + 12, { align: 'center' });
-  
-  y += 8;
-  doc.setFontSize(8);
-  doc.text('(CONSTITUÍDA PELO DECRETO Nº 53.151 DE 10 DE JUNHO DE 2012)', margem + 5, y);
+  doc.text('Data e Hora de Emissão', margem + larguraEsquerda + 25, y + 12, { align: 'center' });
+  doc.text(formatarData(data.dataEmissao), margem + larguraEsquerda + 25, y + 16, { align: 'center' });
   
   // Código de Verificação
   if (data.codigoVerificacao) {
-    y += 6;
     doc.setFontSize(7);
-    doc.text(`Código de Verificação`, margem + larguraEsquerda + 25, y + 4, { align: 'center' });
-    doc.text(data.codigoVerificacao, margem + larguraEsquerda + 25, y + 8, { align: 'center' });
+    doc.text('Código de Verificação', margem + larguraEsquerda + 25, y + 22, { align: 'center' });
+    doc.text(data.codigoVerificacao, margem + larguraEsquerda + 25, y + 26, { align: 'center' });
   }
   
-  y += 15;
+  y += 25;
   
   // === PRESTADOR DE SERVIÇOS ===
   doc.setFontSize(10);
