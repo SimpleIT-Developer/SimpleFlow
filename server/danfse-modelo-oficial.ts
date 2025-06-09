@@ -112,6 +112,34 @@ async function processarNFSeOficial(parsed: any): Promise<DANFSeOficialData> {
   const valores = dps.valores || infNFSe.valores || {};
   const vServPrest = valores.vServPrest || {};
   
+  // Debug do valor ISS
+  console.log('Procurando valor ISS em:');
+  console.log('valores.vISSQN:', valores.vISSQN);
+  console.log('valores.vISS:', valores.vISS);
+  console.log('serv.vISSQN:', serv.vISSQN);
+  console.log('infNFSe.vISSQN:', infNFSe.vISSQN);
+  console.log('parsed.NFSe.vISSQN:', parsed.NFSe.vISSQN);
+  
+  // Buscar vISSQN em qualquer lugar da estrutura
+  function buscarVISSQN(obj: any, caminho = ''): any {
+    if (typeof obj !== 'object' || obj === null) return null;
+    
+    for (const [key, value] of Object.entries(obj)) {
+      const novoCaminho = caminho ? `${caminho}.${key}` : key;
+      if (key === 'vISSQN' && value) {
+        console.log(`Encontrado vISSQN em ${novoCaminho}:`, value);
+        return value;
+      }
+      if (typeof value === 'object') {
+        const resultado = buscarVISSQN(value, novoCaminho);
+        if (resultado) return resultado;
+      }
+    }
+    return null;
+  }
+  
+  const valorIssEncontrado = buscarVISSQN(parsed);
+  
   return {
     // Número da NF-e: /NFSe/infNFSe/nNFSe
     numeroNfse: infNFSe.nNFSe || '',
@@ -213,8 +241,8 @@ async function processarNFSeOficial(parsed: any): Promise<DANFSeOficialData> {
     // Alíquota: /NFSe/infNFSe/valores/pAliqAplic
     aliquota: parseFloat(valores.pAliqAplic || valores.aliq || '0'),
     
-    // ISS: buscar em múltiplos locais do XML NFSe
-    valorIss: parseFloat(valores.vISSQN || valores.vISS || serv.vISSQN || infNFSe.vISSQN || '0'),
+    // ISS: usar o valor encontrado pela busca recursiva
+    valorIss: parseFloat(valorIssEncontrado || '0'),
     
     issRetido: valores.tpRetISSQN === '1',
     
@@ -435,10 +463,10 @@ function gerarDANFSeOficial(data: DANFSeOficialData): jsPDF {
   doc.setFont('helvetica', 'normal');
   doc.text('SECRETARIA MUNICIPAL DA FAZENDA', largura/2, y, { align: 'center' });
   
-  // Número da NFSe no canto superior direito - simples
+  // Número da NFSe no canto superior direito - em linhas separadas
   doc.setFontSize(8);
   doc.setFont('helvetica', 'bold');
-  doc.text('Número da NFSe', largura - 50, y - 8);
+  doc.text('Número da NFSe', largura - 15, y - 15, { align: 'right' });
   
   doc.setFontSize(16);
   doc.setFont('helvetica', 'bold');
@@ -446,8 +474,8 @@ function gerarDANFSeOficial(data: DANFSeOficialData): jsPDF {
   
   doc.setFontSize(7);
   doc.setFont('helvetica', 'normal');
-  doc.text('Data e Hora de Emissão', largura - 50, y + 2);
-  doc.text(formatarData(data.dataEmissao), largura - 15, y + 2, { align: 'right' });
+  doc.text('Data e Hora de Emissão', largura - 15, y - 2, { align: 'right' });
+  doc.text(formatarData(data.dataEmissao), largura - 15, y + 4, { align: 'right' });
   
   // Código de Verificação (se existir)
   if (data.codigoVerificacao) {
@@ -638,8 +666,8 @@ function gerarDANFSeOficial(data: DANFSeOficialData): jsPDF {
   // === TABELA DE VALORES SIMPLIFICADA ===
   // Layout conforme modelo original
   
-  const colunas = [35, 35, 35, 35, 25, 25];
-  const cabecalhos = ['Código do Serviço', 'Valor Serviços (R$)', 'Valor Deduções (R$)', 'Base Cálculo (R$)', 'Alíquota (%)', 'ISS (R$)'];
+  const colunas = [25, 30, 30, 30, 20, 25];
+  const cabecalhos = ['Código', 'Valor Serviços', 'Deduções', 'Base Cálculo', 'Alíquota', 'ISS'];
   
   let x = margem + 5;
   doc.setFontSize(7);
