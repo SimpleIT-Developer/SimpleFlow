@@ -54,7 +54,7 @@ function formatDate(dateStr: string): string {
 
 export async function generateNfeRelatorioPDF(data: RelatorioData): Promise<Buffer> {
   try {
-    const doc = new jsPDF();
+    const doc = new jsPDF('landscape', 'mm', 'a4');
     const pageHeight = doc.internal.pageSize.height;
     const pageWidth = doc.internal.pageSize.width;
     const margin = 20;
@@ -124,13 +124,13 @@ export async function generateNfeRelatorioPDF(data: RelatorioData): Promise<Buff
       const tableStartY = currentY;
       const rowHeight = 6;
       
-      // Colunas da tabela com layout profissional
+      // Colunas da tabela com layout profissional para paisagem
       const columns = [
-        { title: 'Número NFe', x: margin, width: 30 },
-        { title: 'Data Emissão', x: margin + 32, width: 28 },
-        { title: 'Fornecedor', x: margin + 62, width: 70 },
-        { title: 'CNPJ Fornecedor', x: margin + 134, width: 40 },
-        { title: 'Valor', x: margin + 176, width: 30 }
+        { title: 'Número NFe', x: margin, width: 35 },
+        { title: 'Data Emissão', x: margin + 37, width: 35 },
+        { title: 'Fornecedor', x: margin + 74, width: 120 },
+        { title: 'CNPJ Fornecedor', x: margin + 196, width: 50 },
+        { title: 'Valor (R$)', x: margin + 248, width: 40 }
       ];
 
       // Desenhar fundo do cabeçalho
@@ -174,7 +174,11 @@ export async function generateNfeRelatorioPDF(data: RelatorioData): Promise<Buff
         doc.text(fornecedor, columns[2].x + 2, currentY + 3);
         
         doc.text(formatCNPJ(nfe.cnpjFornecedor || ''), columns[3].x + 2, currentY + 3);
-        doc.text(formatCurrency(nfe.valor), columns[4].x + columns[4].width - 2, currentY + 3, { align: 'right' });
+        
+        // Debug: verificar se o valor existe
+        const valorFormatado = formatCurrency(nfe.valor || 0);
+        console.log('Valor NFe:', nfe.valor, 'Formatado:', valorFormatado);
+        doc.text(valorFormatado, columns[4].x + columns[4].width - 2, currentY + 3, { align: 'right' });
 
         currentY += rowHeight;
       });
