@@ -15,6 +15,7 @@ import NFeRecebidasPage from "@/pages/nfe-recebidas";
 import NFSeRecebidasPage from "@/pages/nfse-recebidas";
 import FornecedoresPage from "@/pages/fornecedores";
 import UsuariosPage from "@/pages/usuarios";
+import RelatoriosPage from "@/pages/relatorios";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -50,6 +51,11 @@ function Router() {
       <Route path="/fornecedores">
         <ProtectedRoute>
           <FornecedoresPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/relatorios">
+        <ProtectedRoute>
+          <RelatoriosPage />
         </ProtectedRoute>
       </Route>
       <Route path="/usuarios">

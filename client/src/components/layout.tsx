@@ -4,7 +4,7 @@ import { logout } from "@/lib/auth";
 import { AnimatedLogo } from "@/components/animated-logo";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { LogOut, BarChart3, Settings, FileText, Building2, Receipt, FileCheck, Users, Truck } from "lucide-react";
+import { LogOut, BarChart3, Settings, FileText, Building2, Receipt, FileCheck, Users, Truck, FileBarChart } from "lucide-react";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -51,7 +51,7 @@ export function Layout({ children, currentPage }: LayoutProps) {
     );
   }
 
-  const user = userData && 'user' in userData ? userData.user : null;
+  const user = userData && typeof userData === 'object' && 'user' in userData ? userData.user : null;
   const userInitials = user?.name
     ? user.name.split(" ")
         .map((n: string) => n[0])
@@ -151,6 +151,18 @@ export function Layout({ children, currentPage }: LayoutProps) {
                   }`}>
                     <Truck className="w-5 h-5" />
                     <span>Fornecedores</span>
+                  </a>
+                </Link>
+              </li>
+              <li>
+                <Link href="/relatorios">
+                  <a className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer ${
+                    isActive("/relatorios")
+                      ? "text-white bg-primary/20 border border-primary/30"
+                      : "text-gray-300 hover:text-white hover:bg-white/10"
+                  }`}>
+                    <FileBarChart className="w-5 h-5" />
+                    <span>Relatórios</span>
                   </a>
                 </Link>
               </li>
