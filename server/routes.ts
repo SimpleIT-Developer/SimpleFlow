@@ -1365,7 +1365,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           doc_dest_nome as empresa_tomadora,
           doc_dest_documento as cnpj_tomadora
         FROM doc
-        WHERE doc_date_emi BETWEEN ? AND ?
+        WHERE DATE(doc_date_emi) BETWEEN ? AND ?
       `;
       
       const params = [dataInicial, dataFinal];
