@@ -1,0 +1,42 @@
+auth.ts:39 
+            
+            
+           POST https://4af2ddac-c41b-4933-8330-c5d54c62722f-00-2kepl7x6yljkx.picard.replit.dev/api/relatorios/nfe-resumo 500 (Internal Server Error)
+window.fetch @ Network.js:219
+window.fetch @ auth.ts:39
+window.fetch @ auth.ts:39
+handleGenerateReport @ relatorios.tsx:94
+callCallback2 @ chunk-RPCDYKBN.js?v=3133df7a:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=3133df7a:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=3133df7a:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=3133df7a:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=3133df7a:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=3133df7a:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=3133df7a:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=3133df7a:7051
+(anônimo) @ chunk-RPCDYKBN.js?v=3133df7a:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=3133df7a:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=3133df7a:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=3133df7a:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=3133df7a:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=3133df7a:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=3133df7a:5449
+Console.js:61 Erro ao gerar relatório: 
+Mt.forEach.n.<computed> @ Console.js:61
+handleGenerateReport @ relatorios.tsx:132
+await in handleGenerateReport
+callCallback2 @ chunk-RPCDYKBN.js?v=3133df7a:3674
+invokeGuardedCallbackDev @ chunk-RPCDYKBN.js?v=3133df7a:3699
+invokeGuardedCallback @ chunk-RPCDYKBN.js?v=3133df7a:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-RPCDYKBN.js?v=3133df7a:3736
+executeDispatch @ chunk-RPCDYKBN.js?v=3133df7a:7014
+processDispatchQueueItemsInOrder @ chunk-RPCDYKBN.js?v=3133df7a:7034
+processDispatchQueue @ chunk-RPCDYKBN.js?v=3133df7a:7043
+dispatchEventsForPlugins @ chunk-RPCDYKBN.js?v=3133df7a:7051
+(anônimo) @ chunk-RPCDYKBN.js?v=3133df7a:7174
+batchedUpdates$1 @ chunk-RPCDYKBN.js?v=3133df7a:18913
+batchedUpdates @ chunk-RPCDYKBN.js?v=3133df7a:3579
+dispatchEventForPluginEventSystem @ chunk-RPCDYKBN.js?v=3133df7a:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-RPCDYKBN.js?v=3133df7a:5478
+dispatchEvent @ chunk-RPCDYKBN.js?v=3133df7a:5472
+dispatchDiscreteEvent @ chunk-RPCDYKBN.js?v=3133df7a:5449

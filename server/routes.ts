@@ -1353,17 +1353,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       let query = `
         SELECT 
-          d.doc_numero as numero_nfe,
-          d.doc_data_emissao as data_emissao,
-          d.doc_nome_emitente as fornecedor,
-          d.doc_cnpj_emitente as cnpj_fornecedor,
-          d.doc_valor_total as valor_total_nfe,
+          d.doc_numero_serie as numero_nfe,
+          d.doc_data as data_emissao,
+          d.doc_emit_nome as fornecedor,
+          d.doc_emit_cnpj as cnpj_fornecedor,
+          d.doc_valor as valor_total_nfe,
           c.nome as empresa_tomadora,
           c.cnpj as cnpj_tomadora
         FROM doc d
-        LEFT JOIN cliente c ON d.doc_codigo_cliente = c.codigo
-        WHERE d.doc_tipo = 'NFe' 
-        AND d.doc_data_emissao BETWEEN ? AND ?
+        LEFT JOIN cliente c ON d.doc_id_company = c.codigo
+        WHERE d.doc_data BETWEEN ? AND ?
       `;
       
       const params = [dataInicial, dataFinal];
@@ -1373,7 +1372,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         params.push(empresa);
       }
       
-      query += ' ORDER BY c.nome, d.doc_data_emissao';
+      query += ' ORDER BY c.nome, d.doc_data';
       
       const [results] = await mysqlPool.execute(query, params) as any;
       
