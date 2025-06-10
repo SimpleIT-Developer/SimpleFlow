@@ -240,15 +240,23 @@ export default function RelatoriosPage() {
                   <Label className="text-white mb-2 block">Data Inicial</Label>
                   <Input
                     type="date"
-                    value={dateRange.from ? format(dateRange.from, "yyyy-MM-dd") : ""}
-                    onChange={(e) => setDateRange(prev => ({ ...prev, from: new Date(e.target.value) }))}
+                    value={dateRange.from ? formatDateLocal(dateRange.from) : ""}
+                    onChange={(e) => {
+                      const [year, month, day] = e.target.value.split('-');
+                      const date = new Date(Number(year), Number(month) - 1, Number(day));
+                      setDateRange(prev => ({ ...prev, from: date }));
+                    }}
                     className="bg-white/10 border-white/20 text-white mb-2"
                   />
                   <Label className="text-white mb-2 block">Data Final</Label>
                   <Input
                     type="date"
-                    value={dateRange.to ? format(dateRange.to, "yyyy-MM-dd") : ""}
-                    onChange={(e) => setDateRange(prev => ({ ...prev, to: new Date(e.target.value) }))}
+                    value={dateRange.to ? formatDateLocal(dateRange.to) : ""}
+                    onChange={(e) => {
+                      const [year, month, day] = e.target.value.split('-');
+                      const date = new Date(Number(year), Number(month) - 1, Number(day));
+                      setDateRange(prev => ({ ...prev, to: date }));
+                    }}
                     className="bg-white/10 border-white/20 text-white"
                   />
                 </div>
