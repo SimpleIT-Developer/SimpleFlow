@@ -24,6 +24,7 @@ interface RelatorioData {
   dataFinal: string;
   empresas: Empresa[];
   totalGeral: number;
+  totalRegistros: number;
 }
 
 function formatCurrency(value: number): string {
@@ -51,7 +52,7 @@ function formatDate(dateStr: string): string {
   }
 }
 
-export async function generateNFeRelatorioPDF(data: RelatorioData): Promise<{ success: boolean, pdfPath?: string, error?: string }> {
+export async function generateNfeRelatorioPDF(data: RelatorioData): Promise<Buffer> {
   try {
     const doc = new jsPDF();
     const pageHeight = doc.internal.pageSize.height;
@@ -214,30 +215,12 @@ export async function generateNFeRelatorioPDF(data: RelatorioData): Promise<{ su
       doc.text('SimpleDFe - Sistema de Gestão de Documentos Fiscais', pageWidth / 2, pageHeight - 5, { align: 'center' });
     }
 
-    // Salvar PDF
-    const fileName = `relatorio_nfe_${Date.now()}.pdf`;
-    const filePath = path.join(process.cwd(), 'temp', fileName);
-    
-    // Criar diretório temp se não existir
-    const tempDir = path.join(process.cwd(), 'temp');
-    if (!fs.existsSync(tempDir)) {
-      fs.mkdirSync(tempDir, { recursive: true });
-    }
-
-    // Salvar o arquivo
+    // Retornar PDF como Buffer
     const pdfOutput = doc.output('arraybuffer');
-    fs.writeFileSync(filePath, Buffer.from(pdfOutput));
-
-    return {
-      success: true,
-      pdfPath: filePath
-    };
+    return Buffer.from(pdfOutput);
 
   } catch (error) {
     console.error('Erro ao gerar PDF do relatório NFe:', error);
-    return {
-      success: false,
-      error: `Erro ao gerar PDF: ${(error as Error).message}`
-    };
+    throw new Error(`Erro ao gerar PDF: ${(error as Error).message}`);
   }
 }

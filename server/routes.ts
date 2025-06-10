@@ -10,6 +10,7 @@ import { db } from "./db";
 import { sendWelcomeEmail } from "./email-service";
 import { sendWelcomeEmail as sendWelcomeEmailResend } from "./resend-service";
 import { eq, ilike, or, and, count, desc, asc } from "drizzle-orm";
+import { generateNfeRelatorioPDF } from "./nfe-relatorio-generator";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production";
 
@@ -1405,14 +1406,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         totalGeral += parseFloat(nfe.valor_total_nfe) || 0;
       });
       
-      // Por enquanto, retornar os dados em JSON para testar a consulta
-      res.json({
-        message: "Dados das NFe encontrados",
+      // Gerar PDF
+      const pdfBuffer = await generateNfeRelatorioPDF({
         dataInicial,
         dataFinal,
         empresas: Array.from(empresas.values()),
         totalGeral,
         totalRegistros: results.length
+      });
+
+      // Converter para base64 para enviar ao frontend
+      const pdfBase64 = pdfBuffer.toString('base64');
+      
+      res.json({
+        success: true,
+        pdf: pdfBase64,
+        filename: `relatorio-nfe-${dataInicial}-${dataFinal}.pdf`
       });
       
     } catch (error) {

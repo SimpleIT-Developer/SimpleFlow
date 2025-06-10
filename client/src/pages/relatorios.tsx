@@ -108,17 +108,26 @@ export default function RelatoriosPage() {
           throw new Error('Erro ao gerar relatório');
         }
 
-        // Baixar o PDF
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.style.display = 'none';
-        a.href = url;
-        a.download = `relatorio_nfe_${format(dateRange.from || new Date(), 'yyyy-MM-dd')}_${format(dateRange.to || new Date(), 'yyyy-MM-dd')}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
+        const data = await response.json();
+        
+        if (data.success && data.pdf) {
+          // Converter base64 para blob
+          const binaryString = window.atob(data.pdf);
+          const bytes = new Uint8Array(binaryString.length);
+          for (let i = 0; i < binaryString.length; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+          }
+          const blob = new Blob([bytes], { type: 'application/pdf' });
+          
+          // Abrir PDF em nova aba
+          const url = window.URL.createObjectURL(blob);
+          window.open(url, '_blank');
+          
+          // Cleanup
+          setTimeout(() => window.URL.revokeObjectURL(url), 100);
+        } else {
+          throw new Error('Formato de resposta inválido');
+        }
       } else {
         // Outros tipos de relatório (simulação)
         await new Promise(resolve => setTimeout(resolve, 2000));
