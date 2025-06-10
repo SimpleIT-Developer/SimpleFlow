@@ -11,6 +11,7 @@ import { sendWelcomeEmail } from "./email-service";
 import { sendWelcomeEmail as sendWelcomeEmailResend } from "./resend-service";
 import { eq, ilike, or, and, count, desc, asc } from "drizzle-orm";
 import { generateNfeRelatorioPDF } from "./nfe-relatorio-generator";
+import { generateNfseRelatorioPDF } from "./nfse-relatorio-generator";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production";
 
@@ -1448,6 +1449,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Erro ao gerar relatório de NFe:", error);
       res.status(500).json({ message: "Erro ao gerar relatório", error: (error as Error).message });
+    }
+  });
+
+  // Rota para gerar relatório de NFSe
+  app.post("/api/relatorios/nfse-resumo", authenticateToken, async (req: any, res) => {
+    try {
+      const { dataInicial, dataFinal, empresa } = req.body;
+      
+      console.log('Gerando relatório NFSe para:', dataInicial, 'até', dataFinal);
+      
+      let query = `
+        SELECT 
+          nfse_nsu as numero_nfse,
+          nfse_data_hora as data_emissao,
+          nfse_emitente as fornecedor,
+          nfse_doc as cnpj_fornecedor,
+          nfse_valor_servico as valor_total_nfse
+        FROM nfse
+        WHERE DATE(nfse_data_hora) BETWEEN ? AND ?
+      `;
+      
+      const params = [dataInicial, dataFinal];
+      
+      if (empresa && empresa !== 'all') {
+        // Para NFSe, precisamos verificar qual campo representa a empresa tomadora
+        // Como não temos esse campo específico na tabela nfse, vamos pular esse filtro por enquanto
+        console.log('Filtro por empresa não implementado para NFSe ainda');
+      }
+      
+      query += ' ORDER BY nfse_emitente, nfse_data_hora';
+      
+      const [results] = await mysqlPool.execute(query, params) as any;
+      
+      console.log(`Encontradas ${results.length} NFSe para o período`);
+      
+      // Agrupar por fornecedor (emitente)
+      const empresas = new Map();
+      let totalGeral = 0;
+      
+      results.forEach((nfse: any) => {
+        const empresaKey = nfse.cnpj_fornecedor || 'sem_empresa';
+        if (!empresas.has(empresaKey)) {
+          empresas.set(empresaKey, {
+            nome: nfse.fornecedor || 'Fornecedor não identificado',
+            cnpj: nfse.cnpj_fornecedor || '',
+            nfses: [],
+            total: 0
+          });
+        }
+        
+        const empresa = empresas.get(empresaKey);
+        empresa.nfses.push({
+          numero: nfse.numero_nfse,
+          dataEmissao: nfse.data_emissao,
+          fornecedor: nfse.fornecedor,
+          cnpjFornecedor: nfse.cnpj_fornecedor,
+          valor: parseFloat(nfse.valor_total_nfse) || 0
+        });
+        empresa.total += parseFloat(nfse.valor_total_nfse) || 0;
+        totalGeral += parseFloat(nfse.valor_total_nfse) || 0;
+      });
+      
+      // Gerar PDF
+      const pdfBuffer = await generateNfseRelatorioPDF({
+        dataInicial,
+        dataFinal,
+        empresa,
+        empresas,
+        totalGeral,
+        totalNfses: results.length
+      });
+
+      // Converter para base64 para enviar ao frontend
+      const pdfBase64 = pdfBuffer.toString('base64');
+      
+      res.json({
+        success: true,
+        pdf: pdfBase64,
+        filename: `relatorio-nfse-${dataInicial}-${dataFinal}.pdf`
+      });
+      
+    } catch (error) {
+      console.error("Erro ao gerar relatório de NFSe:", error);
+      res.status(500).json({ message: "Erro ao gerar relatório NFSe", error: (error as Error).message });
     }
   });
 
