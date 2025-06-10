@@ -35,6 +35,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register endpoint
   app.post("/api/auth/register", async (req, res) => {
     try {
+      // Verificar e criar tabela de usuários se necessário
+      await storage.ensureUsersTableExists();
+      
       const validatedData = registerSchema.parse(req.body);
       
       // Check if user already exists
@@ -113,6 +116,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Login endpoint
   app.post("/api/auth/login", async (req, res) => {
     try {
+      // Verificar e criar tabela de usuários se necessário
+      await storage.ensureUsersTableExists();
+      
       const validatedData = loginSchema.parse(req.body);
 
       // Find user by email
@@ -156,6 +162,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get current user endpoint
   app.get("/api/auth/me", authenticateToken, async (req: any, res) => {
     try {
+      // Verificar e criar tabela de usuários se necessário
+      await storage.ensureUsersTableExists();
+      
       const user = await storage.getUser(req.user.id);
       if (!user) {
         return res.status(404).json({ message: "Usuário não encontrado" });
