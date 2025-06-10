@@ -1572,8 +1572,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`Processando ${results.length} NFSe para extração de tributos`);
       
-      // Função para extrair tributos do XML
-      const extractTributesFromXML = async (xmlContent: any): Promise<{
+      // Função para extrair tributos do XML (usando as mesmas funções do DANFSe)
+      const extractTributesFromXML = async (xmlContent: any, nfseId: string): Promise<{
         valorISS: number;
         valorPIS: number;
         valorCOFINS: number;
@@ -1589,6 +1589,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           } else if (typeof xmlContent === 'string') {
             cleanXml = xmlContent;
           } else {
+            console.log(`NFSe ${nfseId}: XML não é Buffer nem string`);
             return { valorISS: 0, valorPIS: 0, valorCOFINS: 0, valorINSS: 0, valorIRRF: 0, valorCSLL: 0 };
           }
           
@@ -1597,42 +1598,102 @@ export async function registerRoutes(app: Express): Promise<Server> {
             cleanXml = Buffer.from(cleanXml, 'base64').toString('utf-8');
           }
           
+          console.log(`NFSe ${nfseId}: Processando XML de tamanho ${cleanXml.length}`);
+          
           // Parse do XML
           const xml2js = require('xml2js');
           const parseStringPromise = require('util').promisify(xml2js.parseString);
           const parsed = await parseStringPromise(cleanXml, { explicitArray: false });
           
-          // Função recursiva para buscar tributos
-          const buscarTributoXML = (obj: any, nomeTributo: string): number => {
+          // Usar as mesmas funções de busca do DANFSe
+          function buscarTributo(obj: any, nomeTributo: string, caminho = ''): number {
             if (typeof obj !== 'object' || obj === null) return 0;
             
             for (const [key, value] of Object.entries(obj)) {
-              const keyLower = key.toLowerCase();
-              const tributoLower = nomeTributo.toLowerCase();
+              const caminhoAtual = caminho ? `${caminho}.${key}` : key;
               
-              if (keyLower === tributoLower && value) {
+              // Variações de nomes para busca
+              const variacoes = [
+                nomeTributo.toLowerCase(),
+                nomeTributo.toUpperCase(),
+                nomeTributo,
+                nomeTributo.charAt(0).toLowerCase() + nomeTributo.slice(1),
+                nomeTributo.charAt(0).toUpperCase() + nomeTributo.slice(1)
+              ];
+              
+              if (variacoes.includes(key) && value !== null && value !== undefined) {
                 const valorNumerico = parseFloat(String(value));
-                return isNaN(valorNumerico) ? 0 : valorNumerico;
+                if (!isNaN(valorNumerico) && valorNumerico > 0) {
+                  console.log(`NFSe ${nfseId}: Encontrado ${nomeTributo} em ${caminhoAtual}: ${valorNumerico}`);
+                  return valorNumerico;
+                }
               }
               
               if (typeof value === 'object') {
-                const resultado = buscarTributoXML(value, nomeTributo);
+                const resultado = buscarTributo(value, nomeTributo, caminhoAtual);
                 if (resultado > 0) return resultado;
               }
             }
             return 0;
+          }
+          
+          // Funções específicas para cada tributo
+          const buscarPIS = (obj: any): number => {
+            return buscarTributo(obj, 'vPis') ||
+                   buscarTributo(obj, 'vPIS') ||
+                   buscarTributo(obj, 'Pis') ||
+                   buscarTributo(obj, 'PIS');
           };
           
-          return {
-            valorISS: buscarTributoXML(parsed, 'vISSQN') || buscarTributoXML(parsed, 'vISS'),
-            valorPIS: buscarTributoXML(parsed, 'vPis') || buscarTributoXML(parsed, 'vPIS'),
-            valorCOFINS: buscarTributoXML(parsed, 'vCofins') || buscarTributoXML(parsed, 'vCOFINS'),
-            valorINSS: buscarTributoXML(parsed, 'vRetINSS') || buscarTributoXML(parsed, 'vINSS'),
-            valorIRRF: buscarTributoXML(parsed, 'vRetIRRF') || buscarTributoXML(parsed, 'vIRRF'),
-            valorCSLL: buscarTributoXML(parsed, 'vRetCSLL') || buscarTributoXML(parsed, 'vCSLL')
+          const buscarCOFINS = (obj: any): number => {
+            return buscarTributo(obj, 'vCofins') ||
+                   buscarTributo(obj, 'vCOFINS') ||
+                   buscarTributo(obj, 'Cofins') ||
+                   buscarTributo(obj, 'COFINS');
           };
+          
+          const buscarIR = (obj: any): number => {
+            return buscarTributo(obj, 'vRetIRRF') ||
+                   buscarTributo(obj, 'vIRRF') ||
+                   buscarTributo(obj, 'IRRF') ||
+                   buscarTributo(obj, 'IR');
+          };
+          
+          const buscarCSLL = (obj: any): number => {
+            return buscarTributo(obj, 'vRetCSLL') ||
+                   buscarTributo(obj, 'vCSLL') ||
+                   buscarTributo(obj, 'CSLL') ||
+                   buscarTributo(obj, 'RetCSLL');
+          };
+          
+          const buscarINSS = (obj: any): number => {
+            return buscarTributo(obj, 'vRetINSS') ||
+                   buscarTributo(obj, 'vINSS') ||
+                   buscarTributo(obj, 'INSS') ||
+                   buscarTributo(obj, 'RetINSS');
+          };
+          
+          const buscarVISSQN = (obj: any): number => {
+            return buscarTributo(obj, 'vISSQN') ||
+                   buscarTributo(obj, 'vISS') ||
+                   buscarTributo(obj, 'ISSQN') ||
+                   buscarTributo(obj, 'ISS');
+          };
+          
+          const tributos = {
+            valorISS: buscarVISSQN(parsed),
+            valorPIS: buscarPIS(parsed),
+            valorCOFINS: buscarCOFINS(parsed),
+            valorINSS: buscarINSS(parsed),
+            valorIRRF: buscarIR(parsed),
+            valorCSLL: buscarCSLL(parsed)
+          };
+          
+          console.log(`NFSe ${nfseId}: Tributos extraídos:`, tributos);
+          return tributos;
+          
         } catch (error) {
-          console.error('Erro ao processar XML:', error);
+          console.error(`NFSe ${nfseId}: Erro ao processar XML:`, error);
           return { valorISS: 0, valorPIS: 0, valorCOFINS: 0, valorINSS: 0, valorIRRF: 0, valorCSLL: 0 };
         }
       };
@@ -1670,7 +1731,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         // Extrair tributos do XML
-        const tributos = await extractTributesFromXML(nfse.xml_content);
+        const tributos = await extractTributesFromXML(nfse.xml_content, nfse.numero_nfse);
         const valorServico = parseFloat(nfse.valor_total_nfse) || 0;
         
         const nfseCompleta = {
