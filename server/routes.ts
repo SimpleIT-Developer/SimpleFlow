@@ -1347,28 +1347,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { dataInicial, dataFinal, empresa } = req.body;
       
-      // Primeiro, vamos verificar qual é o nome correto da tabela
-      const [tables] = await mysqlPool.execute('SHOW TABLES') as any;
-      console.log('Tabelas disponíveis:', tables);
-      
-      // Buscar tabelas relacionadas a NFe
-      const nfeTables = tables.filter((table: any) => 
-        Object.values(table)[0].toString().toLowerCase().includes('nfe')
-      );
-      console.log('Tabelas NFe encontradas:', nfeTables);
+      // Verificar estrutura da tabela xml para entender os campos
+      const [xmlColumns] = await mysqlPool.execute('DESCRIBE xml') as any;
+      console.log('Colunas da tabela xml:', xmlColumns);
       
       let query = `
         SELECT 
-          n.numero as numero_nfe,
-          n.data_emissao,
-          n.nome_emitente as fornecedor,
-          n.cnpj_emitente as cnpj_fornecedor,
-          n.valor_total as valor_total_nfe,
+          x.numero as numero_nfe,
+          x.data_emissao,
+          x.nome_emitente as fornecedor,
+          x.cnpj_emitente as cnpj_fornecedor,
+          x.valor_total as valor_total_nfe,
           c.nome as empresa_tomadora,
           c.cnpj as cnpj_tomadora
-        FROM nfe n
-        LEFT JOIN cliente c ON n.codigo_cliente = c.codigo
-        WHERE n.data_emissao BETWEEN ? AND ?
+        FROM xml x
+        LEFT JOIN cliente c ON x.codigo_cliente = c.codigo
+        WHERE x.tipo_documento = 'NFe' 
+        AND x.data_emissao BETWEEN ? AND ?
       `;
       
       const params = [dataInicial, dataFinal];
