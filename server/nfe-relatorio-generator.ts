@@ -163,7 +163,7 @@ export async function generateNfeRelatorioPDF(data: RelatorioData): Promise<Buff
         doc.setFontSize(7);
         
         // Dados da NFe
-        doc.text(nfe.numero || '', columns[0].x + 2, currentY + 3);
+        doc.text(String(nfe.numero || ''), columns[0].x + 2, currentY + 3);
         doc.text(formatDate(nfe.dataEmissao), columns[1].x + 2, currentY + 3);
         
         // Fornecedor (truncar se muito longo)
