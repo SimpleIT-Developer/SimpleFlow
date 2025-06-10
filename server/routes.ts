@@ -1348,8 +1348,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { dataInicial, dataFinal, empresa } = req.body;
       
-      // Debug: verificar dados específicos para 08/06/2025
+      // Debug: verificar dados específicos
       console.log('Verificando dados para:', dataInicial, 'até', dataFinal);
+      
+      // Primeiro, ver quais datas existem na tabela
+      const [allDates] = await mysqlPool.execute(`
+        SELECT 
+          DATE(doc_date_emi) as data_emissao,
+          COUNT(*) as quantidade
+        FROM doc 
+        GROUP BY DATE(doc_date_emi)
+        ORDER BY data_emissao DESC
+        LIMIT 10
+      `) as any;
+      console.log('Datas disponíveis na tabela:', allDates);
+      
+      // Agora verificar nossa consulta específica
       const [debugData] = await mysqlPool.execute(`
         SELECT 
           doc_num,
@@ -1360,7 +1374,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         WHERE DATE(doc_date_emi) BETWEEN ? AND ?
         LIMIT 5
       `, [dataInicial, dataFinal]) as any;
-      console.log('Dados encontrados:', debugData);
+      console.log('Dados encontrados para o período:', debugData);
       
       let query = `
         SELECT 
