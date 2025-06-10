@@ -1357,7 +1357,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       let query = `
         SELECT 
-          doc_serie as numero_nfe,
+          doc_num as numero_nfe,
           doc_date_emi as data_emissao,
           doc_emit_nome as fornecedor,
           doc_emit_documento as cnpj_fornecedor,

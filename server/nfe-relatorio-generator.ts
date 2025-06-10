@@ -124,13 +124,13 @@ export async function generateNfeRelatorioPDF(data: RelatorioData): Promise<Buff
       const tableStartY = currentY;
       const rowHeight = 6;
       
-      // Colunas da tabela
+      // Colunas da tabela com layout profissional
       const columns = [
-        { title: 'Número NFe', x: margin, width: 25 },
-        { title: 'Data Emissão', x: margin + 25, width: 25 },
-        { title: 'Fornecedor', x: margin + 50, width: 80 },
-        { title: 'CNPJ Fornecedor', x: margin + 130, width: 35 },
-        { title: 'Valor', x: margin + 165, width: 25 }
+        { title: 'Número NFe', x: margin, width: 30 },
+        { title: 'Data Emissão', x: margin + 32, width: 28 },
+        { title: 'Fornecedor', x: margin + 62, width: 70 },
+        { title: 'CNPJ Fornecedor', x: margin + 134, width: 40 },
+        { title: 'Valor', x: margin + 176, width: 30 }
       ];
 
       // Desenhar fundo do cabeçalho
@@ -139,8 +139,12 @@ export async function generateNfeRelatorioPDF(data: RelatorioData): Promise<Buff
       
       // Texto do cabeçalho
       doc.setTextColor(0, 0, 0);
-      columns.forEach(col => {
-        doc.text(col.title, col.x + 2, currentY + 3);
+      columns.forEach((col, index) => {
+        if (index === 4) { // Coluna "Valor" alinhada à direita
+          doc.text(col.title, col.x + col.width - 2, currentY + 3, { align: 'right' });
+        } else {
+          doc.text(col.title, col.x + 2, currentY + 3);
+        }
       });
 
       currentY += rowHeight + 2;
@@ -170,7 +174,7 @@ export async function generateNfeRelatorioPDF(data: RelatorioData): Promise<Buff
         doc.text(fornecedor, columns[2].x + 2, currentY + 3);
         
         doc.text(formatCNPJ(nfe.cnpjFornecedor || ''), columns[3].x + 2, currentY + 3);
-        doc.text(formatCurrency(nfe.valor), columns[4].x + 2, currentY + 3, { align: 'right' });
+        doc.text(formatCurrency(nfe.valor), columns[4].x + columns[4].width - 2, currentY + 3, { align: 'right' });
 
         currentY += rowHeight;
       });
