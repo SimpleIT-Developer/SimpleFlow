@@ -1347,9 +1347,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { dataInicial, dataFinal, empresa } = req.body;
       
-      // Verificar estrutura da tabela doc para entender os campos
+      // Verificar estrutura das tabelas
       const [docColumns] = await mysqlPool.execute('DESCRIBE doc') as any;
       console.log('Colunas da tabela doc:', docColumns);
+      
+      const [clienteColumns] = await mysqlPool.execute('DESCRIBE cliente') as any;
+      console.log('Colunas da tabela cliente:', clienteColumns);
       
       let query = `
         SELECT 
