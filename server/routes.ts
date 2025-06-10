@@ -1465,7 +1465,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           nfse_data_hora as data_emissao,
           nfse_emitente as fornecedor,
           nfse_doc as cnpj_fornecedor,
-          nfse_valor_servico as valor_total_nfse
+          nfse_valor_servico as valor_total_nfse,
+          nfse_tomador as empresa_tomadora,
+          nfse_tomador_doc as cnpj_tomadora
         FROM nfse
         WHERE DATE(nfse_data_hora) BETWEEN ? AND ?
       `;
@@ -1473,27 +1475,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const params = [dataInicial, dataFinal];
       
       if (empresa && empresa !== 'all') {
-        // Para NFSe, precisamos verificar qual campo representa a empresa tomadora
-        // Como não temos esse campo específico na tabela nfse, vamos pular esse filtro por enquanto
-        console.log('Filtro por empresa não implementado para NFSe ainda');
+        query += ' AND nfse_tomador_doc = ?';
+        params.push(empresa);
       }
       
-      query += ' ORDER BY nfse_emitente, nfse_data_hora';
+      query += ' ORDER BY nfse_tomador, nfse_data_hora';
       
       const [results] = await mysqlPool.execute(query, params) as any;
       
       console.log(`Encontradas ${results.length} NFSe para o período`);
       
-      // Agrupar por fornecedor (emitente)
+      // Agrupar por empresa tomadora (igual ao NFe)
       const empresas = new Map();
       let totalGeral = 0;
       
       results.forEach((nfse: any) => {
-        const empresaKey = nfse.cnpj_fornecedor || 'sem_empresa';
+        const empresaKey = nfse.cnpj_tomadora || 'sem_empresa';
         if (!empresas.has(empresaKey)) {
           empresas.set(empresaKey, {
-            nome: nfse.fornecedor || 'Fornecedor não identificado',
-            cnpj: nfse.cnpj_fornecedor || '',
+            nome: nfse.empresa_tomadora || 'Empresa não identificada',
+            cnpj: nfse.cnpj_tomadora || '',
             nfses: [],
             total: 0
           });
