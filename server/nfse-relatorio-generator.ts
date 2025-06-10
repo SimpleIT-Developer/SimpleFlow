@@ -1,4 +1,21 @@
 import { jsPDF } from 'jspdf';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+
+interface NFSe {
+  numero: string;
+  dataEmissao: string;
+  fornecedor: string;
+  cnpjFornecedor: string;
+  valor: number;
+}
+
+interface Empresa {
+  nome: string;
+  cnpj: string;
+  nfses: NFSe[];
+  total: number;
+}
 
 interface NFSeRelatorialData {
   dataInicial: string;
@@ -20,212 +37,6 @@ interface NFSeRelatorialData {
   totalNfses: number;
 }
 
-export async function generateNfseRelatorioPDF(data: NFSeRelatorialData): Promise<Buffer> {
-  const doc = new jsPDF({
-    orientation: 'landscape',
-    unit: 'mm',
-    format: 'a4'
-  });
-
-  // Configurações
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const pageHeight = doc.internal.pageSize.getHeight();
-  const margin = 15;
-  const usableWidth = pageWidth - (margin * 2);
-  let currentY = margin;
-
-  // Função para adicionar nova página
-  const addNewPage = () => {
-    doc.addPage();
-    currentY = margin;
-    addHeader();
-  };
-
-  // Função para verificar se precisa de nova página
-  const checkNewPage = (neededSpace: number) => {
-    if (currentY + neededSpace > pageHeight - margin) {
-      addNewPage();
-    }
-  };
-
-  // Cabeçalho
-  const addHeader = () => {
-    // Logo/Título
-    doc.setFontSize(20);
-    doc.setFont('helvetica', 'bold');
-    doc.text('SIMPLDFÉ', margin, currentY);
-    
-    // Título do relatório
-    doc.setFontSize(16);
-    doc.text('RELATÓRIO RESUMO DE NFSE', pageWidth / 2, currentY, { align: 'center' });
-    
-    currentY += 10;
-    
-    // Período
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'normal');
-    const periodoText = `Período: ${formatDateBR(data.dataInicial)} a ${formatDateBR(data.dataFinal)}`;
-    doc.text(periodoText, pageWidth / 2, currentY, { align: 'center' });
-    
-    currentY += 8;
-    
-    // Empresa filtro
-    if (data.empresa && data.empresa !== 'all') {
-      const empresaInfo = Array.from(data.empresas.values()).find(emp => emp.cnpj === data.empresa);
-      if (empresaInfo) {
-        doc.text(`Empresa: ${empresaInfo.nome} - CNPJ: ${formatCNPJ(empresaInfo.cnpj)}`, pageWidth / 2, currentY, { align: 'center' });
-        currentY += 8;
-      }
-    }
-    
-    // Data de geração
-    doc.setFontSize(10);
-    doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, pageWidth - margin, currentY, { align: 'right' });
-    
-    currentY += 15;
-  };
-
-  // Adicionar cabeçalho inicial
-  addHeader();
-
-  // Resumo geral
-  checkNewPage(25);
-  doc.setFontSize(14);
-  doc.setFont('helvetica', 'bold');
-  doc.text('RESUMO GERAL', margin, currentY);
-  currentY += 8;
-
-  doc.setFontSize(11);
-  doc.setFont('helvetica', 'normal');
-  doc.text(`Total de Empresas: ${data.empresas.size}`, margin, currentY);
-  currentY += 5;
-  doc.text(`Total de NFSe: ${data.totalNfses}`, margin, currentY);
-  currentY += 5;
-  doc.text(`Valor Total Geral: ${formatCurrency(data.totalGeral)}`, margin, currentY);
-  currentY += 15;
-
-  // Tabela por empresa
-  const empresasArray = Array.from(data.empresas.entries());
-  for (const [cnpj, empresa] of empresasArray) {
-    checkNewPage(40);
-    
-    // Cabeçalho da empresa
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text(`${empresa.nome}`, margin, currentY);
-    currentY += 5;
-    
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`CNPJ: ${formatCNPJ(empresa.cnpj)} | Total: ${formatCurrency(empresa.total)} | NFSe: ${empresa.nfses.length}`, margin, currentY);
-    currentY += 10;
-
-    // Cabeçalho da tabela
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'bold');
-    
-    const colWidths = {
-      numero: 35,
-      data: 25,
-      fornecedor: 80,
-      cnpj: 45,
-      valor: 25
-    };
-    
-    let colX = margin;
-    
-    // Fundo do cabeçalho
-    doc.setFillColor(240, 240, 240);
-    doc.rect(margin, currentY - 2, usableWidth, 8, 'F');
-    
-    // Textos do cabeçalho
-    doc.setTextColor(0, 0, 0);
-    doc.text('Número NFSe', colX + 2, currentY + 3);
-    colX += colWidths.numero;
-    
-    doc.text('Data Emissão', colX + 2, currentY + 3);
-    colX += colWidths.data;
-    
-    doc.text('Fornecedor', colX + 2, currentY + 3);
-    colX += colWidths.fornecedor;
-    
-    doc.text('CNPJ Fornecedor', colX + 2, currentY + 3);
-    colX += colWidths.cnpj;
-    
-    doc.text('Valor', colX + 2, currentY + 3);
-    
-    currentY += 10;
-
-    // Dados das NFSe
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
-    
-    for (const nfse of empresa.nfses) {
-      checkNewPage(8);
-      
-      colX = margin;
-      
-      // Zebra stripes
-      if ((empresa.nfses.indexOf(nfse)) % 2 === 0) {
-        doc.setFillColor(250, 250, 250);
-        doc.rect(margin, currentY - 2, usableWidth, 6, 'F');
-      }
-      
-      // Número NFSe
-      doc.text(nfse.numero.toString(), colX + 2, currentY + 2);
-      colX += colWidths.numero;
-      
-      // Data
-      doc.text(formatDateBR(nfse.dataEmissao), colX + 2, currentY + 2);
-      colX += colWidths.data;
-      
-      // Fornecedor (truncar se muito longo)
-      const fornecedorText = nfse.fornecedor.length > 35 ? 
-        nfse.fornecedor.substring(0, 32) + '...' : nfse.fornecedor;
-      doc.text(fornecedorText, colX + 2, currentY + 2);
-      colX += colWidths.fornecedor;
-      
-      // CNPJ
-      doc.text(formatCNPJ(nfse.cnpjFornecedor), colX + 2, currentY + 2);
-      colX += colWidths.cnpj;
-      
-      // Valor
-      doc.text(formatCurrency(nfse.valor), colX + 2, currentY + 2);
-      
-      currentY += 6;
-    }
-    
-    // Linha de total da empresa
-    currentY += 3;
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(9);
-    doc.text(`Subtotal ${empresa.nome}: ${formatCurrency(empresa.total)}`, pageWidth - margin - 60, currentY, { align: 'right' });
-    currentY += 15;
-  }
-
-  // Total geral final
-  checkNewPage(15);
-  doc.setDrawColor(0, 0, 0);
-  doc.line(margin, currentY, pageWidth - margin, currentY);
-  currentY += 8;
-  
-  doc.setFontSize(12);
-  doc.setFont('helvetica', 'bold');
-  doc.text(`TOTAL GERAL: ${formatCurrency(data.totalGeral)}`, pageWidth - margin, currentY, { align: 'right' });
-
-  // Adicionar numeração de páginas
-  const pageCount = doc.getNumberOfPages();
-  for (let i = 1; i <= pageCount; i++) {
-    doc.setPage(i);
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Página ${i} de ${pageCount}`, pageWidth - margin, pageHeight - 5, { align: 'right' });
-  }
-
-  return Buffer.from(doc.output('arraybuffer'));
-}
-
-// Funções auxiliares
 function formatCurrency(value: number): string {
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
@@ -235,15 +46,201 @@ function formatCurrency(value: number): string {
 
 function formatCNPJ(cnpj: string): string {
   if (!cnpj) return '';
-  const cleaned = cnpj.replace(/\D/g, '');
-  if (cleaned.length === 14) {
-    return cleaned.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+  const cleanCNPJ = cnpj.replace(/\D/g, '');
+  if (cleanCNPJ.length === 14) {
+    return cleanCNPJ.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
   }
   return cnpj;
 }
 
-function formatDateBR(dateStr: string): string {
-  if (!dateStr) return '';
-  const date = new Date(dateStr);
-  return date.toLocaleDateString('pt-BR');
+function formatDate(dateStr: string): string {
+  try {
+    const date = new Date(dateStr);
+    return format(date, 'dd/MM/yyyy', { locale: ptBR });
+  } catch (error) {
+    return dateStr;
+  }
+}
+
+export async function generateNfseRelatorioPDF(data: NFSeRelatorialData): Promise<Buffer> {
+  try {
+    const doc = new jsPDF('landscape', 'mm', 'a4');
+    const pageHeight = doc.internal.pageSize.height;
+    const pageWidth = doc.internal.pageSize.width;
+    const margin = 20;
+    let currentY = margin;
+
+    // Converter Map para Array de empresas
+    const empresas: Empresa[] = Array.from(data.empresas.values());
+
+    // Cabeçalho da página
+    const addHeader = () => {
+      doc.setFontSize(20);
+      doc.setFont('helvetica', 'bold');
+      doc.text('RELATÓRIO DE NFSe - RESUMO', pageWidth / 2, currentY, { align: 'center' });
+      
+      currentY += 15;
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Período: ${formatDate(data.dataInicial)} a ${formatDate(data.dataFinal)}`, pageWidth / 2, currentY, { align: 'center' });
+      
+      currentY += 10;
+      doc.text(`Gerado em: ${format(new Date(), 'dd/MM/yyyy HH:mm', { locale: ptBR })}`, pageWidth / 2, currentY, { align: 'center' });
+      
+      currentY += 20;
+    };
+
+    // Função para adicionar nova página
+    const addNewPage = () => {
+      doc.addPage();
+      currentY = margin;
+      addHeader();
+    };
+
+    // Função para verificar se precisa de nova página
+    const checkNewPage = (requiredSpace: number) => {
+      if (currentY + requiredSpace > pageHeight - 30) {
+        addNewPage();
+      }
+    };
+
+    // Adicionar cabeçalho inicial
+    addHeader();
+
+    // Iterar por cada empresa
+    empresas.forEach((empresa, empresaIndex) => {
+      // Verificar espaço para cabeçalho da empresa
+      checkNewPage(40);
+
+      // Cabeçalho da empresa
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`EMPRESA: ${empresa.nome}`, margin, currentY);
+      currentY += 8;
+      
+      if (empresa.cnpj) {
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`CNPJ: ${formatCNPJ(empresa.cnpj)}`, margin, currentY);
+        currentY += 12;
+      } else {
+        currentY += 8;
+      }
+
+      // Cabeçalho da tabela
+      checkNewPage(25);
+      
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'bold');
+      
+      // Desenhar cabeçalho da tabela
+      const tableStartY = currentY;
+      const rowHeight = 6;
+      
+      // Colunas da tabela com layout ajustado para paisagem
+      const columns = [
+        { title: 'NFSe', x: margin, width: 25 },
+        { title: 'Data', x: margin + 27, width: 28 },
+        { title: 'Fornecedor', x: margin + 57, width: 100 },
+        { title: 'CNPJ', x: margin + 159, width: 45 },
+        { title: 'Valor (R$)', x: margin + 206, width: 35 }
+      ];
+
+      // Desenhar fundo do cabeçalho
+      doc.setFillColor(230, 230, 230);
+      doc.rect(margin, currentY - 2, pageWidth - (2 * margin), rowHeight + 2, 'F');
+      
+      // Texto do cabeçalho
+      doc.setTextColor(0, 0, 0);
+      columns.forEach((col, index) => {
+        if (index === 4) { // Coluna "Valor" alinhada à direita
+          doc.text(col.title, col.x + col.width - 2, currentY + 3, { align: 'right' });
+        } else {
+          doc.text(col.title, col.x + 2, currentY + 3);
+        }
+      });
+
+      currentY += rowHeight + 2;
+
+      // Itens da tabela
+      empresa.nfses.forEach((nfse, index) => {
+        checkNewPage(8);
+
+        // Alternar cor de fundo das linhas
+        if (index % 2 === 0) {
+          doc.setFillColor(248, 248, 248);
+          doc.rect(margin, currentY - 1, pageWidth - (2 * margin), rowHeight, 'F');
+        }
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7);
+        
+        // Dados da NFSe
+        doc.text(String(nfse.numero || ''), columns[0].x + 2, currentY + 3);
+        doc.text(formatDate(nfse.dataEmissao), columns[1].x + 2, currentY + 3);
+        
+        // Fornecedor (truncar se muito longo)
+        let fornecedor = nfse.fornecedor || '';
+        if (fornecedor.length > 45) {
+          fornecedor = fornecedor.substring(0, 42) + '...';
+        }
+        doc.text(fornecedor, columns[2].x + 2, currentY + 3);
+        
+        doc.text(formatCNPJ(nfse.cnpjFornecedor || ''), columns[3].x + 2, currentY + 3);
+        
+        // Valor com alinhamento à direita
+        const valorFormatado = formatCurrency(nfse.valor || 0);
+        doc.text(valorFormatado, columns[4].x + columns[4].width - 2, currentY + 3, { align: 'right' });
+
+        currentY += rowHeight;
+      });
+
+      // Total da empresa
+      currentY += 5;
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.text(`Total da Empresa: ${formatCurrency(empresa.total)}`, pageWidth - margin - 50, currentY, { align: 'right' });
+      
+      currentY += 15;
+
+      // Separador entre empresas (exceto a última)
+      if (empresaIndex < empresas.length - 1) {
+        checkNewPage(10);
+        doc.line(margin, currentY, pageWidth - margin, currentY);
+        currentY += 10;
+      }
+    });
+
+    // Totalizador geral
+    checkNewPage(30);
+    currentY += 10;
+    
+    // Linha separadora
+    doc.setLineWidth(1);
+    doc.line(margin, currentY, pageWidth - margin, currentY);
+    currentY += 10;
+    
+    // Total geral
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text(`TOTAL GERAL: ${formatCurrency(data.totalGeral)}`, pageWidth / 2, currentY, { align: 'center' });
+
+    // Rodapé
+    const totalPages = doc.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Página ${i} de ${totalPages}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
+      doc.text('SimpleDFe - Sistema de Gestão de Documentos Fiscais', pageWidth / 2, pageHeight - 5, { align: 'center' });
+    }
+
+    // Retornar PDF como Buffer
+    const pdfOutput = doc.output('arraybuffer');
+    return Buffer.from(pdfOutput);
+
+  } catch (error) {
+    console.error('Erro ao gerar PDF do relatório NFSe:', error);
+    throw new Error(`Erro ao gerar PDF: ${(error as Error).message}`);
+  }
 }
