@@ -124,13 +124,13 @@ export async function generateNfeRelatorioPDF(data: RelatorioData): Promise<Buff
       const tableStartY = currentY;
       const rowHeight = 6;
       
-      // Colunas da tabela com layout profissional para paisagem
+      // Colunas da tabela com layout ajustado para paisagem
       const columns = [
-        { title: 'Número NFe', x: margin, width: 35 },
-        { title: 'Data Emissão', x: margin + 37, width: 35 },
-        { title: 'Fornecedor', x: margin + 74, width: 120 },
-        { title: 'CNPJ Fornecedor', x: margin + 196, width: 50 },
-        { title: 'Valor (R$)', x: margin + 248, width: 40 }
+        { title: 'NFe', x: margin, width: 25 },
+        { title: 'Data', x: margin + 27, width: 28 },
+        { title: 'Fornecedor', x: margin + 57, width: 100 },
+        { title: 'CNPJ', x: margin + 159, width: 45 },
+        { title: 'Valor (R$)', x: margin + 206, width: 35 }
       ];
 
       // Desenhar fundo do cabeçalho
@@ -168,16 +168,15 @@ export async function generateNfeRelatorioPDF(data: RelatorioData): Promise<Buff
         
         // Fornecedor (truncar se muito longo)
         let fornecedor = nfe.fornecedor || '';
-        if (fornecedor.length > 35) {
-          fornecedor = fornecedor.substring(0, 32) + '...';
+        if (fornecedor.length > 45) {
+          fornecedor = fornecedor.substring(0, 42) + '...';
         }
         doc.text(fornecedor, columns[2].x + 2, currentY + 3);
         
         doc.text(formatCNPJ(nfe.cnpjFornecedor || ''), columns[3].x + 2, currentY + 3);
         
-        // Debug: verificar se o valor existe
+        // Valor com alinhamento à direita
         const valorFormatado = formatCurrency(nfe.valor || 0);
-        console.log('Valor NFe:', nfe.valor, 'Formatado:', valorFormatado);
         doc.text(valorFormatado, columns[4].x + columns[4].width - 2, currentY + 3, { align: 'right' });
 
         currentY += rowHeight;
