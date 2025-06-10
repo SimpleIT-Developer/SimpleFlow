@@ -1600,93 +1600,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           console.log(`NFSe ${nfseId}: Processando XML de tamanho ${cleanXml.length}`);
           
-          // Parse do XML
-          const xml2js = require('xml2js');
-          const parseStringPromise = require('util').promisify(xml2js.parseString);
-          const parsed = await parseStringPromise(cleanXml, { explicitArray: false });
+          // Mostrar primeiros 200 caracteres do XML para debug
+          console.log(`NFSe ${nfseId}: Início do XML:`, cleanXml.substring(0, 200));
           
-          // Usar as mesmas funções de busca do DANFSe
-          function buscarTributo(obj: any, nomeTributo: string, caminho = ''): number {
-            if (typeof obj !== 'object' || obj === null) return 0;
+          // Parse do XML
+          const xml2js = await import('xml2js');
+          const parsed = await xml2js.parseStringPromise(cleanXml, { explicitArray: false });
+          
+          console.log(`NFSe ${nfseId}: Estrutura principal do XML:`, Object.keys(parsed));
+          
+          // Função para buscar valores recursivamente
+          const buscarValorRecursivo = (obj: any, chaves: string[]): number => {
+            if (!obj || typeof obj !== 'object') return 0;
             
-            for (const [key, value] of Object.entries(obj)) {
-              const caminhoAtual = caminho ? `${caminho}.${key}` : key;
-              
-              // Variações de nomes para busca
-              const variacoes = [
-                nomeTributo.toLowerCase(),
-                nomeTributo.toUpperCase(),
-                nomeTributo,
-                nomeTributo.charAt(0).toLowerCase() + nomeTributo.slice(1),
-                nomeTributo.charAt(0).toUpperCase() + nomeTributo.slice(1)
-              ];
-              
-              if (variacoes.includes(key) && value !== null && value !== undefined) {
-                const valorNumerico = parseFloat(String(value));
-                if (!isNaN(valorNumerico) && valorNumerico > 0) {
-                  console.log(`NFSe ${nfseId}: Encontrado ${nomeTributo} em ${caminhoAtual}: ${valorNumerico}`);
-                  return valorNumerico;
+            for (const chave of chaves) {
+              for (const [key, value] of Object.entries(obj)) {
+                if (key.toLowerCase() === chave.toLowerCase() && value !== null && value !== undefined) {
+                  const valorNumerico = parseFloat(String(value));
+                  if (!isNaN(valorNumerico) && valorNumerico > 0) {
+                    console.log(`NFSe ${nfseId}: Encontrado ${chave} = ${valorNumerico}`);
+                    return valorNumerico;
+                  }
                 }
-              }
-              
-              if (typeof value === 'object') {
-                const resultado = buscarTributo(value, nomeTributo, caminhoAtual);
-                if (resultado > 0) return resultado;
+                
+                if (typeof value === 'object') {
+                  const resultado = buscarValorRecursivo(value, [chave]);
+                  if (resultado > 0) return resultado;
+                }
               }
             }
             return 0;
-          }
-          
-          // Funções específicas para cada tributo
-          const buscarPIS = (obj: any): number => {
-            return buscarTributo(obj, 'vPis') ||
-                   buscarTributo(obj, 'vPIS') ||
-                   buscarTributo(obj, 'Pis') ||
-                   buscarTributo(obj, 'PIS');
           };
           
-          const buscarCOFINS = (obj: any): number => {
-            return buscarTributo(obj, 'vCofins') ||
-                   buscarTributo(obj, 'vCOFINS') ||
-                   buscarTributo(obj, 'Cofins') ||
-                   buscarTributo(obj, 'COFINS');
-          };
-          
-          const buscarIR = (obj: any): number => {
-            return buscarTributo(obj, 'vRetIRRF') ||
-                   buscarTributo(obj, 'vIRRF') ||
-                   buscarTributo(obj, 'IRRF') ||
-                   buscarTributo(obj, 'IR');
-          };
-          
-          const buscarCSLL = (obj: any): number => {
-            return buscarTributo(obj, 'vRetCSLL') ||
-                   buscarTributo(obj, 'vCSLL') ||
-                   buscarTributo(obj, 'CSLL') ||
-                   buscarTributo(obj, 'RetCSLL');
-          };
-          
-          const buscarINSS = (obj: any): number => {
-            return buscarTributo(obj, 'vRetINSS') ||
-                   buscarTributo(obj, 'vINSS') ||
-                   buscarTributo(obj, 'INSS') ||
-                   buscarTributo(obj, 'RetINSS');
-          };
-          
-          const buscarVISSQN = (obj: any): number => {
-            return buscarTributo(obj, 'vISSQN') ||
-                   buscarTributo(obj, 'vISS') ||
-                   buscarTributo(obj, 'ISSQN') ||
-                   buscarTributo(obj, 'ISS');
-          };
-          
+          // Buscar cada tributo com todas as variações possíveis
           const tributos = {
-            valorISS: buscarVISSQN(parsed),
-            valorPIS: buscarPIS(parsed),
-            valorCOFINS: buscarCOFINS(parsed),
-            valorINSS: buscarINSS(parsed),
-            valorIRRF: buscarIR(parsed),
-            valorCSLL: buscarCSLL(parsed)
+            valorISS: buscarValorRecursivo(parsed, ['vISSQN', 'vISS', 'ISSQN', 'ISS', 'vissqn', 'viss']),
+            valorPIS: buscarValorRecursivo(parsed, ['vPis', 'vPIS', 'Pis', 'PIS', 'vpis']),
+            valorCOFINS: buscarValorRecursivo(parsed, ['vCofins', 'vCOFINS', 'Cofins', 'COFINS', 'vcofins']),
+            valorINSS: buscarValorRecursivo(parsed, ['vRetINSS', 'vINSS', 'INSS', 'RetINSS', 'vretinss', 'vinss']),
+            valorIRRF: buscarValorRecursivo(parsed, ['vRetIRRF', 'vIRRF', 'IRRF', 'IR', 'vretirrf', 'virrf']),
+            valorCSLL: buscarValorRecursivo(parsed, ['vRetCSLL', 'vCSLL', 'CSLL', 'RetCSLL', 'vretcsll', 'vcsll'])
           };
           
           console.log(`NFSe ${nfseId}: Tributos extraídos:`, tributos);
