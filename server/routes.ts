@@ -1347,18 +1347,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { dataInicial, dataFinal, empresa } = req.body;
       
+      // Primeiro, vamos verificar qual é o nome correto da tabela
+      const [tables] = await mysqlPool.execute('SHOW TABLES') as any;
+      console.log('Tabelas disponíveis:', tables);
+      
+      // Buscar tabelas relacionadas a NFe
+      const nfeTables = tables.filter((table: any) => 
+        Object.values(table)[0].toString().toLowerCase().includes('nfe')
+      );
+      console.log('Tabelas NFe encontradas:', nfeTables);
+      
       let query = `
         SELECT 
-          nfe.numero_nfe,
-          nfe.data_emissao,
-          nfe.nome_fornecedor as fornecedor,
-          nfe.cnpj_fornecedor,
-          nfe.valor_total_nfe,
+          n.numero as numero_nfe,
+          n.data_emissao,
+          n.nome_emitente as fornecedor,
+          n.cnpj_emitente as cnpj_fornecedor,
+          n.valor_total as valor_total_nfe,
           c.nome as empresa_tomadora,
           c.cnpj as cnpj_tomadora
-        FROM nfe_recebida nfe
-        LEFT JOIN cliente c ON nfe.codigo_cliente = c.codigo
-        WHERE nfe.data_emissao BETWEEN ? AND ?
+        FROM nfe n
+        LEFT JOIN cliente c ON n.codigo_cliente = c.codigo
+        WHERE n.data_emissao BETWEEN ? AND ?
       `;
       
       const params = [dataInicial, dataFinal];
