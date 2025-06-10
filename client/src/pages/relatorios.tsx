@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { DatePickerWithRange } from "@/components/ui/date-range-picker";
 import { Badge } from "@/components/ui/badge";
 import { 
   FileBarChart, 
@@ -19,13 +18,17 @@ import {
   Filter,
   RefreshCw
 } from "lucide-react";
-import { DateRange } from "react-day-picker";
 import { addDays, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
+interface DateRange {
+  from?: Date;
+  to?: Date;
+}
+
 export default function RelatoriosPage() {
   const [selectedReport, setSelectedReport] = useState("");
-  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+  const [dateRange, setDateRange] = useState<DateRange>({
     from: addDays(new Date(), -30),
     to: new Date(),
   });
@@ -37,7 +40,7 @@ export default function RelatoriosPage() {
     queryKey: ["/api/dashboard/cnpj-ativos"],
   });
 
-  const companies = companiesData || [];
+  const companies = Array.isArray(companiesData) ? companiesData : [];
 
   const reportTypes = [
     {
@@ -91,7 +94,7 @@ export default function RelatoriosPage() {
   };
 
   const formatDateRange = () => {
-    if (!dateRange?.from) return "Selecionar período";
+    if (!dateRange.from) return "Selecionar período";
     
     if (dateRange.to) {
       return `${format(dateRange.from, "dd/MM/yyyy", { locale: ptBR })} - ${format(dateRange.to, "dd/MM/yyyy", { locale: ptBR })}`;
@@ -174,15 +177,20 @@ export default function RelatoriosPage() {
               <CardContent className="space-y-4">
                 {/* Período */}
                 <div>
-                  <Label className="text-white mb-2 block">Período</Label>
-                  <DatePickerWithRange
-                    date={dateRange}
-                    onDateChange={setDateRange}
-                    className="w-full"
+                  <Label className="text-white mb-2 block">Data Inicial</Label>
+                  <Input
+                    type="date"
+                    value={dateRange.from ? format(dateRange.from, "yyyy-MM-dd") : ""}
+                    onChange={(e) => setDateRange(prev => ({ ...prev, from: new Date(e.target.value) }))}
+                    className="bg-white/10 border-white/20 text-white mb-2"
                   />
-                  <p className="text-xs text-gray-400 mt-1">
-                    {formatDateRange()}
-                  </p>
+                  <Label className="text-white mb-2 block">Data Final</Label>
+                  <Input
+                    type="date"
+                    value={dateRange.to ? format(dateRange.to, "yyyy-MM-dd") : ""}
+                    onChange={(e) => setDateRange(prev => ({ ...prev, to: new Date(e.target.value) }))}
+                    className="bg-white/10 border-white/20 text-white"
+                  />
                 </div>
 
                 {/* Empresa */}
