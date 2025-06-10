@@ -1347,23 +1347,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { dataInicial, dataFinal, empresa } = req.body;
       
-      // Verificar estrutura da tabela xml para entender os campos
-      const [xmlColumns] = await mysqlPool.execute('DESCRIBE xml') as any;
-      console.log('Colunas da tabela xml:', xmlColumns);
+      // Verificar estrutura da tabela doc para entender os campos
+      const [docColumns] = await mysqlPool.execute('DESCRIBE doc') as any;
+      console.log('Colunas da tabela doc:', docColumns);
       
       let query = `
         SELECT 
-          x.numero as numero_nfe,
-          x.data_emissao,
-          x.nome_emitente as fornecedor,
-          x.cnpj_emitente as cnpj_fornecedor,
-          x.valor_total as valor_total_nfe,
+          d.doc_numero as numero_nfe,
+          d.doc_data_emissao as data_emissao,
+          d.doc_nome_emitente as fornecedor,
+          d.doc_cnpj_emitente as cnpj_fornecedor,
+          d.doc_valor_total as valor_total_nfe,
           c.nome as empresa_tomadora,
           c.cnpj as cnpj_tomadora
-        FROM xml x
-        LEFT JOIN cliente c ON x.codigo_cliente = c.codigo
-        WHERE x.tipo_documento = 'NFe' 
-        AND x.data_emissao BETWEEN ? AND ?
+        FROM doc d
+        LEFT JOIN cliente c ON d.doc_codigo_cliente = c.codigo
+        WHERE d.doc_tipo = 'NFe' 
+        AND d.doc_data_emissao BETWEEN ? AND ?
       `;
       
       const params = [dataInicial, dataFinal];
@@ -1373,7 +1373,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         params.push(empresa);
       }
       
-      query += ' ORDER BY c.nome, nfe.data_emissao';
+      query += ' ORDER BY c.nome, d.doc_data_emissao';
       
       const [results] = await mysqlPool.execute(query, params) as any;
       
@@ -1404,29 +1404,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         totalGeral += parseFloat(nfe.valor_total_nfe) || 0;
       });
       
-      // Gerar PDF
-      const { generateNFeRelatorioPDF } = await import('./nfe-relatorio-generator');
-      const pdfResult = await generateNFeRelatorioPDF({
+      // Por enquanto, retornar os dados em JSON para testar a consulta
+      res.json({
+        message: "Dados das NFe encontrados",
         dataInicial,
         dataFinal,
         empresas: Array.from(empresas.values()),
-        totalGeral
+        totalGeral,
+        totalRegistros: results.length
       });
-      
-      if (!pdfResult.success) {
-        throw new Error(pdfResult.error);
-      }
-      
-      // Ler e enviar o PDF
-      const fs = await import('fs');
-      const pdfBuffer = fs.readFileSync(pdfResult.pdfPath!);
-      
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `attachment; filename="relatorio_nfe_${dataInicial}_${dataFinal}.pdf"`);
-      res.send(pdfBuffer);
-      
-      // Limpar arquivo temporário
-      fs.unlinkSync(pdfResult.pdfPath!);
       
     } catch (error) {
       console.error("Erro ao gerar relatório de NFe:", error);
