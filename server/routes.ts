@@ -12,6 +12,7 @@ import { sendWelcomeEmail as sendWelcomeEmailResend } from "./resend-service";
 import { eq, ilike, or, and, count, desc, asc } from "drizzle-orm";
 import { generateNfeRelatorioPDF } from "./nfe-relatorio-generator";
 import { generateNfseRelatorioPDF } from "./nfse-relatorio-generator";
+import { generateNfseTributosRelatorioPDF } from "./nfse-tributos-relatorio-generator";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production";
 
@@ -1534,6 +1535,197 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Erro ao gerar relatório de NFSe:", error);
       res.status(500).json({ message: "Erro ao gerar relatório NFSe", error: (error as Error).message });
+    }
+  });
+
+  // Rota para gerar relatório de tributos NFSe
+  app.post("/api/relatorios/nfse-tributos", authenticateToken, async (req: any, res) => {
+    try {
+      const { dataInicial, dataFinal, empresa } = req.body;
+      
+      console.log('Gerando relatório de tributos NFSe para:', dataInicial, 'até', dataFinal);
+      
+      let query = `
+        SELECT 
+          nfse_nsu as numero_nfse,
+          nfse_data_hora as data_emissao,
+          nfse_emitente as fornecedor,
+          nfse_doc as cnpj_fornecedor,
+          nfse_valor_servico as valor_total_nfse,
+          nfse_tomador as empresa_tomadora,
+          nfse_tomador_doc as cnpj_tomadora,
+          nfse_xml as xml_content
+        FROM nfse
+        WHERE DATE(nfse_data_hora) BETWEEN ? AND ?
+      `;
+      
+      const params = [dataInicial, dataFinal];
+      
+      if (empresa && empresa !== 'all') {
+        query += ' AND nfse_tomador_doc = ?';
+        params.push(empresa);
+      }
+      
+      query += ' ORDER BY nfse_tomador, nfse_data_hora';
+      
+      const [results] = await mysqlPool.execute(query, params) as any;
+      
+      console.log(`Processando ${results.length} NFSe para extração de tributos`);
+      
+      // Função para extrair tributos do XML
+      const extractTributesFromXML = async (xmlContent: any): Promise<{
+        valorISS: number;
+        valorPIS: number;
+        valorCOFINS: number;
+        valorINSS: number;
+        valorIRRF: number;
+        valorCSLL: number;
+      }> => {
+        try {
+          let cleanXml = '';
+          
+          if (Buffer.isBuffer(xmlContent)) {
+            cleanXml = xmlContent.toString('utf-8');
+          } else if (typeof xmlContent === 'string') {
+            cleanXml = xmlContent;
+          } else {
+            return { valorISS: 0, valorPIS: 0, valorCOFINS: 0, valorINSS: 0, valorIRRF: 0, valorCSLL: 0 };
+          }
+          
+          // Decodificar base64 se necessário
+          if (!cleanXml.startsWith('<')) {
+            cleanXml = Buffer.from(cleanXml, 'base64').toString('utf-8');
+          }
+          
+          // Parse do XML
+          const xml2js = require('xml2js');
+          const parseStringPromise = require('util').promisify(xml2js.parseString);
+          const parsed = await parseStringPromise(cleanXml, { explicitArray: false });
+          
+          // Função recursiva para buscar tributos
+          const buscarTributoXML = (obj: any, nomeTributo: string): number => {
+            if (typeof obj !== 'object' || obj === null) return 0;
+            
+            for (const [key, value] of Object.entries(obj)) {
+              const keyLower = key.toLowerCase();
+              const tributoLower = nomeTributo.toLowerCase();
+              
+              if (keyLower === tributoLower && value) {
+                const valorNumerico = parseFloat(String(value));
+                return isNaN(valorNumerico) ? 0 : valorNumerico;
+              }
+              
+              if (typeof value === 'object') {
+                const resultado = buscarTributoXML(value, nomeTributo);
+                if (resultado > 0) return resultado;
+              }
+            }
+            return 0;
+          };
+          
+          return {
+            valorISS: buscarTributoXML(parsed, 'vISSQN') || buscarTributoXML(parsed, 'vISS'),
+            valorPIS: buscarTributoXML(parsed, 'vPis') || buscarTributoXML(parsed, 'vPIS'),
+            valorCOFINS: buscarTributoXML(parsed, 'vCofins') || buscarTributoXML(parsed, 'vCOFINS'),
+            valorINSS: buscarTributoXML(parsed, 'vRetINSS') || buscarTributoXML(parsed, 'vINSS'),
+            valorIRRF: buscarTributoXML(parsed, 'vRetIRRF') || buscarTributoXML(parsed, 'vIRRF'),
+            valorCSLL: buscarTributoXML(parsed, 'vRetCSLL') || buscarTributoXML(parsed, 'vCSLL')
+          };
+        } catch (error) {
+          console.error('Erro ao processar XML:', error);
+          return { valorISS: 0, valorPIS: 0, valorCOFINS: 0, valorINSS: 0, valorIRRF: 0, valorCSLL: 0 };
+        }
+      };
+      
+      // Agrupar por empresa tomadora e processar XMLs
+      const empresasMap = new Map();
+      let totaisGerais = {
+        valorServico: 0,
+        valorISS: 0,
+        valorPIS: 0,
+        valorCOFINS: 0,
+        valorINSS: 0,
+        valorIRRF: 0,
+        valorCSLL: 0
+      };
+      
+      for (const nfse of results) {
+        const empresaKey = nfse.cnpj_tomadora || 'sem_empresa';
+        
+        if (!empresasMap.has(empresaKey)) {
+          empresasMap.set(empresaKey, {
+            nome: nfse.empresa_tomadora || 'Empresa não identificada',
+            cnpj: nfse.cnpj_tomadora || '',
+            nfses: [],
+            totais: {
+              valorServico: 0,
+              valorISS: 0,
+              valorPIS: 0,
+              valorCOFINS: 0,
+              valorINSS: 0,
+              valorIRRF: 0,
+              valorCSLL: 0
+            }
+          });
+        }
+        
+        // Extrair tributos do XML
+        const tributos = await extractTributesFromXML(nfse.xml_content);
+        const valorServico = parseFloat(nfse.valor_total_nfse) || 0;
+        
+        const nfseCompleta = {
+          numero: nfse.numero_nfse,
+          dataEmissao: nfse.data_emissao,
+          fornecedor: nfse.fornecedor,
+          cnpjFornecedor: nfse.cnpj_fornecedor,
+          valorServico,
+          ...tributos
+        };
+        
+        const empresa = empresasMap.get(empresaKey);
+        empresa.nfses.push(nfseCompleta);
+        
+        // Somar totais da empresa
+        empresa.totais.valorServico += valorServico;
+        empresa.totais.valorISS += tributos.valorISS;
+        empresa.totais.valorPIS += tributos.valorPIS;
+        empresa.totais.valorCOFINS += tributos.valorCOFINS;
+        empresa.totais.valorINSS += tributos.valorINSS;
+        empresa.totais.valorIRRF += tributos.valorIRRF;
+        empresa.totais.valorCSLL += tributos.valorCSLL;
+        
+        // Somar totais gerais
+        totaisGerais.valorServico += valorServico;
+        totaisGerais.valorISS += tributos.valorISS;
+        totaisGerais.valorPIS += tributos.valorPIS;
+        totaisGerais.valorCOFINS += tributos.valorCOFINS;
+        totaisGerais.valorINSS += tributos.valorINSS;
+        totaisGerais.valorIRRF += tributos.valorIRRF;
+        totaisGerais.valorCSLL += tributos.valorCSLL;
+      }
+      
+      // Gerar PDF
+      const pdfBuffer = await generateNfseTributosRelatorioPDF({
+        dataInicial,
+        dataFinal,
+        empresa,
+        empresas: Array.from(empresasMap.values()),
+        totaisGerais,
+        totalNfses: results.length
+      });
+
+      // Converter para base64
+      const pdfBase64 = pdfBuffer.toString('base64');
+      
+      res.json({
+        success: true,
+        pdf: pdfBase64,
+        filename: `relatorio-tributos-nfse-${dataInicial}-${dataFinal}.pdf`
+      });
+      
+    } catch (error) {
+      console.error("Erro ao gerar relatório de tributos NFSe:", error);
+      res.status(500).json({ message: "Erro ao gerar relatório de tributos NFSe", error: (error as Error).message });
     }
   });
 

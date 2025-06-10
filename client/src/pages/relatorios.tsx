@@ -188,6 +188,45 @@ export default function RelatoriosPage() {
         } else {
           throw new Error('Formato de resposta inválido');
         }
+      } else if (selectedReport === 'nfse-tributos') {
+        // Gerar relatório de tributos NFSe
+        const response = await fetch('/api/relatorios/nfse-tributos', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          },
+          body: JSON.stringify({
+            dataInicial: dateRange.from ? formatDateLocal(dateRange.from) : '',
+            dataFinal: dateRange.to ? formatDateLocal(dateRange.to) : '',
+            empresa: selectedCompany
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error('Erro ao gerar relatório');
+        }
+
+        const data = await response.json();
+        
+        if (data.success && data.pdf) {
+          // Converter base64 para blob
+          const binaryString = window.atob(data.pdf);
+          const bytes = new Uint8Array(binaryString.length);
+          for (let i = 0; i < binaryString.length; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+          }
+          const blob = new Blob([bytes], { type: 'application/pdf' });
+          
+          // Abrir PDF em nova aba
+          const url = window.URL.createObjectURL(blob);
+          window.open(url, '_blank');
+          
+          // Cleanup
+          setTimeout(() => window.URL.revokeObjectURL(url), 100);
+        } else {
+          throw new Error('Formato de resposta inválido');
+        }
       } else {
         // Outros tipos de relatório (simulação)
         await new Promise(resolve => setTimeout(resolve, 2000));
