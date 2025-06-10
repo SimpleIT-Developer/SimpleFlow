@@ -16,7 +16,8 @@ import {
   FileCheck, 
   TrendingUp,
   Filter,
-  RefreshCw
+  RefreshCw,
+  DollarSign
 } from "lucide-react";
 import { addDays, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -56,6 +57,13 @@ export default function RelatoriosPage() {
       description: "Relatório consolidado de notas fiscais de serviços recebidas",
       icon: FileCheck,
       color: "text-green-500",
+    },
+    {
+      id: "nfse-tributos",
+      title: "Relatórios de Tributos NFSe",
+      description: "Análise detalhada de tributos e impostos das NFSe recebidas",
+      icon: DollarSign,
+      color: "text-red-500",
     },
     {
       id: "companies-activity",
