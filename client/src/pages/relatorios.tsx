@@ -19,13 +19,21 @@ import {
   RefreshCw,
   DollarSign
 } from "lucide-react";
-import { addDays, format } from "date-fns";
+import { addDays, format, subDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 interface DateRange {
   from?: Date;
   to?: Date;
 }
+
+// Função para formatar data local sem conversão de timezone
+const formatDateLocal = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
 export default function RelatoriosPage() {
   const [selectedReport, setSelectedReport] = useState("");
@@ -98,8 +106,8 @@ export default function RelatoriosPage() {
             'Authorization': `Bearer ${localStorage.getItem('authToken')}`
           },
           body: JSON.stringify({
-            dataInicial: dateRange.from ? format(dateRange.from, 'yyyy-MM-dd') : '',
-            dataFinal: dateRange.to ? format(dateRange.to, 'yyyy-MM-dd') : '',
+            dataInicial: dateRange.from ? formatDateLocal(dateRange.from) : '',
+            dataFinal: dateRange.to ? formatDateLocal(dateRange.to) : '',
             empresa: selectedCompany
           })
         });
