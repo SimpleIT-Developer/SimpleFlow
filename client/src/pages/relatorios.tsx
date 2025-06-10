@@ -88,17 +88,52 @@ export default function RelatoriosPage() {
 
     setIsGenerating(true);
     
-    // Simular geração do relatório
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Aqui seria implementada a lógica real de geração de relatórios
-    console.log("Gerando relatório:", {
-      type: selectedReport,
-      dateRange,
-      company: selectedCompany,
-    });
-    
-    setIsGenerating(false);
+    try {
+      if (selectedReport === 'nfe-summary') {
+        // Gerar relatório de NFe
+        const response = await fetch('/api/relatorios/nfe-resumo', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          },
+          body: JSON.stringify({
+            dataInicial: dateRange.from ? format(dateRange.from, 'yyyy-MM-dd') : '',
+            dataFinal: dateRange.to ? format(dateRange.to, 'yyyy-MM-dd') : '',
+            empresa: selectedCompany
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error('Erro ao gerar relatório');
+        }
+
+        // Baixar o PDF
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `relatorio_nfe_${format(dateRange.from || new Date(), 'yyyy-MM-dd')}_${format(dateRange.to || new Date(), 'yyyy-MM-dd')}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } else {
+        // Outros tipos de relatório (simulação)
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        console.log("Gerando relatório:", {
+          type: selectedReport,
+          dateRange,
+          company: selectedCompany,
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao gerar relatório:', error);
+      alert('Erro ao gerar relatório. Tente novamente.');
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const formatDateRange = () => {

@@ -1342,6 +1342,93 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Rota para gerar relatório de NFe
+  app.post("/api/relatorios/nfe-resumo", authenticateToken, async (req: any, res) => {
+    try {
+      const { dataInicial, dataFinal, empresa } = req.body;
+      
+      let query = `
+        SELECT 
+          nfe.numero_nfe,
+          nfe.data_emissao,
+          nfe.nome_fornecedor as fornecedor,
+          nfe.cnpj_fornecedor,
+          nfe.valor_total_nfe,
+          c.nome as empresa_tomadora,
+          c.cnpj as cnpj_tomadora
+        FROM nfe_recebida nfe
+        LEFT JOIN cliente c ON nfe.codigo_cliente = c.codigo
+        WHERE nfe.data_emissao BETWEEN ? AND ?
+      `;
+      
+      const params = [dataInicial, dataFinal];
+      
+      if (empresa && empresa !== 'all') {
+        query += ' AND c.cnpj = ?';
+        params.push(empresa);
+      }
+      
+      query += ' ORDER BY c.nome, nfe.data_emissao';
+      
+      const [results] = await mysqlPool.execute(query, params) as any;
+      
+      // Agrupar por empresa
+      const empresas = new Map();
+      let totalGeral = 0;
+      
+      results.forEach((nfe: any) => {
+        const empresaKey = nfe.cnpj_tomadora || 'sem_empresa';
+        if (!empresas.has(empresaKey)) {
+          empresas.set(empresaKey, {
+            nome: nfe.empresa_tomadora || 'Empresa não identificada',
+            cnpj: nfe.cnpj_tomadora || '',
+            nfes: [],
+            total: 0
+          });
+        }
+        
+        const empresa = empresas.get(empresaKey);
+        empresa.nfes.push({
+          numero: nfe.numero_nfe,
+          dataEmissao: nfe.data_emissao,
+          fornecedor: nfe.fornecedor,
+          cnpjFornecedor: nfe.cnpj_fornecedor,
+          valor: parseFloat(nfe.valor_total_nfe) || 0
+        });
+        empresa.total += parseFloat(nfe.valor_total_nfe) || 0;
+        totalGeral += parseFloat(nfe.valor_total_nfe) || 0;
+      });
+      
+      // Gerar PDF
+      const { generateNFeRelatorioPDF } = await import('./nfe-relatorio-generator');
+      const pdfResult = await generateNFeRelatorioPDF({
+        dataInicial,
+        dataFinal,
+        empresas: Array.from(empresas.values()),
+        totalGeral
+      });
+      
+      if (!pdfResult.success) {
+        throw new Error(pdfResult.error);
+      }
+      
+      // Ler e enviar o PDF
+      const fs = await import('fs');
+      const pdfBuffer = fs.readFileSync(pdfResult.pdfPath!);
+      
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="relatorio_nfe_${dataInicial}_${dataFinal}.pdf"`);
+      res.send(pdfBuffer);
+      
+      // Limpar arquivo temporário
+      fs.unlinkSync(pdfResult.pdfPath!);
+      
+    } catch (error) {
+      console.error("Erro ao gerar relatório de NFe:", error);
+      res.status(500).json({ message: "Erro ao gerar relatório", error: (error as Error).message });
+    }
+  });
+
   // Rota de teste para envio de email
   app.post("/api/test-email", authenticateToken, async (req: any, res) => {
     try {
