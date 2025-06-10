@@ -1361,8 +1361,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           d.doc_emit_nome as fornecedor,
           d.doc_emit_documento as cnpj_fornecedor,
           d.doc_valor as valor_total_nfe,
-          c.nome as empresa_tomadora,
-          c.cnpj as cnpj_tomadora
+          c.nome_fantasia as empresa_tomadora,
+          d.doc_dest_nome as destinatario,
+          d.doc_dest_documento as cnpj_destinatario
         FROM doc d
         LEFT JOIN cliente c ON d.doc_id_company = c.codigo
         WHERE d.doc_date_emi BETWEEN ? AND ?
@@ -1371,11 +1372,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const params = [dataInicial, dataFinal];
       
       if (empresa && empresa !== 'all') {
-        query += ' AND c.cnpj = ?';
+        query += ' AND d.doc_dest_documento = ?';
         params.push(empresa);
       }
       
-      query += ' ORDER BY c.nome, d.doc_date_emi';
+      query += ' ORDER BY c.nome_fantasia, d.doc_date_emi';
       
       const [results] = await mysqlPool.execute(query, params) as any;
       
