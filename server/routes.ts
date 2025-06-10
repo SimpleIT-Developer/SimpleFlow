@@ -1348,12 +1348,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { dataInicial, dataFinal, empresa } = req.body;
       
-      // Verificar estrutura das tabelas
-      const [docColumns] = await mysqlPool.execute('DESCRIBE doc') as any;
-      console.log('Colunas da tabela doc:', docColumns);
-      
-      const [clienteColumns] = await mysqlPool.execute('DESCRIBE cliente') as any;
-      console.log('Colunas da tabela cliente:', clienteColumns);
+      // Debug: verificar dados específicos para 08/06/2025
+      console.log('Verificando dados para:', dataInicial, 'até', dataFinal);
+      const [debugData] = await mysqlPool.execute(`
+        SELECT 
+          doc_num,
+          DATE(doc_date_emi) as data_emissao,
+          doc_emit_nome,
+          doc_valor
+        FROM doc 
+        WHERE DATE(doc_date_emi) BETWEEN ? AND ?
+        LIMIT 5
+      `, [dataInicial, dataFinal]) as any;
+      console.log('Dados encontrados:', debugData);
       
       let query = `
         SELECT 
