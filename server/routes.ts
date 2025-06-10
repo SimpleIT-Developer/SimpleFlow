@@ -1537,6 +1537,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Rota para estatísticas dos relatórios
+  app.get("/api/relatorios/stats", authenticateToken, async (req: any, res) => {
+    try {
+      const now = new Date();
+      const currentMonth = now.getMonth() + 1;
+      const currentYear = now.getFullYear();
+      const previousMonth = currentMonth === 1 ? 12 : currentMonth - 1;
+      const previousYear = currentMonth === 1 ? currentYear - 1 : currentYear;
+
+      // NFe este mês
+      const [nfeCurrentMonth] = await mysqlPool.execute(`
+        SELECT COUNT(*) as count
+        FROM doc 
+        WHERE MONTH(doc_date_emi) = ? AND YEAR(doc_date_emi) = ?
+      `, [currentMonth, currentYear]) as any;
+
+      // NFe mês anterior
+      const [nfePreviousMonth] = await mysqlPool.execute(`
+        SELECT COUNT(*) as count
+        FROM doc 
+        WHERE MONTH(doc_date_emi) = ? AND YEAR(doc_date_emi) = ?
+      `, [previousMonth, previousYear]) as any;
+
+      // NFSe este mês
+      const [nfseCurrentMonth] = await mysqlPool.execute(`
+        SELECT COUNT(*) as count
+        FROM nfse 
+        WHERE MONTH(nfse_data_hora) = ? AND YEAR(nfse_data_hora) = ?
+      `, [currentMonth, currentYear]) as any;
+
+      // NFSe mês anterior
+      const [nfsePreviousMonth] = await mysqlPool.execute(`
+        SELECT COUNT(*) as count
+        FROM nfse 
+        WHERE MONTH(nfse_data_hora) = ? AND YEAR(nfse_data_hora) = ?
+      `, [previousMonth, previousYear]) as any;
+
+      // Empresas ativas (contar CNPJs únicos da tabela doc)
+      const [empresasAtivas] = await mysqlPool.execute(`
+        SELECT COUNT(DISTINCT doc_dest_documento) as count
+        FROM doc 
+        WHERE doc_dest_documento IS NOT NULL AND doc_dest_documento != ''
+      `) as any;
+
+      // Calcular crescimento
+      const totalCurrentMonth = nfeCurrentMonth[0].count + nfseCurrentMonth[0].count;
+      const totalPreviousMonth = nfePreviousMonth[0].count + nfsePreviousMonth[0].count;
+      
+      let crescimento = 0;
+      if (totalPreviousMonth > 0) {
+        crescimento = ((totalCurrentMonth - totalPreviousMonth) / totalPreviousMonth) * 100;
+      } else if (totalCurrentMonth > 0) {
+        crescimento = 100; // Se não havia dados no mês anterior e agora há, crescimento de 100%
+      }
+
+      res.json({
+        nfeEsteMes: nfeCurrentMonth[0].count,
+        nfseEsteMes: nfseCurrentMonth[0].count,
+        empresasAtivas: empresasAtivas[0].count,
+        crescimento: Math.round(crescimento * 100) / 100, // Arredondar para 2 casas decimais
+        crescimentoPositivo: crescimento >= 0
+      });
+
+    } catch (error) {
+      console.error("Erro ao buscar estatísticas dos relatórios:", error);
+      res.status(500).json({ message: "Erro ao buscar estatísticas", error: (error as Error).message });
+    }
+  });
+
   // Rota de teste para envio de email
   app.post("/api/test-email", authenticateToken, async (req: any, res) => {
     try {

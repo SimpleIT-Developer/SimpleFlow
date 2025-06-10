@@ -49,7 +49,19 @@ export default function RelatoriosPage() {
     queryKey: ["/api/dashboard/cnpj-ativos"],
   });
 
+  // Buscar estatísticas dos relatórios
+  const { data: statsData } = useQuery({
+    queryKey: ["/api/relatorios/stats"],
+  });
+
   const companies = Array.isArray(companiesData) ? companiesData : [];
+  const stats = statsData || {
+    nfeEsteMes: 0,
+    nfseEsteMes: 0,
+    empresasAtivas: 0,
+    crescimento: 0,
+    crescimentoPositivo: true
+  };
 
   const reportTypes = [
     {
@@ -360,7 +372,7 @@ export default function RelatoriosPage() {
                 <Receipt className="w-8 h-8 text-blue-500" />
                 <div>
                   <p className="text-gray-400 text-sm">NFe este mês</p>
-                  <p className="text-white text-xl font-bold">342</p>
+                  <p className="text-white text-xl font-bold">{stats.nfeEsteMes}</p>
                 </div>
               </div>
             </CardContent>
@@ -372,7 +384,7 @@ export default function RelatoriosPage() {
                 <FileCheck className="w-8 h-8 text-green-500" />
                 <div>
                   <p className="text-gray-400 text-sm">NFSe este mês</p>
-                  <p className="text-white text-xl font-bold">156</p>
+                  <p className="text-white text-xl font-bold">{stats.nfseEsteMes}</p>
                 </div>
               </div>
             </CardContent>
@@ -384,7 +396,7 @@ export default function RelatoriosPage() {
                 <Building2 className="w-8 h-8 text-purple-500" />
                 <div>
                   <p className="text-gray-400 text-sm">Empresas ativas</p>
-                  <p className="text-white text-xl font-bold">{companies.length}</p>
+                  <p className="text-white text-xl font-bold">{stats.empresasAtivas}</p>
                 </div>
               </div>
             </CardContent>
@@ -393,10 +405,12 @@ export default function RelatoriosPage() {
           <Card className="glassmorphism border-white/20">
             <CardContent className="p-4">
               <div className="flex items-center space-x-3">
-                <TrendingUp className="w-8 h-8 text-orange-500" />
+                <TrendingUp className={`w-8 h-8 ${stats.crescimentoPositivo ? 'text-green-500' : 'text-red-500'}`} />
                 <div>
                   <p className="text-gray-400 text-sm">Crescimento</p>
-                  <p className="text-white text-xl font-bold">+12%</p>
+                  <p className={`text-xl font-bold ${stats.crescimentoPositivo ? 'text-green-400' : 'text-red-400'}`}>
+                    {stats.crescimentoPositivo ? '+' : ''}{stats.crescimento}%
+                  </p>
                 </div>
               </div>
             </CardContent>
