@@ -6,6 +6,7 @@ export interface AuthResponse {
     username: string;
     email: string;
     name: string;
+    type: string;
   };
   token: string;
   message: string;
@@ -22,6 +23,7 @@ export interface RegisterData {
   password: string;
   confirmPassword: string;
   name: string;
+  type: string;
 }
 
 // Set up axios default header for auth token

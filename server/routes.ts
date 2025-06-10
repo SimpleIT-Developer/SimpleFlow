@@ -61,6 +61,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email: validatedData.email,
         password: hashedPassword,
         name: validatedData.name,
+        type: validatedData.type,
+        status: 1,
       });
 
       // Buscar código do cliente no MySQL
