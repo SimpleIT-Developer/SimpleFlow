@@ -15,6 +15,7 @@ import {
   Receipt, 
   FileCheck, 
   TrendingUp,
+  TrendingDown,
   Filter,
   RefreshCw,
   DollarSign
@@ -405,9 +406,15 @@ export default function RelatoriosPage() {
           <Card className="glassmorphism border-white/20">
             <CardContent className="p-4">
               <div className="flex items-center space-x-3">
-                <TrendingUp className={`w-8 h-8 ${stats.crescimentoPositivo ? 'text-green-500' : 'text-red-500'}`} />
+                {stats.crescimentoPositivo ? (
+                  <TrendingUp className="w-8 h-8 text-green-500" />
+                ) : (
+                  <TrendingDown className="w-8 h-8 text-red-500" />
+                )}
                 <div>
-                  <p className="text-gray-400 text-sm">Crescimento</p>
+                  <p className="text-gray-400 text-sm">
+                    {stats.crescimentoPositivo ? 'Crescimento' : 'Baixa'}
+                  </p>
                   <p className={`text-xl font-bold ${stats.crescimentoPositivo ? 'text-green-400' : 'text-red-400'}`}>
                     {stats.crescimentoPositivo ? '+' : ''}{stats.crescimento}%
                   </p>
