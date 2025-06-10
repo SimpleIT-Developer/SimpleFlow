@@ -99,6 +99,55 @@ function buscarVServ(obj: any, caminho = ''): any {
   return null;
 }
 
+// Função para buscar tributos no XML (case insensitive)
+function buscarTributo(obj: any, nomeTributo: string, caminho = ''): number {
+  if (typeof obj !== 'object' || obj === null) return 0;
+  
+  for (const [key, value] of Object.entries(obj)) {
+    const caminhoAtual = caminho ? `${caminho}.${key}` : key;
+    const keyLower = key.toLowerCase();
+    const tributoLower = nomeTributo.toLowerCase();
+    
+    // Buscar exatamente o nome do tributo
+    if (keyLower === tributoLower && value) {
+      console.log(`Encontrado ${nomeTributo} em ${caminhoAtual}:`, value);
+      const valorNumerico = parseFloat(String(value));
+      return isNaN(valorNumerico) ? 0 : valorNumerico;
+    }
+    
+    if (typeof value === 'object') {
+      const resultado = buscarTributo(value, nomeTributo, caminhoAtual);
+      if (resultado > 0) return resultado;
+    }
+  }
+  return 0;
+}
+
+// Função específica para buscar PIS
+function buscarPIS(obj: any): number {
+  return buscarTributo(obj, 'vPis') || buscarTributo(obj, 'vPIS') || buscarTributo(obj, 'pis') || buscarTributo(obj, 'PIS');
+}
+
+// Função específica para buscar COFINS
+function buscarCOFINS(obj: any): number {
+  return buscarTributo(obj, 'vCofins') || buscarTributo(obj, 'vCOFINS') || buscarTributo(obj, 'cofins') || buscarTributo(obj, 'COFINS');
+}
+
+// Função específica para buscar IR
+function buscarIR(obj: any): number {
+  return buscarTributo(obj, 'vRetIRRF') || buscarTributo(obj, 'vIRRF') || buscarTributo(obj, 'vIR') || buscarTributo(obj, 'ir') || buscarTributo(obj, 'IR');
+}
+
+// Função específica para buscar CSLL
+function buscarCSLL(obj: any): number {
+  return buscarTributo(obj, 'vRetCSLL') || buscarTributo(obj, 'vCSLL') || buscarTributo(obj, 'csll') || buscarTributo(obj, 'CSLL');
+}
+
+// Função específica para buscar INSS
+function buscarINSS(obj: any): number {
+  return buscarTributo(obj, 'vRetINSS') || buscarTributo(obj, 'vINSS') || buscarTributo(obj, 'inss') || buscarTributo(obj, 'INSS');
+}
+
 async function extrairDadosLayoutFinal(xmlContent: string): Promise<DANFSeLayoutFinalData> {
   try {
     let cleanXml = xmlContent.trim();
@@ -189,11 +238,11 @@ async function extrairDadosLayoutFinal(xmlContent: string): Promise<DANFSeLayout
         issRetido: valores.tpRetISSQN === '1',
         valorTotalNota: parseFloat(valores.vLiq || valorServEncontrado || valores.vServ || serv.vServ || '0'),
         
-        pis: parseFloat(valores.vPIS || '0'),
-        cofins: parseFloat(valores.vCOFINS || '0'),
-        inss: parseFloat(valores.vINSS || '0'),
-        ir: parseFloat(valores.vIR || '0'),
-        csll: parseFloat(valores.vCSLL || '0'),
+        pis: buscarPIS(parsed),
+        cofins: buscarCOFINS(parsed),
+        inss: buscarINSS(parsed),
+        ir: buscarIR(parsed),
+        csll: buscarCSLL(parsed),
         
         outrasInformacoes: valores.xOutInf || ''
       };
@@ -252,11 +301,11 @@ async function extrairDadosLayoutFinal(xmlContent: string): Promise<DANFSeLayout
         issRetido: nfe.ISSRetido === 'true',
         valorTotalNota: parseFloat(nfe.ValorServicos || '0'),
         
-        pis: parseFloat(nfe.ValorPIS || '0'),
-        cofins: parseFloat(nfe.ValorCOFINS || '0'),
-        inss: parseFloat(nfe.ValorINSS || '0'),
-        ir: parseFloat(nfe.ValorIR || '0'),
-        csll: parseFloat(nfe.ValorCSLL || '0'),
+        pis: buscarPIS(parsed),
+        cofins: buscarCOFINS(parsed),
+        inss: buscarINSS(parsed),
+        ir: buscarIR(parsed),
+        csll: buscarCSLL(parsed),
         
         outrasInformacoes: nfe.Discriminacao || ''
       };
