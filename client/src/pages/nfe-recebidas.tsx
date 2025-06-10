@@ -229,7 +229,9 @@ export default function NFeRecebidasPage() {
   const formatDate = (dateString: string) => {
     if (!dateString) return "";
     const date = new Date(dateString);
-    return date.toLocaleDateString('pt-BR');
+    // Ajustar timezone para mostrar data local correta
+    const localDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000);
+    return localDate.toLocaleDateString('pt-BR');
   };
 
   const getStatusBadge = (nfe: NFeRecebida) => {
