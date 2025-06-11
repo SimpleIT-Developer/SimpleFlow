@@ -112,6 +112,9 @@ export default function ContasReceberPage() {
 
   const getTitulosVencidos = () => {
     const hoje = startOfDay(new Date());
+    // Só mostra títulos vencidos quando estamos visualizando hoje
+    if (!isSameDay(dataAtual, hoje)) return [];
+    
     return titulos.filter(titulo => 
       isBefore(titulo.vencimento, hoje) && 
       titulo.status === 'pendente' &&
@@ -191,14 +194,17 @@ export default function ContasReceberPage() {
           <Card className="glass-card border-primary/20 mb-6">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
-                <Button
-                  variant="ghost"
-                  onClick={() => navegarData('anterior')}
-                  className="text-white hover:bg-white/10"
-                >
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Anterior
-                </Button>
+                {!isSameDay(dataAtual, new Date()) && (
+                  <Button
+                    variant="ghost"
+                    onClick={() => navegarData('anterior')}
+                    className="text-white hover:bg-white/10"
+                  >
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Anterior
+                  </Button>
+                )}
+                {isSameDay(dataAtual, new Date()) && <div></div>}
                 
                 <div className="flex items-center space-x-4">
                   <div className="text-center">

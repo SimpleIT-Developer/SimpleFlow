@@ -37,8 +37,8 @@ export default function LoadingPage() {
         
         {/* Título e Descrição */}
         <div className="space-y-4">
-          <h1 className="text-4xl font-bold text-white">SimpleDFe</h1>
-          <p className="text-xl text-gray-300">Sistema de Gestão de Documentos Eletrônicos Inteligente</p>
+          <h1 className="text-4xl font-bold text-white">SimpleFlow</h1>
+          <p className="text-xl text-gray-300">Sistema Inteligente de Fluxo de Caixa Integrado</p>
         </div>
 
         {/* Barra de Progresso Animada - Responsiva */}
