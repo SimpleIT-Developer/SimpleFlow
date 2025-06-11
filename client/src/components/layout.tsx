@@ -96,86 +96,86 @@ export function Layout({ children, currentPage }: LayoutProps) {
             <ul className="space-y-2">
               <li>
                 <Link href="/dashboard">
-                  <a className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                  <div className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer ${
                     isActive("/dashboard")
                       ? "text-white bg-primary/20 border border-primary/30"
                       : "text-gray-300 hover:text-white hover:bg-white/10"
                   }`}>
                     <BarChart3 className="w-5 h-5" />
                     <span>Dashboard</span>
-                  </a>
+                  </div>
                 </Link>
               </li>
               <li>
                 <Link href="/contas-pagar">
-                  <a className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer ${
+                  <div className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer ${
                     isActive("/contas-pagar")
                       ? "text-white bg-primary/20 border border-primary/30"
                       : "text-gray-300 hover:text-white hover:bg-white/10"
                   }`}>
                     <CreditCard className="w-5 h-5" />
                     <span>Contas a Pagar</span>
-                  </a>
+                  </div>
                 </Link>
               </li>
               <li>
                 <Link href="/contas-receber">
-                  <a className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer ${
+                  <div className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer ${
                     isActive("/contas-receber")
                       ? "text-white bg-primary/20 border border-primary/30"
                       : "text-gray-300 hover:text-white hover:bg-white/10"
                   }`}>
                     <Receipt className="w-5 h-5" />
                     <span>Contas a Receber</span>
-                  </a>
+                  </div>
                 </Link>
               </li>
               <li>
                 <Link href="/extrato">
-                  <a className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer ${
+                  <div className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer ${
                     isActive("/extrato")
                       ? "text-white bg-primary/20 border border-primary/30"
                       : "text-gray-300 hover:text-white hover:bg-white/10"
                   }`}>
                     <PiggyBank className="w-5 h-5" />
                     <span>Extrato Bancário</span>
-                  </a>
+                  </div>
                 </Link>
               </li>
               <li>
                 <Link href="/ai-assistant">
-                  <a className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer ${
+                  <div className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer ${
                     isActive("/ai-assistant")
                       ? "text-white bg-primary/20 border border-primary/30"
                       : "text-gray-300 hover:text-white hover:bg-white/10"
                   }`}>
                     <Bot className="w-5 h-5" />
                     <span>Assistente IA</span>
-                  </a>
+                  </div>
                 </Link>
               </li>
               <li>
                 <Link href="/relatorios">
-                  <a className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer ${
+                  <div className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer ${
                     isActive("/relatorios")
                       ? "text-white bg-primary/20 border border-primary/30"
                       : "text-gray-300 hover:text-white hover:bg-white/10"
                   }`}>
                     <FileBarChart className="w-5 h-5" />
                     <span>Relatórios</span>
-                  </a>
+                  </div>
                 </Link>
               </li>
               <li>
                 <Link href="/usuarios">
-                  <a className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer ${
+                  <div className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer ${
                     isActive("/usuarios")
                       ? "text-white bg-primary/20 border border-primary/30"
                       : "text-gray-300 hover:text-white hover:bg-white/10"
                   }`}>
                     <Users className="w-5 h-5" />
                     <span>Usuários</span>
-                  </a>
+                  </div>
                 </Link>
               </li>
 

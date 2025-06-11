@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { loginSchema, registerSchema, users, type Company, type CompanyFilters, type CompanyResponse, type NFeRecebida, type NFeFilters, type NFeResponse, type NFSeRecebida, type NFSeResponse, type Usuario, type UsuarioResponse, type FornecedorResponse } from "@shared/schema";
+import { loginSchema, registerSchema, users, type Usuario, type UsuarioResponse, type DashboardStats, type FluxoCaixaData, type UltimosLancamentos } from "@shared/schema";
 import { z } from "zod";
 import { mysqlPool, testMysqlConnection } from "./mysql-config";
 import { db } from "./db";
