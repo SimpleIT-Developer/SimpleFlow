@@ -1,0 +1,44 @@
+Quero que você atue como um desenvolvedor full-stack e gere para mim a estrutura de um front-end chamado **SimpleFlow**, uma ferramenta de Fluxo de Caixa integrada a qualquer ERP. Use React (com Vite ou Next.js), Tailwind CSS e, se preferir, componentes shadcn/ui para facilitar o estilo. **Usei um REMIX do projeto SimpleDFe para aproveitar o mesmo estilo visual e componentes**, mas limpe todo o código e não deixe sujeiras do outro sistema. Siga o padrão visual do site https://www.simpledfe.com.br, mas troque o roxo por um amarelo escuro (#B58900), mantendo tipografia e espaçamentos similares.
+
+1. **Configuração Inicial**  
+   - Crie um projeto React com configuração de autenticação e rotas.  
+   - Instale dependências: React Router, Axios (ou fetch), Zustand/Context API para estado global, Chart.js ou Recharts.  
+   - Crie um arquivo de configuração (`src/config/endpoints.ts`) onde o usuário poderá inserir URLs dos endpoints do ERP (ex.: `/api/login`, `/api/fluxo/entradas`, etc.).
+
+2. **Autenticação**  
+   - Páginas de **Login** e **Registro** (registro oculto por enquanto).  
+   - Formulários com validação (Yup + React Hook Form).  
+   - Ao fazer login, guarde o token e os dados do usuário em estado global e redirecione ao dashboard.
+
+3. **Dashboard de Fluxo de Caixa**  
+   - Componente `Dashboard`:  
+     - **Cartões** com números de Entradas, Saídas e Saldo atual (select de conta parametrizável).  
+     - **Gráfico de Linhas/Barra** mostrando evolução do caixa diário, semanal e mensal.  
+     - **Resumo Rápido**: “Pagamentos do dia”, “Recebimentos do dia”.  
+   - Use layout de grade responsiva: cards no topo, gráfico abaixo.
+
+4. **Menus Laterais**  
+   - **Contas a Pagar**: Listagem paginada, filtro por data, botão “Marcar como pago”.  
+   - **Contas a Receber**: Listagem similar, botão “Registrar recebimento”.  
+   - **Extrato Bancário**: Uso do endpoint `/api/extrato`, tabela de lançamentos com busca por descrição e data.
+
+5. **Integração com ERP**  
+   - Em `/src/services/api.ts`, configure funções para chamar os endpoints parametrizáveis.  
+   - Exemplo:  
+     ```ts
+     export async function fetchEntradas(periodo: { from: string; to: string }) { … }
+     export async function fetchSaidas(periodo: { from: string; to: string }) { … }
+     export async function fetchExtrato(contaId: string) { … }
+     ```  
+   - Mostre estados de loading e erro na UI.
+
+6. **Menu de IA**  
+   - Componente `AiAssistant`:  
+     - Campo de texto para perguntas (ex.: “Qual o saldo da conta X?”).  
+     - Ao enviar, chame um serviço interno (`/api/ai/query`) que processa via OpenAI ou outra API.  
+     - Exiba resposta em balões de chat, com histórico de perguntas.
+
+7. **Estilo e Branding**  
+   - Altere cores principais para amarelo escuro (#B58900) e tons neutros (cinza claro para fundos).  
+   - Substitua logo no cabeçalho por um ícone de gráfico de barras estilizado em amarelo, mantendo proporções semelhantes ao do SimpleDFe.  
+   - Esconda o link “Registrar” no rodapé ou menu lateral.
