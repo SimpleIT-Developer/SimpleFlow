@@ -32,6 +32,8 @@ function authenticateToken(req: any, res: any, next: any) {
 import { createServer } from "http";
 
 export function registerRoutes(app: Express) {
+  const server = createServer(app);
+  
   // Rota de registro
   app.post("/api/auth/register", async (req, res) => {
     try {
@@ -400,4 +402,6 @@ export function registerRoutes(app: Express) {
       res.status(500).json({ message: "Erro ao buscar usuários" });
     }
   });
+
+  return server;
 }
