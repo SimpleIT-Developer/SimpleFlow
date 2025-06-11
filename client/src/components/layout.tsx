@@ -143,14 +143,14 @@ export function Layout({ children, currentPage }: LayoutProps) {
                 </Link>
               </li>
               <li>
-                <Link href="/ai-assistant">
+                <Link href="/fluxo-caixa">
                   <div className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer ${
-                    isActive("/ai-assistant")
+                    isActive("/fluxo-caixa")
                       ? "text-white bg-primary/20 border border-primary/30"
                       : "text-gray-300 hover:text-white hover:bg-white/10"
                   }`}>
-                    <Bot className="w-5 h-5" />
-                    <span>Assistente IA</span>
+                    <TrendingUp className="w-5 h-5" />
+                    <span>Fluxo de Caixa</span>
                   </div>
                 </Link>
               </li>
@@ -163,6 +163,30 @@ export function Layout({ children, currentPage }: LayoutProps) {
                   }`}>
                     <FileBarChart className="w-5 h-5" />
                     <span>Relatórios</span>
+                  </div>
+                </Link>
+              </li>
+              <li>
+                <Link href="/configuracoes">
+                  <div className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer ${
+                    isActive("/configuracoes")
+                      ? "text-white bg-primary/20 border border-primary/30"
+                      : "text-gray-300 hover:text-white hover:bg-white/10"
+                  }`}>
+                    <Settings className="w-5 h-5" />
+                    <span>Configurações</span>
+                  </div>
+                </Link>
+              </li>
+              <li>
+                <Link href="/ai-assistant">
+                  <div className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer ${
+                    isActive("/ai-assistant")
+                      ? "text-white bg-primary/20 border border-primary/30"
+                      : "text-gray-300 hover:text-white hover:bg-white/10"
+                  }`}>
+                    <Bot className="w-5 h-5" />
+                    <span>Assistente IA</span>
                   </div>
                 </Link>
               </li>

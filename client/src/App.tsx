@@ -13,6 +13,8 @@ import DashboardPage from "@/pages/dashboard-flow";
 import ContasPagarPage from "@/pages/contas-pagar";
 import ContasReceberPage from "@/pages/contas-receber";
 import ExtratoPage from "@/pages/extrato";
+import FluxoCaixaPage from "@/pages/fluxo-caixa";
+import ConfiguracoesPage from "@/pages/configuracoes";
 import AIAssistantPage from "@/pages/ai-assistant";
 import UsuariosPage from "@/pages/usuarios";
 import RelatoriosPage from "@/pages/relatorios";
@@ -48,14 +50,24 @@ function Router() {
           <ExtratoPage />
         </ProtectedRoute>
       </Route>
-      <Route path="/ai-assistant">
+      <Route path="/fluxo-caixa">
         <ProtectedRoute>
-          <AIAssistantPage />
+          <FluxoCaixaPage />
         </ProtectedRoute>
       </Route>
       <Route path="/relatorios">
         <ProtectedRoute>
           <RelatoriosPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/configuracoes">
+        <ProtectedRoute>
+          <ConfiguracoesPage />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/ai-assistant">
+        <ProtectedRoute>
+          <AIAssistantPage />
         </ProtectedRoute>
       </Route>
       <Route path="/usuarios">
