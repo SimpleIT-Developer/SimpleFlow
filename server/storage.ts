@@ -1,6 +1,6 @@
-import { users, type User, type InsertUser } from "@shared/schema";
+import { users, type User, type InsertUser, type UsuarioResponse } from "@shared/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, ilike, or, and, count, desc, asc } from "drizzle-orm";
 import { pool } from "./db";
 
 export interface IStorage {
@@ -8,6 +8,7 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(insertUser: InsertUser): Promise<User>;
+  getUsers(filters: any): Promise<UsuarioResponse>;
   ensureUsersTableExists(): Promise<void>;
 }
 
@@ -33,6 +34,53 @@ export class DatabaseStorage implements IStorage {
       .values(insertUser)
       .returning();
     return user;
+  }
+
+  async getUsers(filters: any): Promise<UsuarioResponse> {
+    const { search = "", status = "all", page = 1, limit = 10, sortBy = "name", sortOrder = "asc" } = filters;
+    
+    let query = db.select().from(users);
+    
+    // Aplicar filtros
+    if (search) {
+      query = query.where(or(
+        ilike(users.name, `%${search}%`),
+        ilike(users.email, `%${search}%`),
+        ilike(users.username, `%${search}%`)
+      ));
+    }
+    
+    if (status !== "all") {
+      const statusValue = status === "active" ? 1 : 0;
+      query = query.where(eq(users.status, statusValue));
+    }
+    
+    // Ordenação
+    const orderDirection = sortOrder === "desc" ? desc : asc;
+    const orderField = users[sortBy as keyof typeof users] || users.name;
+    query = query.orderBy(orderDirection(orderField));
+    
+    // Paginação
+    const offset = (page - 1) * limit;
+    const usersList = await query.limit(limit).offset(offset);
+    
+    // Contar total
+    const [totalResult] = await db.select({ count: count() }).from(users);
+    const total = totalResult.count;
+    
+    return {
+      usuarios: usersList.map(user => ({
+        id: user.id,
+        nome: user.name,
+        email: user.email,
+        tipo: user.type || 'user',
+        ativo: user.status || 1
+      })),
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+      limit
+    };
   }
 
   async ensureUsersTableExists(): Promise<void> {
