@@ -193,11 +193,11 @@ function createWelcomeEmailHTML(data: WelcomeEmailData): string {
             </div>
             
             <div class="features">
-                <div class="features-title">🚀 O que você pode fazer com o SimpleDFE:</div>
-                <div class="feature-item">Captura automática de XMLs de NFe e NFS-e emitidos contra o seu CNPJ</div>
-                <div class="feature-item">Organização por CNPJ, datas e tipos de documentos</div>
-                <div class="feature-item">Acesso seguro com controle de usuários</div>
-                <div class="feature-item">Histórico e logs detalhados de todas as operações</div>
+                <div class="features-title">🚀 O que você pode fazer com o SimpleFlow:</div>
+                <div class="feature-item">Análise inteligente de fluxo de caixa com projeções</div>
+                <div class="feature-item">Simulação de pagamentos e recebimentos</div>
+                <div class="feature-item">Integração automática com seu ERP via webhooks</div>
+                <div class="feature-item">Relatórios de análise para tomada de decisão</div>
             </div>
             
             <div class="features">

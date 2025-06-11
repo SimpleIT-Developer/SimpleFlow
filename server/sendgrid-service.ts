@@ -224,7 +224,7 @@ function createWelcomeEmailHTML(data: WelcomeEmailData): string {
             <div class="features-title">🆘 Suporte e ajuda</div>
             <p class="support-info">Se precisar de qualquer apoio, conte com nosso time!</p>
             <div class="support-info">
-                📧 <a href="mailto:contato@simpledfe.com.br" class="url">contato@simpledfe.com.br</a><br>
+                📧 <a href="mailto:contato@simpleflow.com.br" class="url">contato@simpleflow.com.br</a><br>
                 📞 (11) 94498-7584
             </div>
             <br>
