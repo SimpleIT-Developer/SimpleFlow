@@ -73,8 +73,8 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="text-center">
           <AnimatedLogo size="lg" showPulse className="mb-4" />
-          <h1 className="text-3xl font-bold text-white">SimpleDFe</h1>
-          <p className="text-gray-300 mt-2">Sistema de Gestão de Documentos Eletrônicos Inteligente</p>
+          <h1 className="text-3xl font-bold text-white">SimpleFlow</h1>
+          <p className="text-gray-300 mt-2">Sistema Inteligente de Fluxo de Caixa Integrado</p>
         </div>
 
         {/* Login Form */}

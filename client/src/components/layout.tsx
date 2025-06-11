@@ -4,7 +4,7 @@ import { logout } from "@/lib/auth";
 import { AnimatedLogo } from "@/components/animated-logo";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { LogOut, BarChart3, Settings, FileText, Building2, Receipt, FileCheck, Users, Truck, FileBarChart } from "lucide-react";
+import { LogOut, BarChart3, Settings, TrendingUp, CreditCard, PiggyBank, Receipt, FileBarChart, Users, Bot } from "lucide-react";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -86,7 +86,7 @@ export function Layout({ children, currentPage }: LayoutProps) {
           <div className="flex items-center space-x-3 mb-8">
             <AnimatedLogo size="sm" />
             <div>
-              <h2 className="text-white font-semibold">SimpleDFe</h2>
+              <h2 className="text-white font-semibold">SimpleFlow</h2>
               <p className="text-gray-400 text-xs">v1.0.0</p>
             </div>
           </div>
@@ -107,50 +107,50 @@ export function Layout({ children, currentPage }: LayoutProps) {
                 </Link>
               </li>
               <li>
-                <Link href="/companies">
+                <Link href="/contas-pagar">
                   <a className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer ${
-                    isActive("/companies")
+                    isActive("/contas-pagar")
                       ? "text-white bg-primary/20 border border-primary/30"
                       : "text-gray-300 hover:text-white hover:bg-white/10"
                   }`}>
-                    <Building2 className="w-5 h-5" />
-                    <span>Empresas</span>
+                    <CreditCard className="w-5 h-5" />
+                    <span>Contas a Pagar</span>
                   </a>
                 </Link>
               </li>
               <li>
-                <Link href="/nfe-recebidas">
+                <Link href="/contas-receber">
                   <a className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer ${
-                    isActive("/nfe-recebidas")
+                    isActive("/contas-receber")
                       ? "text-white bg-primary/20 border border-primary/30"
                       : "text-gray-300 hover:text-white hover:bg-white/10"
                   }`}>
                     <Receipt className="w-5 h-5" />
-                    <span>NFe Recebidas</span>
+                    <span>Contas a Receber</span>
                   </a>
                 </Link>
               </li>
               <li>
-                <Link href="/nfse-recebidas">
+                <Link href="/extrato">
                   <a className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer ${
-                    isActive("/nfse-recebidas")
+                    isActive("/extrato")
                       ? "text-white bg-primary/20 border border-primary/30"
                       : "text-gray-300 hover:text-white hover:bg-white/10"
                   }`}>
-                    <FileCheck className="w-5 h-5" />
-                    <span>NFSe Recebidas</span>
+                    <PiggyBank className="w-5 h-5" />
+                    <span>Extrato Bancário</span>
                   </a>
                 </Link>
               </li>
               <li>
-                <Link href="/fornecedores">
+                <Link href="/ai-assistant">
                   <a className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 cursor-pointer ${
-                    isActive("/fornecedores")
+                    isActive("/ai-assistant")
                       ? "text-white bg-primary/20 border border-primary/30"
                       : "text-gray-300 hover:text-white hover:bg-white/10"
                   }`}>
-                    <Truck className="w-5 h-5" />
-                    <span>Fornecedores</span>
+                    <Bot className="w-5 h-5" />
+                    <span>Assistente IA</span>
                   </a>
                 </Link>
               </li>
