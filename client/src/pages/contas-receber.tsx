@@ -1,213 +1,452 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Layout } from "@/components/layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Receipt, Search, Calendar, DollarSign, CheckCircle, Clock } from "lucide-react";
-import { format } from "date-fns";
+import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
+import { 
+  Receipt, 
+  Search, 
+  Calendar, 
+  DollarSign, 
+  Filter, 
+  FileText, 
+  Download,
+  ArrowLeft,
+  ArrowRight,
+  AlertTriangle,
+  Clock,
+  CheckCircle
+} from "lucide-react";
+import { format, addDays, subDays, isBefore, isSameDay, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-const mockContasReceber = [
-  {
-    id: 1,
-    descricao: "Venda de Produtos - Pedido #1234",
-    valor: 5800.00,
-    dataVencimento: "2024-06-20",
-    status: "pendente",
-    categoria: "vendas",
-    cliente: "Empresa ABC Ltda"
-  },
-  {
-    id: 2,
-    descricao: "Prestação de Serviços - Consultoria",
-    valor: 12000.00,
-    dataVencimento: "2024-06-15",
-    status: "pendente",
-    categoria: "servicos",
-    cliente: "Tech Solutions Corp"
-  },
-  {
-    id: 3,
-    descricao: "Venda Online - Loja Virtual",
-    valor: 2340.75,
-    dataVencimento: "2024-06-10",
-    status: "recebido",
-    categoria: "vendas",
-    cliente: "Cliente Online"
-  }
-];
+interface TituloReceber {
+  id: string;
+  descricao: string;
+  valor: number;
+  vencimento: Date;
+  categoria: string;
+  cliente: string;
+  documento: string;
+  observacoes?: string;
+  conta: string;
+  natureza: string;
+  centroCusto: string;
+  status: 'pendente' | 'recebido' | 'simulado';
+}
 
 export default function ContasReceberPage() {
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const { toast } = useToast();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [dataAtual, setDataAtual] = useState(new Date());
+  
+  // Dados de exemplo - serão substituídos pelos webhooks do ERP
+  const [titulos, setTitulos] = useState<TituloReceber[]>([
+    {
+      id: '1',
+      descricao: 'Cliente XYZ - Vendas Produto A',
+      valor: 8500.00,
+      vencimento: subDays(new Date(), 1), // Vencido ontem
+      categoria: 'Vendas',
+      cliente: 'XYZ Comércio Ltda',
+      documento: 'NF 98765',
+      conta: 'Banco do Brasil - CC 12345',
+      natureza: 'Receita de Vendas',
+      centroCusto: 'Comercial',
+      status: 'pendente'
+    },
+    {
+      id: '2',
+      descricao: 'Prestação de Serviços - Cliente ABC',
+      valor: 3200.00,
+      vencimento: new Date(), // Hoje
+      categoria: 'Serviços',
+      cliente: 'ABC Empresa Ltd',
+      documento: 'NFS 54321',
+      conta: 'Itaú - CC 67890',
+      natureza: 'Receita de Serviços',
+      centroCusto: 'Operacional',
+      status: 'pendente'
+    },
+    {
+      id: '3',
+      descricao: 'Venda à Prazo - Cliente DEF',
+      valor: 1500.00,
+      vencimento: addDays(new Date(), 1), // Amanhã
+      categoria: 'Vendas',
+      cliente: 'DEF Indústria SA',
+      documento: 'NF 11111',
+      conta: 'Caixa',
+      natureza: 'Receita de Vendas',
+      centroCusto: 'Comercial',
+      status: 'pendente'
+    },
+    {
+      id: '4',
+      descricao: 'Recebimento Parceria GHI',
+      valor: 4800.00,
+      vencimento: addDays(new Date(), 3), // Daqui a 3 dias
+      categoria: 'Parcerias',
+      cliente: 'GHI Partners Ltda',
+      documento: 'Contrato 999',
+      conta: 'Banco do Brasil - CC 12345',
+      natureza: 'Receita de Parcerias',
+      centroCusto: 'Comercial',
+      status: 'pendente'
+    }
+  ]);
 
-  const { data: contas, isLoading } = useQuery({
-    queryKey: ["/api/contas/receber", search, statusFilter],
-    queryFn: () => Promise.resolve(mockContasReceber),
-  });
-
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(value);
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'recebido':
-        return <Badge className="bg-green-500/20 text-green-500">Recebido</Badge>;
-      case 'vencida':
-        return <Badge className="bg-red-500/20 text-red-500">Vencida</Badge>;
-      case 'pendente':
-        return <Badge className="bg-yellow-500/20 text-yellow-500">Pendente</Badge>;
-      default:
-        return <Badge variant="secondary">{status}</Badge>;
+  const navegarData = (direcao: 'anterior' | 'proximo') => {
+    if (direcao === 'anterior') {
+      setDataAtual(subDays(dataAtual, 1));
+    } else {
+      setDataAtual(addDays(dataAtual, 1));
     }
   };
 
-  const totalPendente = contas?.filter(c => c.status === 'pendente').reduce((sum, c) => sum + c.valor, 0) || 0;
-  const totalRecebido = contas?.filter(c => c.status === 'recebido').reduce((sum, c) => sum + c.valor, 0) || 0;
+  const voltarHoje = () => {
+    setDataAtual(new Date());
+  };
+
+  const getTitulosVencidos = () => {
+    const hoje = startOfDay(new Date());
+    return titulos.filter(titulo => 
+      isBefore(titulo.vencimento, hoje) && 
+      titulo.status === 'pendente' &&
+      (titulo.descricao.toLowerCase().includes(searchTerm.toLowerCase()) ||
+       titulo.cliente.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+  };
+
+  const getTitulosDoDia = () => {
+    return titulos.filter(titulo => 
+      isSameDay(titulo.vencimento, dataAtual) && 
+      titulo.status === 'pendente' &&
+      (titulo.descricao.toLowerCase().includes(searchTerm.toLowerCase()) ||
+       titulo.cliente.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+  };
+
+  const simularRecebimento = (id: string) => {
+    setTitulos(prev => prev.map(titulo => 
+      titulo.id === id ? { ...titulo, status: 'simulado' } : titulo
+    ));
+    toast({
+      title: "Recebimento simulado",
+      description: "O título foi marcado como recebido na simulação"
+    });
+  };
+
+  const reverterSimulacao = (id: string) => {
+    setTitulos(prev => prev.map(titulo => 
+      titulo.id === id ? { ...titulo, status: 'pendente' } : titulo
+    ));
+    toast({
+      title: "Simulação revertida",
+      description: "O título voltou ao status pendente"
+    });
+  };
+
+  const gerarRelatorio = () => {
+    const titulosParaReceber = titulos.filter(t => t.status === 'simulado');
+    const titulosParaReagendar = titulos.filter(t => t.status === 'pendente');
+    
+    toast({
+      title: "Relatório gerado",
+      description: `${titulosParaReceber.length} títulos para receber, ${titulosParaReagendar.length} para renegociar`
+    });
+  };
+
+  const titulosVencidos = getTitulosVencidos();
+  const titulosDoDia = getTitulosDoDia();
+  const totalVencidos = titulosVencidos.reduce((sum, titulo) => sum + titulo.valor, 0);
+  const totalDoDia = titulosDoDia.reduce((sum, titulo) => sum + titulo.valor, 0);
+  const totalSimulado = titulos.filter(t => t.status === 'simulado').reduce((sum, titulo) => sum + titulo.valor, 0);
 
   return (
-    <Layout currentPage="Contas a Receber">
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-white">Contas a Receber</h1>
-            <p className="text-gray-400 text-sm">
-              Acompanhe seus recebimentos pendentes
-            </p>
+    <Layout currentPage="contas-receber">
+      <div className="p-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-8">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="flex items-center space-x-3 mb-2">
+                  <Receipt className="w-8 h-8 text-primary" />
+                  <h1 className="text-3xl font-bold text-white">Contas a Receber</h1>
+                </div>
+                <p className="text-gray-400">
+                  Análise de títulos com simulação de recebimentos para otimização do fluxo de caixa
+                </p>
+              </div>
+              <Button onClick={gerarRelatorio} className="bg-primary hover:bg-primary/90">
+                <Download className="w-4 h-4 mr-2" />
+                Gerar Relatório de Análise
+              </Button>
+            </div>
           </div>
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="glassmorphism border-white/20">
+          {/* Navegação de Data */}
+          <Card className="glass-card border-primary/20 mb-6">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-400 text-sm font-medium">A Receber</p>
-                  <p className="text-2xl font-bold text-white">{formatCurrency(totalPendente)}</p>
-                </div>
-                <div className="p-3 rounded-lg bg-primary/20">
-                  <Receipt className="w-6 h-6 text-primary" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="glassmorphism border-white/20">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-400 text-sm font-medium">Já Recebido</p>
-                  <p className="text-2xl font-bold text-white">{formatCurrency(totalRecebido)}</p>
-                </div>
-                <div className="p-3 rounded-lg bg-green-500/20">
-                  <CheckCircle className="w-6 h-6 text-green-500" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="glassmorphism border-white/20">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-400 text-sm font-medium">Total de Contas</p>
-                  <p className="text-2xl font-bold text-white">{contas?.length || 0}</p>
-                </div>
-                <div className="p-3 rounded-lg bg-blue-500/20">
-                  <DollarSign className="w-6 h-6 text-blue-500" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <Card className="glassmorphism border-white/20">
-          <CardContent className="p-6">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input
-                    placeholder="Buscar por descrição ou cliente..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-gray-400"
-                  />
-                </div>
-              </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full md:w-48 bg-white/10 border-white/20 text-white">
-                  <SelectValue placeholder="Filtrar por status" />
-                </SelectTrigger>
-                <SelectContent className="bg-gray-900 border-white/20">
-                  <SelectItem value="all">Todos os Status</SelectItem>
-                  <SelectItem value="pendente">Pendente</SelectItem>
-                  <SelectItem value="vencida">Vencida</SelectItem>
-                  <SelectItem value="recebido">Recebido</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="glassmorphism border-white/20">
-          <CardHeader>
-            <CardTitle className="text-white">Contas a Receber</CardTitle>
-            <CardDescription className="text-gray-400">
-              Seus recebimentos pendentes e realizados
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {contas?.map((conta) => (
-                <div
-                  key={conta.id}
-                  className="flex items-center justify-between p-4 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
+                <Button
+                  variant="ghost"
+                  onClick={() => navegarData('anterior')}
+                  className="text-white hover:bg-white/10"
                 >
-                  <div className="flex items-center space-x-4">
-                    <div className={`p-2 rounded-lg ${
-                      conta.status === 'recebido' ? 'bg-green-500/20' : 
-                      conta.status === 'pendente' ? 'bg-yellow-500/20' : 'bg-red-500/20'
-                    }`}>
-                      {conta.status === 'recebido' ? (
-                        <CheckCircle className="w-4 h-4 text-green-500" />
-                      ) : (
-                        <Clock className="w-4 h-4 text-yellow-500" />
-                      )}
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Anterior
+                </Button>
+                
+                <div className="flex items-center space-x-4">
+                  <div className="text-center">
+                    <div className="flex items-center space-x-2">
+                      <Calendar className="w-5 h-5 text-primary" />
+                      <span className="text-2xl font-bold text-white">
+                        {format(dataAtual, "dd 'de' MMMM, yyyy", { locale: ptBR })}
+                      </span>
                     </div>
-                    <div>
-                      <p className="text-white font-medium">{conta.descricao}</p>
-                      <p className="text-gray-400 text-sm">
-                        {conta.cliente} • Venc: {format(new Date(conta.dataVencimento), 'dd/MM/yyyy', { locale: ptBR })}
-                      </p>
-                    </div>
+                    <p className="text-sm text-gray-400">
+                      {isSameDay(dataAtual, new Date()) ? 'Hoje' : 
+                       isBefore(dataAtual, new Date()) ? 'Data passada' : 'Data futura'}
+                    </p>
                   </div>
-                  <div className="flex items-center space-x-4">
-                    <div className="text-right">
-                      <p className="text-white font-bold">{formatCurrency(conta.valor)}</p>
-                      {getStatusBadge(conta.status)}
-                    </div>
-                    {conta.status !== 'recebido' && (
-                      <Button
-                        size="sm"
-                        className="bg-primary hover:bg-primary/90 text-white"
-                      >
-                        Registrar Recebimento
-                      </Button>
-                    )}
-                  </div>
+                  {!isSameDay(dataAtual, new Date()) && (
+                    <Button
+                      variant="outline"
+                      onClick={voltarHoje}
+                      size="sm"
+                    >
+                      Hoje
+                    </Button>
+                  )}
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                
+                <Button
+                  variant="ghost"
+                  onClick={() => navegarData('proximo')}
+                  className="text-white hover:bg-white/10"
+                >
+                  Próximo
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Resumo */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+            <Card className="glass-card border-red-500/20">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-red-400 text-sm font-medium">Títulos Vencidos</p>
+                    <p className="text-lg font-bold text-white">{titulosVencidos.length}</p>
+                    <p className="text-sm text-red-400">R$ {totalVencidos.toLocaleString('pt-BR')}</p>
+                  </div>
+                  <AlertTriangle className="w-8 h-8 text-red-400" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="glass-card border-yellow-500/20">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-yellow-400 text-sm font-medium">Vencimento Hoje</p>
+                    <p className="text-lg font-bold text-white">{titulosDoDia.length}</p>
+                    <p className="text-sm text-yellow-400">R$ {totalDoDia.toLocaleString('pt-BR')}</p>
+                  </div>
+                  <Clock className="w-8 h-8 text-yellow-400" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="glass-card border-green-500/20">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-green-400 text-sm font-medium">Recebimentos Simulados</p>
+                    <p className="text-lg font-bold text-white">{titulos.filter(t => t.status === 'simulado').length}</p>
+                    <p className="text-sm text-green-400">R$ {totalSimulado.toLocaleString('pt-BR')}</p>
+                  </div>
+                  <CheckCircle className="w-8 h-8 text-green-400" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="glass-card border-primary/20">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-primary text-sm font-medium">Total Geral</p>
+                    <p className="text-lg font-bold text-white">{titulos.filter(t => t.status !== 'simulado').length}</p>
+                    <p className="text-sm text-primary">R$ {titulos.filter(t => t.status !== 'simulado').reduce((sum, t) => sum + t.valor, 0).toLocaleString('pt-BR')}</p>
+                  </div>
+                  <DollarSign className="w-8 h-8 text-primary" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Busca */}
+          <Card className="glass-card border-primary/20 mb-6">
+            <CardContent className="p-6">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  placeholder="Buscar por descrição ou cliente..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Títulos Vencidos */}
+          {titulosVencidos.length > 0 && (
+            <Card className="glass-card border-red-500/20 mb-6">
+              <CardHeader>
+                <CardTitle className="text-red-400 flex items-center space-x-2">
+                  <AlertTriangle className="w-5 h-5" />
+                  <span>Títulos Vencidos ({titulosVencidos.length})</span>
+                </CardTitle>
+                <CardDescription>
+                  Títulos com vencimento anterior à data atual
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {titulosVencidos.map((titulo) => (
+                    <div key={titulo.id} className="p-4 rounded-lg bg-red-500/10 border border-red-500/20">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-3 mb-2">
+                            <Badge variant="outline" className="border-red-500 text-red-400">
+                              Vencido
+                            </Badge>
+                            <span className="text-sm text-gray-400">{titulo.documento}</span>
+                          </div>
+                          <h3 className="font-semibold text-white mb-1">{titulo.descricao}</h3>
+                          <div className="grid grid-cols-2 gap-4 text-sm text-gray-400">
+                            <span>Cliente: {titulo.cliente}</span>
+                            <span>Vencimento: {format(titulo.vencimento, "dd/MM/yyyy")}</span>
+                            <span>Categoria: {titulo.categoria}</span>
+                            <span>Conta: {titulo.conta}</span>
+                          </div>
+                        </div>
+                        <div className="text-right space-y-2">
+                          <p className="text-xl font-bold text-green-400">
+                            R$ {titulo.valor.toLocaleString('pt-BR')}
+                          </p>
+                          {titulo.status === 'pendente' ? (
+                            <Button
+                              size="sm"
+                              onClick={() => simularRecebimento(titulo.id)}
+                              className="bg-green-600 hover:bg-green-700"
+                            >
+                              Simular Recebimento
+                            </Button>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => reverterSimulacao(titulo.id)}
+                              className="border-green-500 text-green-400"
+                            >
+                              Reverter Simulação
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Títulos do Dia */}
+          <Card className="glass-card border-primary/20">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center space-x-2">
+                <Calendar className="w-5 h-5" />
+                <span>Títulos com Vencimento em {format(dataAtual, "dd/MM/yyyy")} ({titulosDoDia.length})</span>
+              </CardTitle>
+              <CardDescription>
+                {titulosDoDia.length === 0 ? 'Nenhum título com vencimento nesta data' : 
+                 `${titulosDoDia.length} título(s) encontrado(s)`}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {titulosDoDia.length === 0 ? (
+                <div className="text-center py-8">
+                  <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-400">Nenhum título com vencimento nesta data</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {titulosDoDia.map((titulo) => (
+                    <div key={titulo.id} className="p-4 rounded-lg bg-white/5 border border-white/10">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-3 mb-2">
+                            <Badge 
+                              variant="outline" 
+                              className={titulo.status === 'simulado' ? 
+                                "border-green-500 text-green-400" : 
+                                "border-yellow-500 text-yellow-400"
+                              }
+                            >
+                              {titulo.status === 'simulado' ? 'Recebido (Simulado)' : 'Pendente'}
+                            </Badge>
+                            <span className="text-sm text-gray-400">{titulo.documento}</span>
+                          </div>
+                          <h3 className="font-semibold text-white mb-1">{titulo.descricao}</h3>
+                          <div className="grid grid-cols-2 gap-4 text-sm text-gray-400">
+                            <span>Cliente: {titulo.cliente}</span>
+                            <span>Centro de Custo: {titulo.centroCusto}</span>
+                            <span>Categoria: {titulo.categoria}</span>
+                            <span>Natureza: {titulo.natureza}</span>
+                          </div>
+                          {titulo.observacoes && (
+                            <p className="text-xs text-gray-500 mt-2">{titulo.observacoes}</p>
+                          )}
+                        </div>
+                        <div className="text-right space-y-2">
+                          <p className="text-xl font-bold text-green-400">
+                            R$ {titulo.valor.toLocaleString('pt-BR')}
+                          </p>
+                          {titulo.status === 'pendente' ? (
+                            <Button
+                              size="sm"
+                              onClick={() => simularRecebimento(titulo.id)}
+                              className="bg-green-600 hover:bg-green-700"
+                            >
+                              Simular Recebimento
+                            </Button>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => reverterSimulacao(titulo.id)}
+                              className="border-green-500 text-green-400"
+                            >
+                              Reverter Simulação
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </Layout>
   );
