@@ -40,100 +40,96 @@ export type User = typeof users.$inferSelect;
 export type LoginData = z.infer<typeof loginSchema>;
 export type RegisterData = z.infer<typeof registerSchema>;
 
-// Types for Company (MySQL table)
-export interface Company {
-  company_id: number;
-  company_name: string;
-  company_fantasy: string;
-  company_cpf_cnpj: string;
-  company_email: string;
-  company_city: string;
-  company_uf: string;
+// Types for Contas (PostgreSQL tables)
+export const contas = pgTable("contas", {
+  id: serial("id").primaryKey(),
+  nome: text("nome").notNull(),
+  tipo: text("tipo").notNull(), // 'corrente', 'poupanca', 'investimento', etc.
+  saldo: integer("saldo").default(0), // Valor em centavos
+  ativo: boolean("ativo").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const lancamentos = pgTable("lancamentos", {
+  id: serial("id").primaryKey(),
+  contaId: integer("conta_id").references(() => contas.id).notNull(),
+  descricao: text("descricao").notNull(),
+  valor: integer("valor").notNull(), // Valor em centavos (positivo = entrada, negativo = saída)
+  tipo: text("tipo").notNull(), // 'entrada', 'saida'
+  categoria: text("categoria"), // 'vendas', 'compras', 'salarios', etc.
+  dataVencimento: timestamp("data_vencimento"),
+  dataPagamento: timestamp("data_pagamento"),
+  status: text("status").default('pendente'), // 'pendente', 'pago', 'cancelado'
+  observacoes: text("observacoes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export interface Conta {
+  id: number;
+  nome: string;
+  tipo: string;
+  saldo: number;
+  ativo: boolean;
+  createdAt: string;
 }
 
-export interface CompanyFilters {
+export interface Lancamento {
+  id: number;
+  contaId: number;
+  descricao: string;
+  valor: number;
+  tipo: string;
+  categoria?: string;
+  dataVencimento?: string;
+  dataPagamento?: string;
+  status: string;
+  observacoes?: string;
+  createdAt: string;
+}
+
+// Schemas e tipos para inserção
+export const insertContaSchema = createInsertSchema(contas).omit({ id: true, createdAt: true });
+export const insertLancamentoSchema = createInsertSchema(lancamentos).omit({ id: true, createdAt: true });
+
+export type InsertConta = z.infer<typeof insertContaSchema>;
+export type InsertLancamento = z.infer<typeof insertLancamentoSchema>;
+
+// Filtros e respostas para lançamentos
+export interface LancamentoFilters {
   search?: string;
+  contaId?: number;
+  tipo?: 'entrada' | 'saida' | 'all';
+  status?: 'pendente' | 'pago' | 'cancelado' | 'all';
+  categoria?: string;
+  dataInicio?: string;
+  dataFim?: string;
   page?: number;
   limit?: number;
-  sortBy?: keyof Company;
+  sortBy?: keyof Lancamento;
   sortOrder?: 'asc' | 'desc';
 }
 
-export interface CompanyResponse {
-  companies: Company[];
+export interface LancamentoResponse {
+  lancamentos: Lancamento[];
   total: number;
   page: number;
   totalPages: number;
   limit: number;
 }
 
-// Types for NFe Recebidas (MySQL table)
-export interface NFeRecebida {
-  doc_id: number;
-  doc_num: string;
-  doc_dest_nome: string;
-  doc_emit_nome: string;
-  doc_emit_documento: string;
-  doc_date_emi: string;
-  doc_valor: number;
-  doc_nat_op: string;
-  doc_status_integracao: number;
-  doc_id_integracao: string | null;
-  doc_codcfo: string | null;
-}
-
-export interface NFeFilters {
+// Filtros para contas
+export interface ContaFilters {
   search?: string;
-  status?: 'all' | 'integrated' | 'not_integrated';
-  empresa?: string;
-  fornecedor?: string;
-  dataInicio?: string;
-  dataFim?: string;
+  tipo?: string;
+  ativo?: boolean;
   page?: number;
   limit?: number;
-  sortBy?: keyof NFeRecebida;
+  sortBy?: keyof Conta;
   sortOrder?: 'asc' | 'desc';
 }
 
-export interface NFeResponse {
-  nfes: NFeRecebida[];
-  total: number;
-  page: number;
-  totalPages: number;
-  limit: number;
-}
-
-// NFSe Recebidas interfaces
-export interface NFSeRecebida {
-  nfse_id: number;
-  nfse_emitente: string;
-  nfse_doc: string;
-  nfse_tomador: string;
-  nfse_tipo: string;
-  nfse_local_prestacao: string;
-  nfse_data_hora: string;
-  nfse_valor_servico: number;
-  nfse_status_integracao: number;
-  nfse_id_integracao: string | null;
-  nfse_codcfo: string | null;
-}
-
-export interface NFSeFilters {
-  search?: string;
-  status?: 'all' | 'integrated' | 'not_integrated';
-  empresa?: string;
-  fornecedor?: string;
-  local?: string;
-  dataInicio?: string;
-  dataFim?: string;
-  page?: number;
-  limit?: number;
-  sortBy?: keyof NFSeRecebida;
-  sortOrder?: 'asc' | 'desc';
-}
-
-export interface NFSeResponse {
-  nfses: NFSeRecebida[];
+export interface ContaResponse {
+  contas: Conta[];
   total: number;
   page: number;
   totalPages: number;
@@ -181,66 +177,57 @@ export interface UsuarioResponse {
   limit: number;
 }
 
-// Dashboard Statistics
+// Dashboard Statistics para Fluxo de Caixa
 export interface DashboardStats {
-  totalCNPJ: number;
-  nfeRecebidas: number;
-  nfeIntegradas: number;
-  nfseRecebidas: number;
-  nfseIntegradas: number;
-  fornecedoresSemERP: number;
+  totalContas: number;
+  entradas: number;
+  saidas: number;
+  saldoTotal: number;
+  contasPagar: number;
+  contasReceber: number;
+  lancamentosHoje: number;
 }
 
-export interface ChartData {
-  date: string;
-  nfe: number;
-  nfse: number;
+export interface FluxoCaixaData {
+  data: string;
+  entradas: number;
+  saidas: number;
+  saldo: number;
 }
 
-export interface PieChartData {
-  name: string;
-  value: number;
-  color: string;
+export interface ResumoFinanceiro {
+  periodo: string;
+  totalEntradas: number;
+  totalSaidas: number;
+  saldoLiquido: number;
+  maiorEntrada: number;
+  maiorSaida: number;
 }
 
-export interface UltimosDocumentos {
-  tipo: string;
-  emitente: string;
+export interface UltimosLancamentos {
+  id: number;
+  descricao: string;
   valor: number;
+  tipo: string;
   data: string;
   status: string;
+  categoria: string;
 }
 
-export interface CNPJAtivo {
-  cnpj: string;
-  nome: string;
-  ultimaCaptura: string;
-  status: string;
+export interface ContaPorTipo {
+  tipo: string;
+  quantidade: number;
+  saldoTotal: number;
 }
 
-// Fornecedores interfaces
-export interface Fornecedor {
-  id: number;
-  nome: string;
-  cnpj: string;
-  codigo_erp: string | null;
-  data_cadastro: string;
+// Interface para IA Assistant
+export interface AIQuery {
+  query: string;
+  context?: string;
 }
 
-export interface FornecedorFilters {
-  search?: string;
-  nome?: string;
-  cnpj?: string;
-  page?: number;
-  limit?: number;
-  sortBy?: keyof Fornecedor;
-  sortOrder?: 'asc' | 'desc';
-}
-
-export interface FornecedorResponse {
-  fornecedores: Fornecedor[];
-  total: number;
-  page: number;
-  totalPages: number;
-  limit: number;
+export interface AIResponse {
+  response: string;
+  suggestions?: string[];
+  data?: any;
 }
