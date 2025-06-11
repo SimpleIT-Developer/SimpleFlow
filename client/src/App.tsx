@@ -9,11 +9,11 @@ import { ProtectedRoute } from "@/components/protected-route";
 import LoginPage from "@/pages/login";
 import RegisterPage from "@/pages/register";
 import LoadingPage from "@/pages/loading";
-import DashboardPage from "@/pages/dashboard";
-import CompaniesPage from "@/pages/companies";
-import NFeRecebidasPage from "@/pages/nfe-recebidas";
-import NFSeRecebidasPage from "@/pages/nfse-recebidas";
-import FornecedoresPage from "@/pages/fornecedores";
+import DashboardPage from "@/pages/dashboard-flow";
+import ContasPagarPage from "@/pages/contas-pagar";
+import ContasReceberPage from "@/pages/contas-receber";
+import ExtratoPage from "@/pages/extrato";
+import AIAssistantPage from "@/pages/ai-assistant";
 import UsuariosPage from "@/pages/usuarios";
 import RelatoriosPage from "@/pages/relatorios";
 import NotFound from "@/pages/not-found";
@@ -33,24 +33,24 @@ function Router() {
           <DashboardPage />
         </ProtectedRoute>
       </Route>
-      <Route path="/companies">
+      <Route path="/contas-pagar">
         <ProtectedRoute>
-          <CompaniesPage />
+          <ContasPagarPage />
         </ProtectedRoute>
       </Route>
-      <Route path="/nfe-recebidas">
+      <Route path="/contas-receber">
         <ProtectedRoute>
-          <NFeRecebidasPage />
+          <ContasReceberPage />
         </ProtectedRoute>
       </Route>
-      <Route path="/nfse-recebidas">
+      <Route path="/extrato">
         <ProtectedRoute>
-          <NFSeRecebidasPage />
+          <ExtratoPage />
         </ProtectedRoute>
       </Route>
-      <Route path="/fornecedores">
+      <Route path="/ai-assistant">
         <ProtectedRoute>
-          <FornecedoresPage />
+          <AIAssistantPage />
         </ProtectedRoute>
       </Route>
       <Route path="/relatorios">
