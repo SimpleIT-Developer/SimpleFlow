@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Download, RefreshCw, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Filter, ArrowUpDown, ArrowUp, ArrowDown, Printer } from "lucide-react";
+import { Download, RefreshCw, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Filter, ArrowUpDown, ArrowUp, ArrowDown, Printer, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { NFSeRecebida, NFSeResponse } from "@shared/schema";
 
@@ -72,6 +72,7 @@ export default function NFSeRecebidasPage() {
   const [limit] = useState(10);
   const [sortBy, setSortBy] = useState<keyof NFSeRecebida>("nfse_data_hora");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [isImporting, setIsImporting] = useState(false);
 
   const { data: nfseData, isLoading, error } = useQuery({
     queryKey: ["nfse-recebidas", { 
@@ -263,6 +264,70 @@ export default function NFSeRecebidasPage() {
     });
   };
 
+  // Função para importar XML de NFSe
+  const handleImportXML = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Verificar se é um arquivo XML
+    if (!file.name.toLowerCase().endsWith('.xml')) {
+      toast({
+        title: "Erro no Arquivo",
+        description: "Por favor, selecione um arquivo XML válido.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsImporting(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('xmlFile', file);
+
+      const response = await fetch('/api/nfse-import', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        },
+        body: formData
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Erro ao importar XML');
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
+        toast({
+          title: "XML Importado com Sucesso",
+          description: result.message || "A NFSe foi importada com sucesso!",
+        });
+        
+        // Atualizar a lista
+        queryClient.invalidateQueries({ queryKey: ["nfse-recebidas"] });
+      } else {
+        throw new Error(result.message || 'Erro ao processar XML');
+      }
+
+    } catch (error) {
+      console.error('Erro ao importar XML:', error);
+      toast({
+        title: "Erro na Importação",
+        description: error instanceof Error ? error.message : "Erro desconhecido ao importar XML",
+        variant: "destructive",
+      });
+    } finally {
+      setIsImporting(false);
+      // Limpar o input
+      if (event.target) {
+        event.target.value = '';
+      }
+    }
+  };
+
   return (
     <Layout currentPage="NFSe Recebidas">
       <div className="space-y-6">
@@ -277,6 +342,25 @@ export default function NFSeRecebidasPage() {
             <Badge variant="secondary" className="text-primary">
               {total} {total === 1 ? "NFSe" : "NFSes"}
             </Badge>
+            
+            {/* Botão de Importar XML */}
+            <div className="relative">
+              <input
+                type="file"
+                accept=".xml"
+                onChange={handleImportXML}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                disabled={isImporting}
+              />
+              <Button
+                className="bg-green-600 hover:bg-green-700 text-white"
+                disabled={isImporting}
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                {isImporting ? "Importando..." : "Importar XML"}
+              </Button>
+            </div>
+            
             <Button
               onClick={handleRefreshNFSe}
               className="bg-purple-600 hover:bg-purple-700 text-white"

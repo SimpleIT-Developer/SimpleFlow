@@ -13,8 +13,24 @@ import { eq, ilike, or, and, count, desc, asc } from "drizzle-orm";
 import { generateNfeRelatorioPDF } from "./nfe-relatorio-generator";
 import { generateNfseRelatorioPDF } from "./nfse-relatorio-generator";
 import { generateNfseTributosRelatorioPDF } from "./nfse-tributos-relatorio-generator";
+import multer from 'multer';
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production";
+
+// Configuração do multer para upload de arquivos
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === 'text/xml' || file.originalname.toLowerCase().endsWith('.xml')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Apenas arquivos XML são permitidos'));
+    }
+  }
+});
 
 // Middleware to verify JWT token
 function authenticateToken(req: any, res: any, next: any) {
