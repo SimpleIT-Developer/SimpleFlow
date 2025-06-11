@@ -1759,6 +1759,182 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Rota para importar XML de NFSe
+  app.post("/api/nfse-import", authenticateToken, upload.single('xmlFile'), async (req: any, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Nenhum arquivo XML foi enviado" 
+        });
+      }
+
+      const xmlContent = req.file.buffer.toString('utf-8');
+      console.log('Importando XML NFSe, tamanho:', xmlContent.length);
+
+      // Parse do XML para validação
+      const xml2js = await import('xml2js');
+      const parsed = await xml2js.parseStringPromise(xmlContent, { explicitArray: false });
+
+      // Verificar se contém as tags obrigatórias para NFSe
+      const hasNFSeTag = !!parsed.NFSe;
+      const hasChaveRPS = xmlContent.includes('<ChaveRPS>') || xmlContent.includes('<chaveRPS>');
+      const hasNNFSe = xmlContent.includes('<nNFSe>') || xmlContent.includes('<numeroNfse>');
+      const hasInfNFSe = xmlContent.includes('<infNFSe>') || xmlContent.includes('<InfNFSe>');
+
+      console.log('Validação de tags:', { hasNFSeTag, hasChaveRPS, hasNNFSe, hasInfNFSe });
+
+      if (!hasNFSeTag && !hasChaveRPS && !hasNNFSe && !hasInfNFSe) {
+        return res.status(400).json({
+          success: false,
+          message: "O arquivo XML não é uma Nota Fiscal de Serviço válida. Tags obrigatórias não encontradas."
+        });
+      }
+
+      // Extrair dados do XML
+      const extractNFSeData = (xmlData: any) => {
+        let nfseData: any = {};
+
+        // Função para buscar valores recursivamente
+        const findValue = (obj: any, keys: string[]): any => {
+          if (!obj || typeof obj !== 'object') return null;
+          
+          for (const key of keys) {
+            for (const [objKey, value] of Object.entries(obj)) {
+              if (objKey.toLowerCase() === key.toLowerCase() && value) {
+                return value;
+              }
+              if (typeof value === 'object') {
+                const result = findValue(value, [key]);
+                if (result) return result;
+              }
+            }
+          }
+          return null;
+        };
+
+        // Extrair chave de verificação
+        const codigoVerificacao = findValue(xmlData, ['CodigoVerificacao', 'codigo_verificacao']);
+        const infNFSeId = findValue(xmlData, ['infNFSe']);
+        let chaveAcesso = codigoVerificacao;
+        
+        // Se não encontrou código de verificação, usar números do ID da infNFSe
+        if (!chaveAcesso && infNFSeId && typeof infNFSeId === 'object' && infNFSeId.$?.Id) {
+          chaveAcesso = infNFSeId.$.Id.replace(/\D/g, ''); // Apenas números
+        }
+
+        // Dados básicos
+        nfseData.nfse_chave = chaveAcesso || '';
+        nfseData.nfse_tipo = 'NFSE';
+        nfseData.nfse_nsu = '0';
+        nfseData.nfse_status = 0;
+        nfseData.nfse_status_integracao = 0;
+        nfseData.nfse_id_integracao = 0;
+        nfseData.nfse_consulta = 0;
+        nfseData.nfse_codcfo = 0;
+
+        // Data de emissão
+        const dataEmissao = findValue(xmlData, ['DataEmissaoNFe', 'dhEmi', 'dataEmissao', 'DataEmissao']);
+        nfseData.nfse_data_hora = dataEmissao || new Date().toISOString();
+
+        // Dados do prestador (emit)
+        const cnpjPrestador = findValue(xmlData, ['CNPJ']) || findValue(xmlData, ['CNPJPrestador']);
+        const nomePrestador = findValue(xmlData, ['nome', 'xNome', 'RazaoSocialPrestador', 'razaoSocial']);
+        
+        nfseData.nfse_doc = cnpjPrestador || '';
+        nfseData.nfse_emitente = nomePrestador || '';
+
+        // Local de prestação
+        const localPrestacao = findValue(xmlData, ['cLocPrestacao', 'MunicipioPrestacao', 'municipioPrestacao']);
+        nfseData.nfse_local_prestacao = localPrestacao || '';
+
+        // Valor dos serviços
+        const valorServicos = findValue(xmlData, ['ValorServicos', 'vServ', 'valorServicos']);
+        nfseData.nfse_valor_servico = valorServicos ? parseFloat(valorServicos) : 0;
+
+        // Dados do tomador
+        const cnpjTomador = findValue(xmlData, ['CNPJTomador']) || findValue(xmlData, ['cnpjTomador']);
+        const nomeTomador = findValue(xmlData, ['RazaoSocialTomador', 'razaoSocialTomador', 'xNomeTomador']);
+        
+        nfseData.nfse_tomador_doc = cnpjTomador || '';
+        nfseData.nfse_tomador = nomeTomador || '';
+
+        // XML em base64
+        nfseData.nfse_xml = Buffer.from(xmlContent).toString('base64');
+
+        // ID da empresa (usar primeira empresa por enquanto)
+        nfseData.nfse_id_company = 42; // Você pode ajustar isso conforme necessário
+
+        return nfseData;
+      };
+
+      const nfseData = extractNFSeData(parsed);
+
+      // Verificar se a chave já existe
+      if (nfseData.nfse_chave) {
+        const [existingRecords] = await mysqlPool.execute(
+          'SELECT nfse_id FROM nfse WHERE nfse_chave = ?',
+          [nfseData.nfse_chave]
+        ) as any;
+
+        if (existingRecords.length > 0) {
+          return res.status(400).json({
+            success: false,
+            message: `NFSe com chave ${nfseData.nfse_chave} já existe no sistema.`
+          });
+        }
+      }
+
+      // Inserir no banco de dados
+      const insertQuery = `
+        INSERT INTO nfse (
+          nfse_id_company, nfse_nsu, nfse_chave, nfse_tipo, nfse_data_hora,
+          nfse_doc, nfse_emitente, nfse_local_prestacao, nfse_xml, nfse_valor_servico,
+          nfse_tomador_doc, nfse_tomador, nfse_status, nfse_status_integracao,
+          nfse_id_integracao, nfse_consulta, nfse_codcfo
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `;
+
+      const insertValues = [
+        nfseData.nfse_id_company,
+        nfseData.nfse_nsu,
+        nfseData.nfse_chave,
+        nfseData.nfse_tipo,
+        nfseData.nfse_data_hora,
+        nfseData.nfse_doc,
+        nfseData.nfse_emitente,
+        nfseData.nfse_local_prestacao,
+        nfseData.nfse_xml,
+        nfseData.nfse_valor_servico,
+        nfseData.nfse_tomador_doc,
+        nfseData.nfse_tomador,
+        nfseData.nfse_status,
+        nfseData.nfse_status_integracao,
+        nfseData.nfse_id_integracao,
+        nfseData.nfse_consulta,
+        nfseData.nfse_codcfo
+      ];
+
+      console.log('Inserindo NFSe:', nfseData);
+
+      const [result] = await mysqlPool.execute(insertQuery, insertValues) as any;
+
+      res.json({
+        success: true,
+        message: `NFSe importada com sucesso! Emitente: ${nfseData.nfse_emitente}, Valor: R$ ${nfseData.nfse_valor_servico.toFixed(2)}`,
+        nfseId: result.insertId
+      });
+
+    } catch (error) {
+      console.error("Erro ao importar XML de NFSe:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Erro interno do servidor ao processar XML",
+        error: (error as Error).message 
+      });
+    }
+  });
+
   // Rota para estatísticas dos relatórios
   app.get("/api/relatorios/stats", authenticateToken, async (req: any, res) => {
     try {
