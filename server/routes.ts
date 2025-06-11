@@ -1935,6 +1935,239 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Rota para importar XML de NFe
+  app.post("/api/nfe-import", authenticateToken, upload.single('xmlFile'), async (req: any, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Nenhum arquivo XML foi enviado" 
+        });
+      }
+
+      const xmlContent = req.file.buffer.toString('utf-8');
+      console.log('Importando XML NFe, tamanho:', xmlContent.length);
+
+      // Parse do XML para validação
+      const xml2js = await import('xml2js');
+      const parsed = await xml2js.parseStringPromise(xmlContent, { explicitArray: false });
+
+      // Verificar se contém as tags obrigatórias para NFe
+      const hasNfeProc = !!parsed.nfeProc;
+      const hasNFe = xmlContent.includes('<NFe>') || xmlContent.includes('<nfe>');
+      const hasInfNFe = xmlContent.includes('<infNFe>') || xmlContent.includes('<infnfe>');
+
+      console.log('Validação de tags:', { hasNfeProc, hasNFe, hasInfNFe });
+
+      if (!hasNfeProc && !hasNFe && !hasInfNFe) {
+        return res.status(400).json({
+          success: false,
+          message: "O arquivo XML não é uma Nota Fiscal Eletrônica válida. Tags obrigatórias não encontradas."
+        });
+      }
+
+      // Extrair dados do XML
+      const extractNFeData = (xmlData: any) => {
+        let nfeData: any = {};
+
+        // Função para buscar valores recursivamente
+        const findValue = (obj: any, keys: string[]): any => {
+          if (!obj || typeof obj !== 'object') return null;
+          
+          for (const key of keys) {
+            for (const [objKey, value] of Object.entries(obj)) {
+              if (objKey.toLowerCase() === key.toLowerCase() && value) {
+                return value;
+              }
+              if (typeof value === 'object') {
+                const result = findValue(value, [key]);
+                if (result) return result;
+              }
+            }
+          }
+          return null;
+        };
+
+        // Navegar pela estrutura nfeProc -> NFe -> infNFe
+        let infNFe = findValue(xmlData, ['infNFe']);
+        if (!infNFe) {
+          // Tentar encontrar NFe diretamente
+          const nfe = findValue(xmlData, ['NFe']);
+          if (nfe) {
+            infNFe = findValue(nfe, ['infNFe']);
+          }
+        }
+
+        if (!infNFe) {
+          throw new Error('Estrutura XML inválida: infNFe não encontrada');
+        }
+
+        // Extrair chave de acesso do ID da infNFe
+        let chaveAcesso = '';
+        if (infNFe.$ && infNFe.$.Id) {
+          chaveAcesso = infNFe.$.Id.replace(/[^0-9]/g, ''); // Apenas números
+        }
+
+        // Dados básicos
+        nfeData.doc_chave = chaveAcesso;
+        nfeData.doc_mod = 55;
+        nfeData.doc_status = 0;
+        nfeData.doc_status_download = 1;
+        nfeData.doc_status_manifestacao = 1;
+        nfeData.doc_consulta = 0;
+        nfeData.doc_status_integracao = 0;
+        nfeData.doc_id_integracao = 0;
+        nfeData.doc_codcfo = 0;
+
+        // Dados da identificação
+        const ide = findValue(infNFe, ['ide']);
+        if (ide) {
+          nfeData.doc_code = findValue(ide, ['cNF']) || '';
+          nfeData.doc_nat_op = findValue(ide, ['natOp']) || '';
+          nfeData.doc_serie = findValue(ide, ['serie']) || '';
+          nfeData.doc_num = findValue(ide, ['nNF']) || '';
+          nfeData.doc_date_emi = findValue(ide, ['dhEmi']) || new Date().toISOString();
+          nfeData.doc_date_sai = findValue(ide, ['dhSaiEnt']) || null;
+        }
+
+        // Dados do emitente
+        const emit = findValue(infNFe, ['emit']);
+        if (emit) {
+          nfeData.doc_emit_documento = findValue(emit, ['CNPJ']) || '';
+          nfeData.doc_emit_nome = findValue(emit, ['xNome']) || '';
+          nfeData.doc_emit_fantasia = findValue(emit, ['xFant']) || '';
+          nfeData.doc_emit_ie = findValue(emit, ['IE']) || '';
+          
+          const enderEmit = findValue(emit, ['enderEmit']);
+          if (enderEmit) {
+            nfeData.doc_uf_inicio = findValue(enderEmit, ['UF']) || '';
+          }
+        }
+
+        // Dados do destinatário
+        const dest = findValue(infNFe, ['dest']);
+        if (dest) {
+          nfeData.doc_dest_documento = findValue(dest, ['CNPJ']) || '';
+          nfeData.doc_dest_nome = findValue(dest, ['xNome']) || '';
+          nfeData.doc_dest_ie = null;
+          
+          const enderDest = findValue(dest, ['enderDest']);
+          if (enderDest) {
+            nfeData.doc_uf_final = findValue(enderDest, ['UF']) || '';
+          }
+        }
+
+        // Dados dos totais
+        const total = findValue(infNFe, ['total']);
+        if (total) {
+          const icmsTot = findValue(total, ['ICMSTot']);
+          if (icmsTot) {
+            nfeData.doc_valor = parseFloat(findValue(icmsTot, ['vNF']) || '0');
+            nfeData.doc_valor_trib = parseFloat(findValue(icmsTot, ['vTotTrib']) || '0');
+            nfeData.doc_valor_base_icms = parseFloat(findValue(icmsTot, ['vBC']) || '0');
+            nfeData.doc_valor_icms = parseFloat(findValue(icmsTot, ['vICMS']) || '0');
+            nfeData.doc_valor_frete = parseFloat(findValue(icmsTot, ['vFrete']) || '0');
+            nfeData.doc_valor_seguro = parseFloat(findValue(icmsTot, ['vSeg']) || '0');
+            nfeData.doc_valor_desconto = parseFloat(findValue(icmsTot, ['vDesc']) || '0');
+          }
+        }
+
+        // XML em base64
+        nfeData.doc_file = Buffer.from(xmlContent).toString('base64');
+
+        // ID da empresa (usar primeira empresa por enquanto)
+        nfeData.doc_id_company = 42; // Ajustar conforme necessário
+
+        return nfeData;
+      };
+
+      const nfeData = extractNFeData(parsed);
+
+      // Verificar se a chave já existe
+      if (nfeData.doc_chave) {
+        const [existingRecords] = await mysqlPool.execute(
+          'SELECT doc_id FROM doc WHERE doc_chave = ?',
+          [nfeData.doc_chave]
+        ) as any;
+
+        if (existingRecords.length > 0) {
+          return res.status(400).json({
+            success: false,
+            message: `NFe com chave ${nfeData.doc_chave} já existe no sistema.`
+          });
+        }
+      }
+
+      // Inserir no banco de dados
+      const insertQuery = `
+        INSERT INTO doc (
+          doc_id_company, doc_mod, doc_code, doc_nat_op, doc_serie, doc_num,
+          doc_date_emi, doc_date_sai, doc_emit_documento, doc_emit_nome,
+          doc_emit_fantasia, doc_emit_ie, doc_dest_documento, doc_dest_nome,
+          doc_dest_ie, doc_valor, doc_valor_trib, doc_valor_base_icms,
+          doc_valor_icms, doc_valor_frete, doc_valor_seguro, doc_valor_desconto,
+          doc_uf_inicio, doc_uf_final, doc_status, doc_status_download,
+          doc_status_manifestacao, doc_file, doc_chave, doc_consulta,
+          doc_status_integracao, doc_id_integracao, doc_codcfo
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `;
+
+      const insertValues = [
+        nfeData.doc_id_company,
+        nfeData.doc_mod,
+        nfeData.doc_code,
+        nfeData.doc_nat_op,
+        nfeData.doc_serie,
+        nfeData.doc_num,
+        nfeData.doc_date_emi,
+        nfeData.doc_date_sai,
+        nfeData.doc_emit_documento,
+        nfeData.doc_emit_nome,
+        nfeData.doc_emit_fantasia,
+        nfeData.doc_emit_ie,
+        nfeData.doc_dest_documento,
+        nfeData.doc_dest_nome,
+        nfeData.doc_dest_ie,
+        nfeData.doc_valor,
+        nfeData.doc_valor_trib,
+        nfeData.doc_valor_base_icms,
+        nfeData.doc_valor_icms,
+        nfeData.doc_valor_frete,
+        nfeData.doc_valor_seguro,
+        nfeData.doc_valor_desconto,
+        nfeData.doc_uf_inicio,
+        nfeData.doc_uf_final,
+        nfeData.doc_status,
+        nfeData.doc_status_download,
+        nfeData.doc_status_manifestacao,
+        nfeData.doc_file,
+        nfeData.doc_chave,
+        nfeData.doc_consulta,
+        nfeData.doc_status_integracao,
+        nfeData.doc_id_integracao,
+        nfeData.doc_codcfo
+      ];
+
+      console.log('Inserindo NFe:', nfeData);
+
+      const [result] = await mysqlPool.execute(insertQuery, insertValues) as any;
+
+      res.json({
+        success: true,
+        message: `NFe importada com sucesso! Emitente: ${nfeData.doc_emit_nome}, Número: ${nfeData.doc_num}, Valor: R$ ${nfeData.doc_valor.toFixed(2)}`,
+        nfeId: result.insertId
+      });
+
+    } catch (error) {
+      console.error("Erro ao importar XML de NFe:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Erro interno do servidor ao processar XML",
+        error: (error as Error).message 
+      });
+    }
+  });
+
   // Rota para estatísticas dos relatórios
   app.get("/api/relatorios/stats", authenticateToken, async (req: any, res) => {
     try {

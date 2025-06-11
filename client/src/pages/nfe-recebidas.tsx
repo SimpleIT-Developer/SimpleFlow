@@ -20,7 +20,8 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
-  Filter
+  Filter,
+  Upload
 } from "lucide-react";
 import type { NFeRecebida, NFeResponse } from "@shared/schema";
 
@@ -37,6 +38,7 @@ export default function NFeRecebidasPage() {
   const [limit] = useState(10);
   const [sortBy, setSortBy] = useState<keyof NFeRecebida>("doc_date_emi");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [isImporting, setIsImporting] = useState(false);
 
   const { data: nfeData, isLoading, error } = useQuery({
     queryKey: ["nfe-recebidas", { 
@@ -94,6 +96,70 @@ export default function NFeRecebidasPage() {
       title: "NFe Atualizadas",
       description: "Dados das NFe recebidas atualizados com sucesso!",
     });
+  };
+
+  // Função para importar XML de NFe
+  const handleImportXML = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Verificar se é um arquivo XML
+    if (!file.name.toLowerCase().endsWith('.xml')) {
+      toast({
+        title: "Erro no Arquivo",
+        description: "Por favor, selecione um arquivo XML válido.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsImporting(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('xmlFile', file);
+
+      const response = await fetch('/api/nfe-import', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        },
+        body: formData
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Erro ao importar XML');
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
+        toast({
+          title: "XML Importado com Sucesso",
+          description: result.message || "A NFe foi importada com sucesso!",
+        });
+        
+        // Atualizar a lista
+        queryClient.invalidateQueries({ queryKey: ["nfe-recebidas"] });
+      } else {
+        throw new Error(result.message || 'Erro ao processar XML');
+      }
+
+    } catch (error) {
+      console.error('Erro ao importar XML:', error);
+      toast({
+        title: "Erro na Importação",
+        description: error instanceof Error ? error.message : "Erro desconhecido ao importar XML",
+        variant: "destructive",
+      });
+    } finally {
+      setIsImporting(false);
+      // Limpar o input
+      if (event.target) {
+        event.target.value = '';
+      }
+    }
   };
 
   const clearFilters = () => {
@@ -295,6 +361,25 @@ export default function NFeRecebidasPage() {
             <Badge variant="secondary" className="text-primary">
               {total} {total === 1 ? "NFe" : "NFes"}
             </Badge>
+            
+            {/* Botão de Importar XML */}
+            <div className="relative">
+              <input
+                type="file"
+                accept=".xml"
+                onChange={handleImportXML}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                disabled={isImporting}
+              />
+              <Button
+                className="bg-green-600 hover:bg-green-700 text-white"
+                disabled={isImporting}
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                {isImporting ? "Importando..." : "Importar XML"}
+              </Button>
+            </div>
+            
             <Button
               onClick={handleRefreshNFe}
               className="bg-purple-600 hover:bg-purple-700 text-white"
